@@ -1,0 +1,2447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lớp học Tích Cực – Vũ Tiến Lực NHC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Nunito','sans-serif'] }, colors: { dojo: { blue:'#33a3dc', green:'#8bc34a', red:'#f44336', yellow:'#ffc107', bg:'#f0f4f8' } } } }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-dojo-bg font-sans antialiased text-gray-800 pb-20 select-none overflow-x-hidden">
+
+<!-- HEADER -->
+<header class="bg-dojo-blue text-white p-4 sticky top-0 shadow-md z-20 flex justify-between items-center rounded-b-xl">
+    <div class="flex items-center gap-2">
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center hover:bg-blue-500 rounded-full transition flex-shrink-0"><i class="fas fa-bars text-xl"></i></button>
+        <img src="https://i.ibb.co/wZRKCnpw/10a9a7ae1ede.png" alt="Logo" class="w-9 h-9 rounded-xl object-cover shadow border-2 border-white border-opacity-30 flex-shrink-0" onclick="toggleSidebar()">
+        <div onclick="toggleSidebar()" class="cursor-pointer min-w-0">
+            <h1 id="headerClassName" class="text-lg font-black leading-tight flex items-center gap-1.5 truncate">Lớp Superstars <i class="fas fa-caret-down text-xs opacity-70"></i></h1>
+            <p class="text-[11px] opacity-75" id="totalClassPoints">Tổng điểm: 0</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-1.5">
+        <!-- Quick sync button -->
+        <button onclick="quickSync()" id="btnQuickSync" class="flex items-center gap-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full px-3 h-9 transition text-white text-xs font-bold" title="Lưu lên Google Sheets">
+            <i id="quickSyncIcon" class="fas fa-cloud-upload-alt text-base"></i>
+            <span id="quickSyncLabel">Lưu</span>
+        </button>
+        <!-- Settings modal -->
+        <button onclick="openSyncModal()" class="w-8 h-8 bg-white bg-opacity-15 hover:bg-opacity-25 rounded-full flex items-center justify-center transition text-white" title="Cài đặt đồng bộ"><i class="fas fa-cog text-sm"></i></button>
+        <button id="headerAddBtn" onclick="openAddStudentModal()" class="w-10 h-10 bg-blue-400 hover:bg-blue-500 rounded-full flex items-center justify-center shadow transition text-white"><i class="fas fa-plus"></i></button>
+    </div>
+</header>
+
+<!-- SIDEBAR -->
+<div id="sidebarBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden" onclick="toggleSidebar()"></div>
+<div id="sidebar" class="fixed top-0 left-0 h-full w-3/4 max-w-sm bg-white z-40 sidebar-closed transition-transform duration-300 ease-in-out shadow-2xl flex flex-col">
+    <!-- Sidebar header với logo nhỏ -->
+    <div class="bg-dojo-blue text-white px-5 pt-10 pb-5 rounded-br-3xl flex items-center gap-3">
+        <img src="https://i.ibb.co/wZRKCnpw/10a9a7ae1ede.png" alt="Logo" class="w-12 h-12 rounded-2xl object-cover shadow-lg border-2 border-white border-opacity-30 flex-shrink-0">
+        <div>
+            <h2 class="text-xl font-black leading-tight">Lớp học Tích Cực</h2>
+            <p class="text-xs opacity-70 mt-0.5">Chọn lớp để quản lý</p>
+        </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="classListContainer"></div>
+    <div class="p-4 border-t border-gray-100 flex flex-col gap-3">
+        <button onclick="document.getElementById('excelInput').click()" class="w-full py-3 bg-green-100 text-green-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-green-200"><i class="fas fa-file-excel"></i> Nhập danh sách (Excel)</button>
+        <input type="file" id="excelInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event)">
+        <button onclick="openClassroomImport()" class="w-full py-3 bg-indigo-100 text-indigo-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-200"><i class="fab fa-google text-indigo-500"></i> Nhập từ Google Classroom</button>
+        <button onclick="openAddClassModal()" class="w-full py-3 bg-dojo-blue text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md"><i class="fas fa-plus-circle"></i> Tạo lớp mới</button>
+    </div>
+    <!-- Branding strip -->
+    <div class="px-4 py-3 border-t border-gray-100 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <img src="https://i.ibb.co/wZRKCnpw/10a9a7ae1ede.png" alt="Logo Lớp học Tích Cực" class="w-11 h-11 rounded-xl object-cover shadow border border-white">
+        <div class="flex-1 min-w-0">
+            <p class="font-black text-gray-800 text-sm leading-tight truncate">Lớp học Tích Cực</p>
+            <p class="text-[11px] text-gray-500 font-semibold mt-0.5 truncate">Tác giả: Vũ Tiến Lực NHC</p>
+        </div>
+        <i class="fas fa-award text-blue-400 text-lg flex-shrink-0"></i>
+    </div>
+</div>
+
+<!-- VIEW: LỚP HỌC -->
+<main id="classroomView" class="p-4 block">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-gray-600 font-bold text-sm uppercase tracking-wide">Học sinh (<span id="studentCount">0</span>)</h2>
+        <div class="flex gap-1.5 flex-wrap justify-end">
+            <button class="text-orange-500 text-xs font-bold bg-orange-50 px-2.5 py-1.5 rounded-full hover:bg-orange-100 transition border border-orange-100 shadow-sm flex items-center" onclick="startRandomSelection()"><i class="fas fa-random mr-1"></i>Gọi</button>
+            <button class="text-red-500 text-xs font-bold bg-red-50 px-2.5 py-1.5 rounded-full hover:bg-red-100 transition border border-red-100 shadow-sm flex items-center" onclick="openGameMenu()"><i class="fas fa-gamepad mr-1"></i>Minigames</button>
+            <button class="text-violet-600 text-xs font-bold bg-violet-50 px-2.5 py-1.5 rounded-full hover:bg-violet-100 transition border border-violet-100 shadow-sm flex items-center" onclick="openGroupDivider()"><i class="fas fa-object-group mr-1"></i>Nhóm</button>
+            <button id="btnSttPanel" class="text-purple-600 text-xs font-bold bg-purple-50 px-2.5 py-1.5 rounded-full hover:bg-purple-100 transition border border-purple-100 shadow-sm flex items-center" onclick="toggleSttPanel()"><i class="fas fa-hashtag mr-1"></i>STT</button>
+            <button class="text-dojo-blue text-xs font-bold bg-blue-50 px-2.5 py-1.5 rounded-full hover:bg-blue-100 transition shadow-sm flex items-center" onclick="awardAll()"><i class="fas fa-users mr-1"></i>Cả lớp</button>
+            <button class="text-emerald-600 text-xs font-bold bg-emerald-50 px-2.5 py-1.5 rounded-full hover:bg-emerald-100 transition border border-emerald-100 shadow-sm flex items-center" onclick="openCommunicationLog()"><i class="fas fa-book mr-1"></i>Sổ liên lạc</button>
+            <button class="text-rose-600 text-xs font-bold bg-rose-50 px-2.5 py-1.5 rounded-full hover:bg-rose-100 transition border border-rose-100 shadow-sm flex items-center" onclick="openGoalsOverview()"><i class="fas fa-bullseye mr-1"></i>Mục tiêu</button>
+            <button class="text-indigo-600 text-xs font-bold bg-indigo-50 px-2.5 py-1.5 rounded-full hover:bg-indigo-100 transition border border-indigo-100 shadow-sm flex items-center" onclick="openSeatingConfig()"><i class="fas fa-th mr-1"></i>Sơ đồ</button>
+            <button id="btnProjectorMode" onclick="toggleProjectorMode()" class="text-cyan-600 text-xs font-bold bg-cyan-50 px-2.5 py-1.5 rounded-full hover:bg-cyan-100 transition border border-cyan-100 shadow-sm flex items-center"><i class="fas fa-broadcast-tower mr-1"></i>Chiếu</button>
+            <button id="btnClassNotes" onclick="openClassNotes()" class="text-teal-600 text-xs font-bold bg-teal-50 px-2.5 py-1.5 rounded-full hover:bg-teal-100 transition border border-teal-100 shadow-sm flex items-center"><i class="fas fa-clipboard-list mr-1"></i>Dặn dò</button>
+            <button onclick="openSubjectGrades()" class="text-violet-600 text-xs font-bold bg-violet-50 px-2.5 py-1.5 rounded-full hover:bg-violet-100 transition border border-violet-100 shadow-sm flex items-center"><i class="fas fa-table mr-1"></i>Sổ điểm</button>
+        </div>
+    </div>
+    <div class="mb-3 relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="text" id="searchInput" onkeyup="filterStudents()" placeholder="Tìm theo STT hoặc Tên, cách nhau dấu , (VD: 1,3,Trâm)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-dojo-blue focus:ring-2 focus:ring-blue-100 transition-all text-sm font-semibold text-gray-700 shadow-sm">
+    </div>
+
+    <!-- Panel chọn theo STT -->
+    <div id="sttPanel" class="hidden mb-3 bg-purple-50 border border-purple-100 rounded-xl p-3 shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+            <p class="text-xs font-bold text-purple-700">Chọn STT để cho/trừ điểm:</p>
+            <div class="flex gap-2">
+                <button onclick="selectAllStt()" class="text-xs text-purple-600 hover:text-purple-800 font-bold bg-white px-2.5 py-1 rounded-full border border-purple-200 shadow-sm">✅ Tất cả</button>
+                <button onclick="clearSttSelection()" class="text-xs text-gray-400 hover:text-gray-600 font-bold bg-white px-2.5 py-1 rounded-full border border-gray-200 shadow-sm">☐ Bỏ chọn</button>
+            </div>
+        </div>
+        <div id="sttChips" class="flex flex-wrap gap-2 mb-3 min-h-[2rem]"></div>
+        <button id="btnAwardByStt" onclick="awardByStt()" class="hidden w-full py-2 bg-purple-600 text-white font-bold rounded-xl shadow text-sm flex items-center justify-center gap-2">
+            <i class="fas fa-star"></i><span id="sttAwardLabel">Cho điểm (0 hs)</span>
+        </button>
+    </div>
+
+    <!-- Thanh multi-select (hiện khi tìm ≥2 từ khóa) -->
+    <div id="multiSelectBar" class="hidden mb-3 bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center justify-between gap-2">
+        <span id="multiSelectInfo" class="text-xs font-bold text-dojo-blue"></span>
+        <div class="flex gap-2">
+            <button onclick="awardAllFiltered()" class="text-xs bg-dojo-blue text-white font-bold px-3 py-1.5 rounded-full shadow-sm whitespace-nowrap">
+                <i class="fas fa-bolt mr-1"></i>Thưởng tất cả
+            </button>
+            <button onclick="toggleGroupSelectMode()" id="btnGroupMode" class="text-xs bg-white text-dojo-blue font-bold px-3 py-1.5 rounded-full border border-dojo-blue whitespace-nowrap">
+                <i class="fas fa-check-square mr-1"></i>Chọn riêng
+            </button>
+        </div>
+    </div>
+
+    <div id="studentGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"></div>
+</main>
+
+<!-- Floating button cho điểm nhóm đã chọn -->
+<div id="floatingGroupBtn" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-20">
+    <button onclick="openGroupPointsModal()" class="bg-dojo-blue text-white font-bold px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 text-sm active:scale-95 transition-transform">
+        <i class="fas fa-star"></i>
+        <span id="floatingGroupCount">Cho điểm (0 học sinh)</span>
+    </button>
+</div>
+
+<!-- VIEW: BÁO CÁO -->
+<main id="reportView" class="p-4 hidden">
+    <!-- Period tabs -->
+    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+        <button id="btnCurrentPeriod" onclick="selectPeriod(null)" class="flex-shrink-0 px-4 py-2 bg-dojo-blue text-white font-bold rounded-full text-sm shadow">Hiện tại</button>
+        <div id="periodTabs" class="flex gap-2"></div>
+    </div>
+    <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+        <div><h2 id="reportTitle" class="text-gray-800 font-bold text-base">Bảng Xếp Hạng</h2><span class="text-xs text-gray-500">Tổng kết điểm thi đua</span></div>
+        <div class="flex items-center gap-2">
+            <button onclick="openWeeklyReports()" class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition" title="Phiếu nhận xét tuần"><i class="fas fa-file-alt"></i></button>
+            <button onclick="shareClassView()" id="btnShareClass" class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition" title="Chia sẻ bảng điểm"><i class="fas fa-share-alt"></i></button>
+            <button onclick="toggleCharts()" id="btnToggleChart" class="w-9 h-9 rounded-xl bg-blue-50 text-dojo-blue flex items-center justify-center hover:bg-blue-100 transition" title="Biểu đồ"><i class="fas fa-chart-line"></i></button>
+            <select id="sortOrder" onchange="renderReport()" class="bg-gray-50 border border-gray-200 text-gray-700 py-1.5 px-3 rounded-lg text-sm outline-none font-semibold focus:border-dojo-blue">
+                <option value="points">Từ cao xuống thấp</option>
+                <option value="name">Theo danh sách lớp</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- CHART SECTION -->
+    <div id="chartSection" class="mb-4 hidden">
+        <div class="flex gap-2 mb-3">
+            <button id="btnTrend" onclick="showChartType('trend')" class="flex-1 py-2 text-sm font-bold rounded-xl bg-dojo-blue text-white shadow transition">📈 Xu hướng</button>
+            <button id="btnComparison" onclick="showChartType('comparison')" class="flex-1 py-2 text-sm font-bold rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">📊 So sánh kỳ</button>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p id="chartLabel" class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Điểm tích lũy theo ngày</p>
+            <div style="position:relative; height:220px">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <p id="chartEmpty" class="hidden text-center text-gray-400 text-sm py-6 font-semibold"></p>
+        </div>
+    </div>
+
+    <div class="flex gap-3 mb-4" id="reportActions">
+        <button onclick="endPeriod()" class="flex-1 py-2 bg-orange-50 text-orange-600 font-bold rounded-xl border border-orange-100 hover:bg-orange-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-flag-checkered"></i> Kết thúc kỳ</button>
+        <button onclick="exportToExcel()" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-xl border border-green-100 hover:bg-green-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+        <button onclick="exportClassList()" class="flex-1 py-2 bg-teal-50 text-teal-600 font-bold rounded-xl border border-teal-100 hover:bg-teal-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-list-ol"></i> Danh sách lớp</button>
+        <button onclick="openBatchCertModal()" class="flex-1 py-2 bg-amber-50 text-amber-600 font-bold rounded-xl border border-amber-100 hover:bg-amber-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-award"></i> Chứng nhận</button>
+    </div>
+    <!-- Streak Hall of Fame -->
+    <div id="streakHallOfFame" class="mb-3"></div>
+    <div id="reportList" class="flex flex-col gap-3"></div>
+</main>
+
+<!-- VIEW: LỊCH SỬ -->
+<main id="historyView" class="p-4 hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-gray-800 font-bold text-lg">Lịch sử chấm điểm</h2>
+        <button onclick="clearHistory()" class="text-xs text-red-400 hover:text-red-600 font-bold bg-red-50 px-3 py-1.5 rounded-full border border-red-100"><i class="fas fa-trash mr-1"></i>Xóa lịch sử</button>
+    </div>
+    <div class="mb-4 relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="text" id="historySearch" onkeyup="renderHistory()" placeholder="Tìm theo tên học sinh..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-dojo-blue text-sm font-semibold text-gray-700 shadow-sm">
+    </div>
+    <div id="historyList" class="flex flex-col gap-2"></div>
+</main>
+
+<!-- VIEW: KỸ NĂNG -->
+<main id="settingsView" class="p-4 hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-gray-800 font-bold text-lg">Quản lý kỹ năng</h2>
+        <span id="settingsClassLabel" class="text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full"></span>
+    </div>
+
+    <!-- BỘ KỸ NĂNG MẪU -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-layer-group text-dojo-blue"></i> Bộ kỹ năng theo vai trò</h3>
+            <span id="currentPresetBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">Tùy chỉnh</span>
+        </div>
+        <div class="grid grid-cols-1 gap-2" id="presetCardGrid">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
+    <!-- Milestones -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
+        <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fas fa-trophy text-yellow-400"></i> Mốc thưởng huy hiệu</h3>
+        <div class="grid grid-cols-2 gap-2" id="milestoneList"></div>
+    </div>
+
+    <!-- Kỹ năng tích cực -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i> Tích cực</h3>
+            <button onclick="openAddSkillModal('positive')" class="text-xs bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full hover:bg-green-200"><i class="fas fa-plus mr-1"></i>Thêm</button>
+        </div>
+        <div id="positiveSkillsList" class="flex flex-col gap-2"></div>
+    </div>
+
+    <!-- Kỹ năng cần cố gắng -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-exclamation-circle text-red-400"></i> Cần cố gắng</h3>
+            <button onclick="openAddSkillModal('negative')" class="text-xs bg-red-100 text-red-700 font-bold px-3 py-1.5 rounded-full hover:bg-red-200"><i class="fas fa-plus mr-1"></i>Thêm</button>
+        </div>
+        <div id="negativeSkillsList" class="flex flex-col gap-2"></div>
+    </div>
+
+    <button onclick="resetSkillsToDefault()" class="w-full py-3 bg-gray-50 text-gray-500 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition text-sm"><i class="fas fa-undo mr-2"></i>Khôi phục kỹ năng mặc định</button>
+</main>
+
+<!-- VIEW: ĐIỂM SỐ -->
+<main id="gradesView" class="p-4 hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-gray-800 font-bold text-lg">Đánh giá học tập</h2>
+        <button onclick="openNewGradePeriodModal()" class="text-xs bg-dojo-blue text-white font-bold px-3 py-2 rounded-xl shadow flex items-center gap-1">
+            <i class="fas fa-plus"></i> Đợt mới
+        </button>
+    </div>
+
+    <!-- Period + HK tabs -->
+    <div class="flex gap-2 mb-2 overflow-x-auto no-scrollbar pb-1" id="gradePeriodTabs">
+        <p class="text-sm text-gray-400 italic py-2">Chưa có đợt đánh giá nào. Bấm "Đợt mới" để bắt đầu.</p>
+    </div>
+    <!-- Subject tabs (chỉ hiện khi đang ở HK mode) -->
+    <div id="gradeSubjectTabs" class="hidden flex gap-1.5 mb-3 overflow-x-auto no-scrollbar pb-1 flex-wrap"></div>
+
+    <!-- Empty state -->
+    <div id="gradesEmpty" class="text-center py-16 text-gray-400">
+        <i class="fas fa-graduation-cap text-5xl mb-4 opacity-30"></i>
+        <p class="font-semibold">Nhập file Excel để bắt đầu đánh giá</p>
+        <p class="text-sm mt-1">Tải file mẫu → điền điểm → upload lại</p>
+    </div>
+
+    <!-- Controls (ẩn khi chưa có period) -->
+    <div id="gradesControls" class="hidden mb-4 flex flex-col gap-3">
+        <!-- Chỉ hiện khi xem đợt từ gradeRecords -->
+        <div class="grade-import-btns flex gap-2">
+            <button onclick="downloadGradeTemplate()" class="flex-1 py-2.5 bg-blue-50 text-dojo-blue font-bold rounded-xl border border-blue-100 hover:bg-blue-100 transition flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-download"></i> Tải file mẫu
+            </button>
+            <button onclick="document.getElementById('gradeExcelInput').click()" class="flex-1 py-2.5 bg-green-50 text-green-700 font-bold rounded-xl border border-green-100 hover:bg-green-100 transition flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-file-excel"></i> Nhập điểm
+            </button>
+            <input type="file" id="gradeExcelInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleGradeUpload(event)">
+        </div>
+        <!-- Thông báo khi đang xem HK từ Sổ điểm bộ môn -->
+        <div id="gradeHKInfo" class="hidden items-center gap-2 bg-violet-50 border border-violet-200 rounded-xl px-4 py-2.5 text-sm text-violet-700 font-semibold">
+            <i class="fas fa-sync-alt text-violet-500"></i>
+            <span>Dữ liệu tự động lấy từ <b>Sổ điểm bộ môn</b> — chỉnh sửa ở đó để cập nhật</span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="openGradeComparison()" id="btnGradeCompare" class="flex-1 py-2.5 bg-purple-50 text-purple-700 font-bold rounded-xl border border-purple-100 hover:bg-purple-100 transition flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-chart-line"></i> So sánh đợt
+            </button>
+            <button onclick="exportGradeSummary()" class="flex-1 py-2.5 bg-orange-50 text-orange-600 font-bold rounded-xl border border-orange-100 hover:bg-orange-100 transition flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-file-export"></i> Xuất báo cáo
+            </button>
+            <button onclick="deleteCurrentGradePeriod()" id="btnGradeDelete" class="py-2.5 px-4 bg-red-50 text-red-500 font-bold rounded-xl border border-red-100 hover:bg-red-100 transition text-sm">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Grade table container -->
+    <div id="gradesTableWrap" class="hidden overflow-x-auto rounded-2xl shadow-sm border border-gray-100 bg-white">
+        <table id="gradesTable" class="w-full text-xs border-collapse min-w-max"></table>
+    </div>
+</main>
+
+<!-- PANEL: HỌC BẠ -->
+<div id="hoaBaPanel" class="fixed inset-0 bg-white z-[92] transform translate-y-full transition-transform duration-300 ease-out flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0 bg-teal-700 text-white">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white bg-opacity-20 flex items-center justify-center"><i class="fas fa-book text-white"></i></div>
+            <div>
+                <h3 class="font-black text-base leading-tight">Học bạ</h3>
+                <p id="hoaBaSubtitle" class="text-xs opacity-80 mt-0.5"></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="hoaBaAutoAll()" class="text-xs font-bold bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1.5 rounded-lg transition flex items-center gap-1"><i class="fas fa-magic"></i>Tự động tất cả</button>
+            <button onclick="exportHoaBaExcel()" class="text-xs font-bold bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1.5 rounded-lg transition flex items-center gap-1"><i class="fas fa-file-excel"></i>Xuất Excel</button>
+            <button onclick="closeHoaBa()" class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center hover:bg-opacity-30"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <!-- HK tabs -->
+    <div class="flex gap-2 px-4 py-2.5 border-b bg-teal-50 flex-shrink-0">
+        <button onclick="hoaBaSetHK('HK1')" id="hoaBaTabHK1" class="px-4 py-1.5 font-bold rounded-full text-sm bg-teal-700 text-white shadow">HK1</button>
+        <button onclick="hoaBaSetHK('HK2')" id="hoaBaTabHK2" class="px-4 py-1.5 font-bold rounded-full text-sm bg-white text-teal-700 border border-teal-200 hover:bg-teal-50 transition">HK2</button>
+        <button onclick="hoaBaSetHK('CN')" id="hoaBaTabCN" class="px-4 py-1.5 font-bold rounded-full text-sm bg-white text-teal-700 border border-teal-200 hover:bg-teal-50 transition">Cả năm</button>
+        <div id="hoaBaHKStats" class="ml-auto text-xs text-teal-600 font-semibold self-center"></div>
+    </div>
+    <!-- Student list -->
+    <div class="flex-1 overflow-auto" id="hoaBaList"></div>
+</div>
+
+<!-- VIEW: SỔ HỌP -->
+<main id="meetingView" class="p-4 hidden pb-24">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h2 class="text-gray-800 font-black text-xl">📓 Sổ họp & Ghi chú</h2>
+            <p id="meetingViewSub" class="text-xs text-gray-400 mt-0.5"></p>
+        </div>
+        <button onclick="openMeetingEdit(null)" class="bg-amber-500 text-white font-bold text-sm px-4 py-2 rounded-xl shadow flex items-center gap-2 hover:bg-amber-600 transition"><i class="fas fa-plus"></i>Thêm</button>
+    </div>
+    <!-- Filter tags -->
+    <div class="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-hide">
+        <button onclick="mnSetTag('all')" id="mnTag_all" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-amber-500 text-white ring-2 ring-amber-400 ring-offset-1">Tất cả</button>
+        <button onclick="mnSetTag('Cơ quan')" id="mnTag_Cơ quan" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">🏫 Cơ quan</button>
+        <button onclick="mnSetTag('Tổ chuyên môn')" id="mnTag_Tổ chuyên môn" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">👥 Tổ CM</button>
+        <button onclick="mnSetTag('Lớp 10')" id="mnTag_Lớp 10" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">🔵 Lớp 10</button>
+        <button onclick="mnSetTag('Lớp 11')" id="mnTag_Lớp 11" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">🟢 Lớp 11</button>
+        <button onclick="mnSetTag('Lớp 12')" id="mnTag_Lớp 12" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">🔴 Lớp 12</button>
+        <button onclick="mnSetTag('Khác')" id="mnTag_Khác" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-amber-100">📌 Khác</button>
+        <button onclick="mnToggleArchive()" id="mnArchiveBtn" class="mn-tag-btn flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">🗄️ Lưu trữ</button>
+    </div>
+    <!-- Note list -->
+    <div id="meetingList" class="space-y-3"></div>
+    <div id="meetingEmpty" class="hidden text-center py-16 text-gray-300">
+        <i class="fas fa-book-open text-6xl mb-4 block"></i>
+        <p class="font-bold text-lg">Chưa có ghi chú</p>
+        <p class="text-sm">Bấm "+ Thêm" để tạo</p>
+    </div>
+</main>
+
+<!-- Modal thêm/sửa ghi chú họp -->
+<div id="mnEditBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[80] hidden" onclick="closeMeetingEdit()"></div>
+<div id="mnEditModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[85] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[95vh] flex flex-col">
+    <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0">
+        <h3 id="mnEditTitle" class="font-black text-gray-800 text-lg">📓 Ghi chú mới</h3>
+        <button onclick="closeMeetingEdit()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-auto p-4 space-y-4">
+        <!-- Date + tag -->
+        <div class="flex gap-3">
+            <div class="flex-1">
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Ngày</label>
+                <input type="date" id="mnDate" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-amber-400">
+            </div>
+            <div class="flex-1">
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Nhãn</label>
+                <select id="mnTag" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-amber-400 bg-white">
+                    <option value="Cơ quan">🏫 Cơ quan</option>
+                    <option value="Tổ chuyên môn">👥 Tổ chuyên môn</option>
+                    <option value="Lớp 10">🔵 Lớp 10</option>
+                    <option value="Lớp 11">🟢 Lớp 11</option>
+                    <option value="Lớp 12">🔴 Lớp 12</option>
+                    <option value="Khác">📌 Khác</option>
+                </select>
+            </div>
+        </div>
+        <!-- Title + important -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-1 block">Tiêu đề / Nội dung họp</label>
+            <div class="flex gap-2 items-start">
+                <input type="text" id="mnTitle" placeholder="VD: Họp hội đồng sư phạm tháng 8..." class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-amber-400">
+                <button id="mnImportantBtn" onclick="mnToggleImportant()" class="w-10 h-10 rounded-xl border-2 border-gray-200 flex items-center justify-center text-gray-300 hover:border-yellow-400 hover:text-yellow-400 transition flex-shrink-0" title="Đánh dấu quan trọng">
+                    <i class="fas fa-star text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Checklist items -->
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold text-gray-500">Danh sách công việc</label>
+                <button onclick="mnAddItem()" class="text-xs font-bold text-amber-600 hover:text-amber-700"><i class="fas fa-plus mr-1"></i>Thêm việc</button>
+            </div>
+            <div id="mnItemList" class="space-y-2"></div>
+            <button onclick="mnAddItem()" class="w-full mt-2 py-2 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-amber-300 hover:text-amber-500 transition"><i class="fas fa-plus mr-1"></i>Thêm công việc</button>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="px-4 py-3 border-t bg-gray-50 flex gap-2 flex-shrink-0">
+        <button onclick="saveMeetingNote()" class="flex-1 bg-amber-500 text-white font-black py-3 rounded-xl hover:bg-amber-600 transition text-sm"><i class="fas fa-save mr-2"></i>Lưu ghi chú</button>
+        <button id="mnDeleteBtn" onclick="deleteMeetingNote()" class="hidden w-12 bg-red-50 text-red-500 font-bold py-3 rounded-xl hover:bg-red-100 transition"><i class="fas fa-trash"></i></button>
+    </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Add class -->
+<div id="addClassBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeAddClassModal()"></div>
+<div id="addClassModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Tạo Lớp Mới</h3>
+    <input type="text" id="newClassName" placeholder="Nhập tên lớp..." class="w-full border-2 border-gray-200 p-3 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')addClass()">
+    <!-- Chọn vai trò / bộ kỹ năng -->
+    <p class="text-xs font-bold text-gray-500 mb-2">Bộ kỹ năng áp dụng</p>
+    <div class="flex flex-col gap-2 mb-4" id="addClassPresetGrid">
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-blue-400 bg-blue-50 cursor-pointer">
+            <input type="radio" name="newClassPreset" value="homeroom" class="accent-blue-500" checked>
+            <i class="fas fa-chalkboard-teacher text-blue-600 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-blue-800">Lớp chủ nhiệm</p><p class="text-[10px] text-blue-500">20 tiêu chí nề nếp, tác phong</p></div>
+        </label>
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-transparent bg-purple-50 cursor-pointer hover:border-purple-300">
+            <input type="radio" name="newClassPreset" value="subject" class="accent-purple-500">
+            <i class="fas fa-graduation-cap text-purple-600 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-purple-800">Giáo viên bộ môn</p><p class="text-[10px] text-purple-500">Tiêu chí học tập theo môn học</p></div>
+        </label>
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-transparent bg-gray-50 cursor-pointer hover:border-gray-300">
+            <input type="radio" name="newClassPreset" value="custom" class="accent-gray-500">
+            <i class="fas fa-sliders-h text-gray-500 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-gray-700">Tùy chỉnh</p><p class="text-[10px] text-gray-400">Bộ kỹ năng mặc định</p></div>
+        </label>
+    </div>
+    <input type="text" id="newTeacherName" placeholder="Tên giáo viên (VD: Vũ Tiến Lực)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-2 focus:outline-none focus:border-dojo-blue text-sm">
+    <input type="text" id="newSubjectName" placeholder="Môn học (VD: Toán — chỉ dùng cho bộ môn)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-sm">
+    <div class="flex gap-3"><button onclick="closeAddClassModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="addClass()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Google Classroom Import Modal -->
+<div id="classroomImportBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="closeClassroomImport()"></div>
+<div id="classroomImportModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-white rounded-2xl z-50 hidden shadow-2xl flex flex-col" style="max-height:85vh">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <i class="fab fa-google text-indigo-600 text-sm"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-800 text-base leading-tight">Nhập từ Google Classroom</h3>
+                <p id="classroomImportSubtitle" class="text-xs text-gray-400">Chọn lớp để nhập học sinh</p>
+            </div>
+        </div>
+        <button onclick="closeClassroomImport()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><i class="fas fa-times text-sm"></i></button>
+    </div>
+    <!-- Body -->
+    <div id="classroomImportBody" class="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+        <!-- Loading state -->
+        <div id="classroomLoading" class="flex flex-col items-center justify-center py-8 gap-3">
+            <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-500">Đang tải danh sách lớp...</p>
+        </div>
+        <!-- Error state -->
+        <div id="classroomError" class="hidden py-4">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600" id="classroomErrorMsg"></div>
+            <div id="classroomErrorHint" class="hidden mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700"></div>
+        </div>
+        <!-- Course list -->
+        <div id="classroomCourseList" class="hidden flex flex-col gap-2"></div>
+        <!-- Student preview -->
+        <div id="classroomStudentPreview" class="hidden">
+            <div class="flex items-center gap-2 mb-3">
+                <button onclick="_classroomBackToCourses()" class="text-xs text-indigo-600 font-bold flex items-center gap-1"><i class="fas fa-arrow-left text-[10px]"></i> Chọn lại lớp</button>
+            </div>
+            <div class="mb-3 bg-indigo-50 rounded-xl p-3">
+                <p class="text-xs text-indigo-500 font-bold">Tên lớp trong ứng dụng</p>
+                <input type="text" id="classroomClassName" class="w-full border-0 bg-transparent text-sm font-bold text-indigo-800 focus:outline-none mt-0.5" placeholder="Tên lớp...">
+            </div>
+            <p class="text-xs font-bold text-gray-500 mb-2">Danh sách học sinh (<span id="classroomStudentCount">0</span> em)</p>
+            <div id="classroomStudentList" class="flex flex-col gap-1 max-h-52 overflow-y-auto rounded-xl border border-gray-100 p-2 bg-gray-50"></div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div id="classroomImportFooter" class="hidden px-5 pb-5 pt-3 border-t border-gray-100 flex-shrink-0">
+        <button onclick="confirmClassroomImport()" id="btnConfirmClassroomImport"
+            class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition active:scale-95 shadow-lg">
+            <i class="fas fa-file-import"></i> Nhập vào ứng dụng
+        </button>
+    </div>
+</div>
+
+<!-- Edit class -->
+<div id="editClassBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeEditClassModal()"></div>
+<div id="editClassModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Sửa Tên Lớp</h3>
+    <input type="hidden" id="editClassId">
+    <input type="text" id="editClassName" class="w-full border-2 border-gray-200 p-3 rounded-xl mb-3 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')saveEditClass()">
+    <input type="text" id="editTeacherName" placeholder="Tên giáo viên (VD: Vũ Tiến Lực)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-2 focus:outline-none focus:border-dojo-blue text-sm">
+    <input type="text" id="editSubjectName" placeholder="Môn học (VD: Toán — chỉ dùng cho bộ môn)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-sm">
+    <div class="flex gap-3"><button onclick="closeEditClassModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="saveEditClass()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Add student -->
+<div id="addStudentBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeAddStudentModal()"></div>
+<div id="addStudentModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Thêm học sinh mới</h3>
+    <input type="text" id="newStudentName" placeholder="Tên học sinh..." class="w-full border-2 border-gray-200 p-3 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')addStudent()">
+    <div class="flex gap-3"><button onclick="closeAddStudentModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="addStudent()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Edit student -->
+<div id="editStudentBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-[70] hidden" onclick="closeEditStudentModal()"></div>
+<div id="editStudentModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-[70] hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Sửa thông tin học sinh</h3>
+    <input type="hidden" id="editStudentId">
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Tên hiển thị (Nickname)</label><input type="text" id="editStudentName" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base" onkeypress="if(event.key==='Enter')saveEditStudent()"></div>
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Họ và tên thật</label><input type="text" id="editStudentRealName" placeholder="VD: Nguyễn Văn An" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Ngày sinh</label><input type="text" id="editStudentDob" placeholder="VD: 15/05/2013" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-4"><label class="text-xs font-bold text-gray-500 mb-1 block">STT</label><input type="number" id="editStudentStt" min="1" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="flex gap-3 mb-3"><button onclick="closeEditStudentModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="saveEditStudent()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+    <button onclick="deleteStudentConfirm()" class="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl border border-red-100 hover:bg-red-100 transition flex items-center justify-center gap-2"><i class="fas fa-trash"></i> Xóa học sinh này</button>
+</div>
+
+<!-- Auto-sync floating badge -->
+<div id="autoSyncBadge" class="hidden fixed top-3 right-3 z-[200] bg-white rounded-full shadow-lg border border-gray-100 px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-600 transition-all duration-300">
+    <span id="autoSyncIcon"></span>
+    <span id="autoSyncText"></span>
+</div>
+
+<!-- Exclude modal: chọn / bỏ học sinh trước khi cho điểm cả lớp -->
+<div id="excludeBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden" onclick="closeExcludeModal()"></div>
+<div id="excludeModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[101] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[88vh] flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between">
+        <div>
+            <h2 class="text-base font-bold text-gray-800"><i class="fas fa-users mr-1.5 text-dojo-blue"></i>Chọn học sinh được điểm</h2>
+            <p class="text-xs text-gray-500 mt-0.5" id="excludeCountLabel">Đang chọn 0 học sinh</p>
+        </div>
+        <button onclick="closeExcludeModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-lg font-bold">✕</button>
+    </div>
+    <div class="px-4 pt-3 pb-1 flex gap-2">
+        <input id="excludeSearch" type="text" placeholder="🔍 Tìm theo tên hoặc STT..."
+            class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-dojo-blue"
+            oninput="filterExcludeList()">
+    </div>
+    <div class="px-4 pb-2 flex gap-2 items-center">
+        <div class="relative flex-1">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400 text-xs font-bold">#</span>
+            <input id="excludeSttInput" type="text" placeholder="Bỏ STT: 3,5,7 ..."
+                class="w-full border-2 border-orange-200 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-orange-50"
+                oninput="applyExcludeStt()">
+        </div>
+        <button onclick="excludeSelectAll(true)" class="text-xs bg-dojo-blue text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm">Chọn tất cả</button>
+        <button onclick="excludeSelectAll(false)" class="text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-xl font-bold whitespace-nowrap">Bỏ tất cả</button>
+    </div>
+    <div id="excludeList" class="flex-1 overflow-y-auto px-4 pb-4 space-y-0.5"></div>
+    <div class="p-4 border-t bg-gray-50 safe-bottom">
+        <button onclick="confirmExcludeAndAward()" class="w-full py-3.5 bg-dojo-blue text-white font-bold rounded-2xl text-base shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            <i class="fas fa-bolt"></i> Tiếp tục cho điểm
+        </button>
+    </div>
+</div>
+
+<!-- Points modal -->
+<div id="backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-[98] hidden" onclick="closePointsModal()"></div>
+<div id="pointsModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[99] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[85vh] flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img id="modalAvatar" src="" class="w-12 h-12 rounded-full bg-gray-100 object-cover">
+            <div>
+                <h3 id="modalStudentName" class="font-bold text-lg text-gray-800">Tên</h3>
+                <p class="text-xs text-gray-500 mb-0.5" id="modalStudentInfo">STT: - | NS: -</p>
+                <p class="text-sm text-gray-500">Đang có <span id="modalStudentPoints" class="font-bold text-dojo-blue">0</span> điểm</p>
+                <p id="modalComment" class="text-[11px] text-blue-400 italic mt-0.5 hidden"></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btnShareStudent" onclick="shareStudentView(selectedStudentId)" class="w-8 h-8 bg-teal-50 rounded-full text-teal-600 flex items-center justify-center hover:bg-teal-100 transition" title="Chia sẻ xem điểm"><i class="fas fa-share-alt text-sm"></i></button>
+            <button id="btnStudentProfile" onclick="openStudentProfile(selectedStudentId)" class="w-8 h-8 bg-green-50 rounded-full text-green-600 flex items-center justify-center hover:bg-green-100 transition" title="Thống kê học sinh"><i class="fas fa-chart-bar text-sm"></i></button>
+            <button id="btnCertStudent" onclick="openCertificateModal(selectedStudentId)" class="w-8 h-8 bg-amber-50 rounded-full text-amber-600 flex items-center justify-center hover:bg-amber-100 transition" title="Xuất chứng nhận PDF"><i class="fas fa-award text-sm"></i></button>
+            <button id="btnEditStudent" onclick="openEditStudentModal(selectedStudentId)" class="w-8 h-8 bg-blue-50 rounded-full text-dojo-blue flex items-center justify-center hover:bg-blue-100 transition" title="Sửa học sinh"><i class="fas fa-edit text-sm"></i></button>
+            <button id="btnDeleteStudent" onclick="deleteStudentFromModal()" class="w-8 h-8 bg-red-50 rounded-full text-red-500 flex items-center justify-center hover:bg-red-100 transition" title="Xóa học sinh"><i class="fas fa-trash text-sm"></i></button>
+            <button onclick="closePointsModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div class="p-2 flex gap-2 border-b">
+        <button id="tabPositive" class="flex-1 py-2 font-bold text-dojo-green border-b-2 border-dojo-green" onclick="switchTab('positive')">Tích cực</button>
+        <button id="tabNegative" class="flex-1 py-2 font-bold text-gray-400 border-b-2 border-transparent" onclick="switchTab('negative')">Cần cố gắng</button>
+    </div>
+    <div class="p-4 overflow-y-auto no-scrollbar" style="max-height:40vh">
+        <div id="positiveSkills" class="grid grid-cols-3 gap-2"></div>
+        <div id="negativeSkills" class="grid grid-cols-3 gap-2 hidden"></div>
+    </div>
+    <!-- Nhập điểm thủ công nhanh -->
+    <div class="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">⚡ Nhập điểm thủ công</p>
+        <div class="flex gap-1.5 mb-2">
+            <button onclick="addManualPoints(1)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+1</button>
+            <button onclick="addManualPoints(2)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+2</button>
+            <button onclick="addManualPoints(3)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+3</button>
+            <button onclick="addManualPoints(5)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+5</button>
+            <button onclick="addManualPoints(-1)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-1</button>
+            <button onclick="addManualPoints(-2)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-2</button>
+            <button onclick="addManualPoints(-3)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-3</button>
+        </div>
+        <div class="flex gap-2">
+            <input type="number" id="manualPointsInput" placeholder="Điểm tuỳ chỉnh (VD: 4 hoặc -2)" class="flex-1 border-2 border-gray-200 px-3 py-2 rounded-xl focus:outline-none focus:border-dojo-blue text-sm bg-white" onkeypress="if(event.key==='Enter')applyManualPoints()">
+            <button onclick="applyManualPoints()" class="px-4 py-2 bg-dojo-blue text-white font-bold rounded-xl hover:bg-blue-600 active:scale-95 transition text-sm">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chọn đợt xuất Excel -->
+<div id="exportPeriodBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden flex items-center justify-center" onclick="closeExportPeriodModal()">
+    <div class="bg-white rounded-2xl w-[90%] max-w-sm shadow-2xl p-5" onclick="event.stopPropagation()">
+        <h3 class="font-bold text-lg text-gray-800 mb-1">Xuất Excel điểm thi đua</h3>
+        <p class="text-xs text-gray-400 mb-4">Chọn đợt muốn xuất (có thể chọn nhiều)</p>
+        <div id="exportPeriodList" class="space-y-2 max-h-56 overflow-y-auto mb-4"></div>
+        <div class="flex gap-3">
+            <button onclick="closeExportPeriodModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">Hủy</button>
+            <button onclick="doExportWithPeriods()" class="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition flex items-center justify-center gap-2"><i class="fas fa-file-excel"></i> Xuất</button>
+        </div>
+    </div>
+</div>
+
+<!-- Random modal -->
+<div id="randomBackdrop" class="fixed inset-0 bg-black bg-opacity-70 z-[70] hidden items-center justify-center" onclick="closeRandomModal()">
+    <div id="randomModal" class="bg-white rounded-3xl p-8 w-[85%] max-w-sm text-center transform scale-95 transition-all duration-300 shadow-2xl" onclick="event.stopPropagation()">
+        <h3 id="randomStatus" class="text-gray-400 font-bold mb-4 uppercase tracking-wider text-sm">Đang chọn...</h3>
+        <div id="randomAvatarContainer" class="w-32 h-32 mx-auto bg-blue-50 rounded-full border-4 border-dojo-blue shadow-inner flex items-center justify-center p-2 mb-4 overflow-hidden transition-transform duration-300">
+            <img id="randomAvatar" src="" class="w-full h-full object-contain">
+        </div>
+        <h2 id="randomName" class="text-2xl font-black text-gray-800 mb-6 min-h-[2rem]">???</h2>
+        <div id="randomActions" class="hidden gap-3 w-full">
+            <button onclick="closeRandomModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">Bỏ qua</button>
+            <button id="btnAwardRandom" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition">Cho điểm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit skill modal -->
+<div id="skillModalBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-[70] hidden" onclick="closeSkillModal()"></div>
+<div id="skillModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-[70] hidden shadow-2xl p-5">
+    <h3 id="skillModalTitle" class="font-bold text-xl text-center mb-4 text-gray-800">Thêm kỹ năng</h3>
+    <input type="hidden" id="skillModalType">
+    <input type="hidden" id="skillModalId">
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Tên kỹ năng</label><input type="text" id="skillModalName" placeholder="VD: Làm bài tốt" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Điểm (dương hoặc âm)</label><input type="number" id="skillModalPoints" placeholder="VD: 1 hoặc -1" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-4">
+        <label class="text-xs font-bold text-gray-500 mb-1 block">Icon Font Awesome (VD: fa-star)</label>
+        <div class="flex gap-2">
+            <input type="text" id="skillModalIcon" placeholder="fa-star" class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base">
+            <div id="skillIconPreview" class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl text-gray-500 flex-shrink-0"><i class="fas fa-star"></i></div>
+        </div>
+    </div>
+    <div class="flex gap-3"><button onclick="closeSkillModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="saveSkill()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- MODAL: Tạo đợt đánh giá mới -->
+<div id="newGradePeriodBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeNewGradePeriodModal()"></div>
+<div id="newGradePeriodModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Tạo đợt đánh giá</h3>
+    <div class="mb-4">
+        <label class="text-xs font-bold text-gray-500 mb-1 block">Tên đợt (VD: Giữa kỳ I, Cuối kỳ I)</label>
+        <input type="text" id="newGradePeriodName" placeholder="VD: Giữa kỳ I - 2024-2025" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base" onkeypress="if(event.key==='Enter')createGradePeriod()">
+    </div>
+    <div class="flex gap-3">
+        <button onclick="closeNewGradePeriodModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button>
+        <button onclick="createGradePeriod()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Tạo</button>
+    </div>
+</div>
+
+<!-- MODAL: So sánh đợt điểm -->
+<div id="gradeCompareModal" class="fixed inset-0 z-[85] hidden flex flex-col bg-dojo-bg overflow-hidden">
+    <div class="bg-purple-700 text-white px-4 pt-10 pb-5 relative flex-shrink-0">
+        <button onclick="closeGradeComparison()" class="absolute top-4 right-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <h2 class="text-lg font-black">So sánh đợt đánh giá</h2>
+        <p id="gradeCompareSubtitle" class="text-xs opacity-80 mt-1"></p>
+        <!-- Period selectors -->
+        <div class="flex gap-2 mt-3 flex-wrap">
+            <select id="comparePeriodA" onchange="renderComparison()" class="bg-white bg-opacity-20 text-white font-bold text-xs px-3 py-1.5 rounded-full border border-white border-opacity-30 outline-none flex-1 min-w-0"></select>
+            <span class="text-white opacity-60 font-bold self-center">→</span>
+            <select id="comparePeriodB" onchange="renderComparison()" class="bg-white bg-opacity-20 text-white font-bold text-xs px-3 py-1.5 rounded-full border border-white border-opacity-30 outline-none flex-1 min-w-0"></select>
+        </div>
+    </div>
+    <!-- Summary chips -->
+    <div id="compareSummaryChips" class="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar flex-shrink-0 bg-white border-b border-gray-100"></div>
+    <!-- Table -->
+    <div class="flex-1 overflow-auto p-4 no-scrollbar">
+        <div id="compareTableWrap" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+            <table id="compareTable" class="w-full text-xs border-collapse min-w-max"></table>
+        </div>
+        <p id="compareEmpty" class="hidden text-center py-10 text-gray-400 font-semibold">Chọn hai đợt khác nhau để so sánh.</p>
+    </div>
+</div>
+
+<!-- MODAL: Tin nhắn phụ huynh -->
+<div id="parentMsgBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[80] hidden" onclick="closeParentMsg()"></div>
+<div id="parentMsgModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[90] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[85vh] flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+        <div>
+            <h3 id="parentMsgTitle" class="font-bold text-gray-800">Tin nhắn phụ huynh</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Sao chép và gửi qua Zalo / SMS</p>
+        </div>
+        <button onclick="closeParentMsg()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar">
+        <textarea id="parentMsgText" class="w-full h-72 text-sm text-gray-700 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-dojo-blue leading-relaxed" readonly></textarea>
+    </div>
+    <div class="p-4 border-t flex gap-3 flex-shrink-0">
+        <button onclick="copyParentMsg()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow flex items-center justify-center gap-2">
+            <i class="fas fa-copy"></i> Sao chép
+        </button>
+        <button onclick="exportAllParentMessages()" class="flex-1 py-3 bg-green-50 text-green-700 font-bold rounded-xl border border-green-100 flex items-center justify-center gap-2">
+            <i class="fas fa-file-excel"></i> Xuất tất cả
+        </button>
+    </div>
+</div>
+
+<!-- STUDENT PROFILE MODAL -->
+<div id="profileBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[80] hidden" onclick="closeStudentProfile()"></div>
+<div id="profileModal" class="fixed inset-0 z-[90] hidden flex flex-col bg-dojo-bg overflow-hidden">
+    <!-- Header -->
+    <div class="bg-dojo-blue text-white px-4 pt-10 pb-6 relative flex-shrink-0">
+        <button onclick="closeStudentProfile()" class="absolute top-4 right-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <button id="btnProfileCert" onclick="" class="absolute top-4 left-4 w-9 h-9 bg-amber-400 bg-opacity-80 hover:bg-opacity-100 rounded-full flex items-center justify-center transition shadow" title="Xuất chứng nhận PDF"><i class="fas fa-award text-white text-base"></i></button>
+        <div class="flex items-center gap-4">
+            <img id="profileAvatar" src="" class="w-20 h-20 rounded-full bg-white bg-opacity-20 p-1 object-contain border-2 border-white border-opacity-50 flex-shrink-0">
+            <div class="flex-1 overflow-hidden">
+                <h2 id="profileName" class="text-xl font-black truncate"></h2>
+                <p id="profileMeta" class="text-xs opacity-80 mt-0.5"></p>
+                <div class="flex gap-2 mt-2 flex-wrap">
+                    <span id="profileBadge" class="hidden text-2xl"></span>
+                    <span id="profileScorePos" class="inline-flex items-center gap-1 text-xs font-bold bg-white bg-opacity-20 px-2 py-1 rounded-full"><i class="fas fa-plus"></i><span id="profilePosVal">0</span></span>
+                    <span id="profileScoreNeg" class="inline-flex items-center gap-1 text-xs font-bold bg-white bg-opacity-20 px-2 py-1 rounded-full"><i class="fas fa-minus"></i><span id="profileNegVal">0</span></span>
+                    <span class="inline-flex items-center gap-1 text-xs font-bold bg-white bg-opacity-30 px-2 py-1 rounded-full">Tổng: <span id="profileTotal" class="ml-0.5 font-black">0</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body scrollable -->
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 no-scrollbar">
+
+        <!-- Nhận xét cá nhân -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2"><i class="fas fa-comment-dots text-dojo-blue"></i> Nhận xét của giáo viên</h3>
+            <p id="profileComment" class="text-sm text-gray-600 italic leading-relaxed"></p>
+        </div>
+
+        <!-- Thống kê kỹ năng -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fas fa-chart-bar text-green-500"></i> Thống kê kỹ năng</h3>
+            <div id="profileSkillBreakdown" class="flex flex-col gap-2"></div>
+            <p id="profileSkillEmpty" class="hidden text-sm text-gray-400 italic text-center py-2">Chưa có lịch sử chấm điểm.</p>
+        </div>
+
+        <!-- Sổ liên lạc -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-book text-emerald-500"></i> Sổ liên lạc</h3>
+                <button id="btnProfileAddNote" class="text-xs bg-emerald-50 text-emerald-600 font-bold px-3 py-1.5 rounded-full border border-emerald-100 hover:bg-emerald-100 transition"><i class="fas fa-plus mr-1"></i>Thêm</button>
+            </div>
+            <div id="profileNoteList" class="flex flex-col gap-2"></div>
+            <p id="profileNoteEmpty" class="hidden text-sm text-gray-400 italic text-center py-3">Chưa có nhận xét nào.</p>
+        </div>
+
+        <!-- Mục tiêu cá nhân -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-bullseye text-rose-500"></i> Mục tiêu cá nhân</h3>
+                <button id="btnProfileAddGoal" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-1.5 rounded-full border border-rose-100 hover:bg-rose-100 transition"><i class="fas fa-plus mr-1"></i>Thêm</button>
+            </div>
+            <div id="profileGoalList" class="flex flex-col gap-2"></div>
+            <p id="profileGoalEmpty" class="hidden text-sm text-gray-400 italic text-center py-3">Chưa có mục tiêu nào. Bấm "Thêm" để tạo!</p>
+        </div>
+
+        <!-- Lịch sử gần đây -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-history text-orange-400"></i> Lịch sử gần đây</h3>
+                <span id="profileHistoryCount" class="text-xs text-gray-400 font-semibold"></span>
+            </div>
+            <div id="profileHistoryList" class="flex flex-col gap-2"></div>
+            <p id="profileHistoryEmpty" class="hidden text-sm text-gray-400 italic text-center py-2">Chưa có lịch sử.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ====== PHIẾU NHẬN XÉT TUẦN ====== -->
+<div id="weeklyReportOverlay" class="fixed inset-0 z-[85] hidden flex flex-col bg-dojo-bg overflow-hidden">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 pt-10 pb-4 relative flex-shrink-0">
+        <button onclick="closeWeeklyReports()" class="absolute top-4 left-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
+        <div class="text-center">
+            <h2 class="text-lg font-black">📋 Phiếu nhận xét tuần</h2>
+            <p id="weeklyReportSubtitle" class="text-xs opacity-75 mt-0.5"></p>
+        </div>
+        <!-- Period selector -->
+        <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar pb-1">
+            <button onclick="setWeeklyPeriod('week0')" id="wp-week0" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-amber-600 shadow">Tuần này</button>
+            <button onclick="setWeeklyPeriod('week-1')" id="wp-week-1" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold bg-white bg-opacity-20 text-white">Tuần trước</button>
+            <button onclick="setWeeklyPeriod('month0')" id="wp-month0" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold bg-white bg-opacity-20 text-white">Tháng này</button>
+            <button onclick="setWeeklyPeriod('custom')" id="wp-custom" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold bg-white bg-opacity-20 text-white">Tùy chọn</button>
+        </div>
+        <!-- Custom date range (hidden by default) -->
+        <div id="wpCustomRange" class="hidden flex gap-2 mt-2">
+            <input type="date" id="wpDateFrom" onchange="renderWeeklyReports()" class="flex-1 text-xs border-0 rounded-xl px-3 py-2 bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:bg-opacity-30">
+            <span class="text-white opacity-60 self-center text-xs">→</span>
+            <input type="date" id="wpDateTo"   onchange="renderWeeklyReports()" class="flex-1 text-xs border-0 rounded-xl px-3 py-2 bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:bg-opacity-30">
+        </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="bg-white border-b border-gray-100 px-4 py-2 flex gap-2 flex-shrink-0">
+        <button onclick="exportAllWeeklyReports()" class="flex-1 py-2 bg-green-50 text-green-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-green-100 hover:bg-green-100 transition"><i class="fas fa-file-excel"></i> Xuất tất cả Excel</button>
+        <button onclick="copyAllParentMessages()" class="flex-1 py-2 bg-blue-50 text-dojo-blue font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-blue-100 hover:bg-blue-100 transition"><i class="fas fa-copy"></i> Sao chép tin nhắn</button>
+    </div>
+
+    <!-- Student report cards list -->
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar" id="weeklyReportList"></div>
+</div>
+
+<!-- INDIVIDUAL STUDENT REPORT DETAIL -->
+<div id="studentReportBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[90] hidden" onclick="closeStudentReport()"></div>
+<div id="studentReportModal" class="fixed inset-x-0 bottom-0 bg-white rounded-t-3xl z-[95] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[95vh] flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center flex-shrink-0 bg-amber-50 rounded-t-3xl">
+        <div><h3 id="studentReportName" class="font-bold text-gray-800 text-lg"></h3><p id="studentReportPeriodLabel" class="text-xs text-gray-400"></p></div>
+        <div class="flex gap-2">
+            <button id="btnShareWeeklyReport" onclick="shareWeeklyReport()" class="w-9 h-9 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center hover:bg-teal-100 transition" title="Chia sẻ"><i class="fas fa-share-alt text-sm"></i></button>
+            <button onclick="copyStudentParentMsg()" class="w-9 h-9 bg-blue-50 text-dojo-blue rounded-full flex items-center justify-center hover:bg-blue-100 transition" title="Sao chép tin nhắn"><i class="fas fa-copy text-sm"></i></button>
+            <button onclick="closeStudentReport()" class="w-9 h-9 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+        </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar" id="studentReportContent"></div>
+</div>
+
+<!-- ====== SỔ LIÊN LẠC ĐIỆN TỬ ====== -->
+<div id="commLogOverlay" class="fixed inset-0 z-[85] hidden flex flex-col bg-dojo-bg overflow-hidden">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 pt-10 pb-4 relative flex-shrink-0">
+        <button onclick="closeCommunicationLog()" class="absolute top-4 left-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
+        <div class="text-center">
+            <h2 class="text-lg font-black">📓 Sổ liên lạc điện tử</h2>
+            <p id="commLogSubtitle" class="text-xs opacity-75 mt-0.5"></p>
+        </div>
+        <!-- Quick stats -->
+        <div class="flex gap-2 mt-3 justify-center">
+            <div id="commStatPraise"   class="bg-white bg-opacity-20 rounded-xl px-3 py-1 text-center"><p class="text-lg font-black" id="cntPraise">0</p><p class="text-[10px] opacity-80">Khen</p></div>
+            <div id="commStatConcern"  class="bg-white bg-opacity-20 rounded-xl px-3 py-1 text-center"><p class="text-lg font-black" id="cntConcern">0</p><p class="text-[10px] opacity-80">Nhắc</p></div>
+            <div id="commStatNotice"   class="bg-white bg-opacity-20 rounded-xl px-3 py-1 text-center"><p class="text-lg font-black" id="cntNotice">0</p><p class="text-[10px] opacity-80">TB</p></div>
+            <div id="commStatReminder" class="bg-white bg-opacity-20 rounded-xl px-3 py-1 text-center"><p class="text-lg font-black" id="cntReminder">0</p><p class="text-[10px] opacity-80">Dặn</p></div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white border-b border-gray-100 px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
+        <select id="commFilterStudent" onchange="renderCommunicationLog();_toggleCommMsgBtn()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-emerald-500">
+            <option value="">Tất cả học sinh</option>
+        </select>
+        <select id="commFilterType" onchange="renderCommunicationLog()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-emerald-500">
+            <option value="">Tất cả loại</option>
+            <option value="praise">⭐ Khen ngợi</option>
+            <option value="concern">⚠️ Cần cố gắng</option>
+            <option value="notice">📢 Thông báo</option>
+            <option value="reminder">⏰ Dặn dò</option>
+        </select>
+        <input type="date" id="commFilterDate" onchange="renderCommunicationLog()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-emerald-500">
+        <!-- Action buttons -->
+        <button id="btnCommMsg" onclick="_openStudentMessage()" class="hidden flex-shrink-0 flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow hover:bg-emerald-700 transition active:scale-95 whitespace-nowrap">
+            <i class="fas fa-comment-dots"></i> Tin nhắn
+        </button>
+        <button onclick="exportCommLogExcel()" class="flex-shrink-0 flex items-center gap-1.5 bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow hover:bg-green-700 transition active:scale-95 whitespace-nowrap">
+            <i class="fas fa-file-excel"></i> Xuất Excel
+        </button>
+    </div>
+
+    <!-- Note list -->
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar" id="commLogList"></div>
+
+    <!-- FAB -->
+    <button onclick="openAddNoteModal(null)" class="absolute bottom-6 right-5 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl flex items-center justify-center text-2xl hover:bg-emerald-700 transition active:scale-95 z-10">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<!-- TIN NHẮN HỌC SINH MODAL -->
+<div id="studentMsgBackdrop" class="fixed inset-0 bg-black bg-opacity-60 z-[100] hidden" onclick="closeStudentMessage()"></div>
+<div id="studentMsgModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[105] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[92vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <img id="msgStudentAvatar" src="" class="w-10 h-10 rounded-full object-contain bg-blue-50 p-0.5">
+            <div>
+                <h3 id="msgStudentName" class="font-black text-gray-800 text-base"></h3>
+                <p id="msgStudentClass" class="text-xs text-gray-400 font-semibold"></p>
+            </div>
+        </div>
+        <button onclick="closeStudentMessage()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Template selector -->
+    <div class="px-4 pt-3 pb-2 flex gap-2 flex-shrink-0">
+        <button onclick="_setMsgTemplate('formal')" id="tplFormal" class="flex-1 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white shadow transition">📋 Trang trọng</button>
+        <button onclick="_setMsgTemplate('friendly')" id="tplFriendly" class="flex-1 py-2 text-xs font-bold rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">😊 Thân thiện</button>
+        <button onclick="_setMsgTemplate('brief')" id="tplBrief" class="flex-1 py-2 text-xs font-bold rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">⚡ Ngắn gọn</button>
+    </div>
+    <!-- Days range -->
+    <div class="px-4 pb-2 flex gap-2 items-center flex-shrink-0">
+        <span class="text-xs text-gray-500 font-bold">Trong</span>
+        <select id="msgDaysRange" onchange="_rebuildMsg()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white focus:border-emerald-500">
+            <option value="7">7 ngày gần nhất</option>
+            <option value="14">14 ngày</option>
+            <option value="30">30 ngày</option>
+            <option value="0">Tất cả</option>
+        </select>
+    </div>
+    <!-- Message textarea (editable) -->
+    <div class="flex-1 overflow-y-auto px-4 pb-2 no-scrollbar">
+        <textarea id="msgPreviewText" rows="14" class="w-full text-sm font-mono bg-gray-50 border border-gray-200 rounded-2xl p-3 focus:outline-none focus:border-emerald-400 resize-none leading-relaxed" style="font-family:monospace"></textarea>
+    </div>
+    <!-- Action buttons -->
+    <div class="p-4 pt-2 flex gap-3 flex-shrink-0 border-t">
+        <button onclick="_copyStudentMessage()" class="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-emerald-700 transition active:scale-95">
+            <i class="fas fa-copy"></i> Sao chép tin nhắn
+        </button>
+        <button onclick="_shareStudentMessage()" class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-100 transition active:scale-95" title="Chia sẻ">
+            <i class="fas fa-share-alt text-lg"></i>
+        </button>
+    </div>
+</div>
+
+<!-- ADD / EDIT NOTE MODAL -->
+<div id="addNoteBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[90] hidden" onclick="closeAddNoteModal()"></div>
+<div id="addNoteModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[95] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[92vh] flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+        <h3 id="addNoteTitle" class="font-bold text-gray-800 text-lg">Thêm nhận xét</h3>
+        <button onclick="closeAddNoteModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar flex flex-col gap-4">
+
+        <!-- Student selector -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Học sinh</label>
+            <div class="relative mb-2">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <input type="text" id="noteStudentSearch" onkeyup="filterNoteStudents()" placeholder="Tìm tên học sinh..." class="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+            </div>
+            <div id="noteStudentList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto no-scrollbar"></div>
+        </div>
+
+        <!-- Type -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Loại nhận xét</label>
+            <div class="grid grid-cols-4 gap-2" id="noteTypeGrid">
+                <button type="button" onclick="selectNoteType('praise')" id="noteType-praise" class="note-type-btn py-2 rounded-xl border-2 border-transparent bg-green-50 text-green-700 flex flex-col items-center gap-1 text-xs font-bold transition"><i class="fas fa-star text-base"></i>Khen</button>
+                <button type="button" onclick="selectNoteType('concern')" id="noteType-concern" class="note-type-btn py-2 rounded-xl border-2 border-transparent bg-orange-50 text-orange-700 flex flex-col items-center gap-1 text-xs font-bold transition"><i class="fas fa-exclamation-triangle text-base"></i>Nhắc</button>
+                <button type="button" onclick="selectNoteType('notice')" id="noteType-notice" class="note-type-btn py-2 rounded-xl border-2 border-transparent bg-blue-50 text-blue-700 flex flex-col items-center gap-1 text-xs font-bold transition"><i class="fas fa-bullhorn text-base"></i>Thông báo</button>
+                <button type="button" onclick="selectNoteType('reminder')" id="noteType-reminder" class="note-type-btn py-2 rounded-xl border-2 border-transparent bg-purple-50 text-purple-700 flex flex-col items-center gap-1 text-xs font-bold transition"><i class="fas fa-clock text-base"></i>Dặn dò</button>
+            </div>
+        </div>
+
+        <!-- Date -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Ngày</label>
+            <input type="date" id="noteDate" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <!-- Content -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Nội dung nhận xét</label>
+            <textarea id="noteContent" rows="4" placeholder="Viết nhận xét chi tiết về học sinh/lớp..." class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"></textarea>
+            <!-- Quick templates -->
+            <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1" id="noteTemplates"></div>
+        </div>
+    </div>
+    <div class="p-4 border-t flex-shrink-0">
+        <button onclick="saveNote()" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-emerald-700 transition active:scale-95">
+            <i class="fas fa-save"></i> <span id="saveNoteLabel">Lưu nhận xét</span>
+        </button>
+    </div>
+</div>
+
+<!-- ====== GOALS OVERVIEW – MỤC TIÊU CÁ NHÂN LỚP ====== -->
+<div id="goalsOverlay" class="fixed inset-0 z-[85] hidden flex flex-col bg-dojo-bg overflow-hidden">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-rose-500 to-pink-600 text-white px-4 pt-10 pb-4 relative flex-shrink-0">
+        <button onclick="closeGoalsOverlay()" class="absolute top-4 left-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
+        <div class="text-center">
+            <h2 class="text-lg font-black">🎯 Mục tiêu cá nhân</h2>
+            <p id="goalsOverlaySubtitle" class="text-xs opacity-75 mt-0.5"></p>
+        </div>
+        <!-- Quick stats -->
+        <div class="flex gap-3 mt-3 justify-center">
+            <div class="bg-white bg-opacity-20 rounded-xl px-4 py-2 text-center">
+                <p class="text-xl font-black" id="goalStatActive">0</p>
+                <p class="text-[10px] opacity-80">Đang thực hiện</p>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-xl px-4 py-2 text-center">
+                <p class="text-xl font-black" id="goalStatAchieved">0</p>
+                <p class="text-[10px] opacity-80">Đã đạt</p>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-xl px-4 py-2 text-center">
+                <p class="text-xl font-black" id="goalStatExpired">0</p>
+                <p class="text-[10px] opacity-80">Hết hạn</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white border-b border-gray-100 px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
+        <select id="goalOverviewFilter" onchange="renderGoalsOverview()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-rose-400">
+            <option value="">Tất cả học sinh</option>
+        </select>
+        <select id="goalStatusFilter" onchange="renderGoalsOverview()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-rose-400">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">🎯 Đang thực hiện</option>
+            <option value="achieved">✅ Đã đạt</option>
+            <option value="expired">⌛ Hết hạn</option>
+        </select>
+        <select id="goalTypeFilter" onchange="renderGoalsOverview()" class="text-xs font-bold border border-gray-200 rounded-xl px-3 py-1.5 outline-none bg-white flex-shrink-0 focus:border-rose-400">
+            <option value="">Tất cả loại</option>
+            <option value="points">⭐ Điểm thi đua</option>
+            <option value="positive">➕ Điểm cộng</option>
+            <option value="negative_limit">🛡️ Giảm điểm trừ</option>
+            <option value="custom">🚩 Tùy chỉnh</option>
+        </select>
+    </div>
+
+    <!-- Goals list -->
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar" id="goalsOverviewList"></div>
+
+    <!-- FAB -->
+    <div id="goalsOverviewFab" class="absolute bottom-6 right-5 hidden">
+        <!-- shown only when a student is selected in filter -->
+        <button onclick="openAddGoalFromOverview()" class="w-14 h-14 bg-rose-600 text-white rounded-full shadow-xl flex items-center justify-center text-2xl hover:bg-rose-700 transition active:scale-95">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
+
+<!-- ADD / EDIT GOAL MODAL -->
+<div id="addGoalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[90] hidden" onclick="closeAddGoalModal()"></div>
+<div id="addGoalModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[95] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[92vh] flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+        <div>
+            <h3 id="addGoalTitle" class="font-bold text-gray-800 text-lg">Thêm mục tiêu</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Học sinh: <span id="addGoalStudentName" class="font-bold text-rose-600"></span></p>
+        </div>
+        <button onclick="closeAddGoalModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar flex flex-col gap-4">
+        <!-- Loại mục tiêu -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Loại mục tiêu</label>
+            <div class="grid grid-cols-2 gap-2" id="goalTypeGrid">
+                <button type="button" data-type="points" onclick="selectGoalType('points')" class="goal-type-btn py-2.5 rounded-xl border-2 border-transparent bg-amber-50 text-amber-700 flex items-center gap-2 px-3 text-sm font-bold transition hover:border-amber-300"><i class="fas fa-star text-amber-500"></i>Điểm thi đua</button>
+                <button type="button" data-type="positive" onclick="selectGoalType('positive')" class="goal-type-btn py-2.5 rounded-xl border-2 border-transparent bg-green-50 text-green-700 flex items-center gap-2 px-3 text-sm font-bold transition hover:border-green-300"><i class="fas fa-plus-circle text-green-500"></i>Điểm cộng</button>
+                <button type="button" data-type="negative_limit" onclick="selectGoalType('negative_limit')" class="goal-type-btn py-2.5 rounded-xl border-2 border-transparent bg-blue-50 text-blue-700 flex items-center gap-2 px-3 text-sm font-bold transition hover:border-blue-300"><i class="fas fa-shield-alt text-blue-500"></i>Giảm điểm trừ</button>
+                <button type="button" data-type="custom" onclick="selectGoalType('custom')" class="goal-type-btn py-2.5 rounded-xl border-2 border-transparent bg-purple-50 text-purple-700 flex items-center gap-2 px-3 text-sm font-bold transition hover:border-purple-300"><i class="fas fa-flag text-purple-500"></i>Tùy chỉnh</button>
+            </div>
+        </div>
+        <!-- Tên mục tiêu -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Tên mục tiêu</label>
+            <input type="text" id="goalTitleInput" placeholder="VD: Đạt 50 điểm thi đua" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-rose-400 text-sm">
+        </div>
+        <!-- Giá trị mục tiêu -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block" id="goalTargetLabel">Giá trị mục tiêu</label>
+            <input type="number" id="goalTargetInput" placeholder="VD: 50" min="1" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-rose-400 text-sm">
+            <p id="goalTargetHint" class="text-[11px] text-gray-400 mt-1"></p>
+        </div>
+        <!-- Tiến độ hiện tại (chỉ cho loại custom) -->
+        <div id="goalCustomSection" class="hidden">
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Tiến độ hiện tại</label>
+            <input type="number" id="goalCurrentInput" value="0" min="0" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-rose-400 text-sm">
+        </div>
+        <!-- Hạn hoàn thành -->
+        <div>
+            <label class="text-xs font-bold text-gray-500 mb-2 block">Hạn hoàn thành <span class="text-gray-300 font-normal">(tùy chọn)</span></label>
+            <input type="date" id="goalDeadlineInput" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-rose-400 text-sm">
+        </div>
+        <!-- Thưởng khi đạt -->
+        <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
+            <label class="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1.5"><i class="fas fa-gift"></i> Thưởng khi đạt mục tiêu <span class="text-amber-400 font-normal">(tùy chọn)</span></label>
+            <div class="flex items-center gap-2">
+                <input type="number" id="goalBonusPoints" value="0" min="0" max="10" class="w-20 border-2 border-amber-200 p-2 rounded-xl focus:outline-none focus:border-amber-400 text-sm text-center font-bold">
+                <span class="text-sm text-amber-700 font-semibold">điểm thưởng thi đua</span>
+            </div>
+        </div>
+    </div>
+    <div class="p-4 border-t flex gap-3 flex-shrink-0">
+        <button onclick="closeAddGoalModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button>
+        <button onclick="saveGoal()" class="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-rose-700 transition active:scale-95">
+            <i class="fas fa-save"></i> <span id="saveGoalLabel">Lưu mục tiêu</span>
+        </button>
+    </div>
+</div>
+
+<!-- ====== CERTIFICATE PREVIEW OVERLAY ====== -->
+<div id="certOverlay" class="fixed inset-0 z-[120] hidden flex flex-col bg-gray-900 bg-opacity-95 overflow-hidden">
+    <!-- Top bar -->
+    <div class="flex justify-between items-center px-4 py-3 bg-gray-900 border-b border-gray-700 flex-shrink-0">
+        <button onclick="closeCertificate()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm transition"><i class="fas fa-arrow-left"></i> Đóng</button>
+        <span class="text-amber-400 font-black text-sm flex items-center gap-1.5"><i class="fas fa-award"></i> Chứng nhận thành tích</span>
+        <div class="flex gap-2">
+            <button onclick="downloadCertPDF()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95 shadow"><i class="fas fa-download"></i> Tải PDF</button>
+            <button onclick="printCertificate()" class="flex items-center gap-1.5 bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition"><i class="fas fa-print"></i> In</button>
+        </div>
+    </div>
+    <!-- Certificate canvas area -->
+    <div class="flex-1 overflow-auto flex items-start justify-center p-4 no-scrollbar">
+        <div id="certPaperWrap" class="w-full max-w-2xl">
+            <!-- The actual certificate (rendered as HTML, exported to PDF via jsPDF) -->
+            <div id="certPaper" class="relative bg-white shadow-2xl" style="aspect-ratio:1.414/1; font-family:'Roboto',sans-serif;">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+    </div>
+    <!-- Nav arrows for batch -->
+    <div id="certNavBar" class="hidden flex-shrink-0 bg-gray-900 border-t border-gray-700 px-4 py-3 flex items-center justify-between gap-3">
+        <button onclick="certPrev()" id="btnCertPrev" class="w-10 h-10 bg-gray-700 rounded-full text-white flex items-center justify-center hover:bg-gray-600 transition disabled:opacity-30"><i class="fas fa-chevron-left"></i></button>
+        <span id="certNavLabel" class="text-gray-300 text-sm font-bold flex-1 text-center"></span>
+        <button onclick="certNext()" id="btnCertNext" class="w-10 h-10 bg-gray-700 rounded-full text-white flex items-center justify-center hover:bg-gray-600 transition"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<!-- BATCH CERT SETTINGS MODAL -->
+<div id="batchCertBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden" onclick="closeBatchCertModal()"></div>
+<div id="batchCertModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[105] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center flex-shrink-0 bg-amber-50 rounded-t-3xl">
+        <div>
+            <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-award text-amber-500"></i> Xuất chứng nhận hàng loạt</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Chọn học sinh cần xuất chứng nhận</p>
+        </div>
+        <button onclick="closeBatchCertModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar flex flex-col gap-4">
+        <!-- Bộ lọc nhanh -->
+        <div class="flex gap-2 flex-wrap">
+            <button onclick="selectCertFilter('all')" id="certFilterAll" class="cert-filter-btn text-xs font-bold px-3 py-1.5 rounded-full border-2 border-amber-400 bg-amber-50 text-amber-700 transition">Tất cả</button>
+            <button onclick="selectCertFilter('milestone')" id="certFilterMilestone" class="cert-filter-btn text-xs font-bold px-3 py-1.5 rounded-full border-2 border-transparent bg-gray-100 text-gray-600 transition">Có huy hiệu</button>
+            <button onclick="selectCertFilter('top10')" id="certFilterTop10" class="cert-filter-btn text-xs font-bold px-3 py-1.5 rounded-full border-2 border-transparent bg-gray-100 text-gray-600 transition">Top 10</button>
+            <button onclick="selectCertFilter('positive')" id="certFilterPositive" class="cert-filter-btn text-xs font-bold px-3 py-1.5 rounded-full border-2 border-transparent bg-gray-100 text-gray-600 transition">Điểm dương</button>
+        </div>
+        <!-- Cài đặt chứng nhận -->
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex flex-col gap-3">
+            <h4 class="font-bold text-amber-800 text-sm">Thông tin chứng nhận</h4>
+            <div>
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Tên trường / đơn vị</label>
+                <input type="text" id="certSchoolName" placeholder="VD: Trường THPT Nguyễn Du" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Tiêu đề chứng nhận</label>
+                <input type="text" id="certTitle" value="CHỨNG NHẬN THÀNH TÍCH XUẤT SẮC" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400 font-bold">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Lý do / thành tích</label>
+                <input type="text" id="certReason" placeholder="VD: Đã hoàn thành xuất sắc học kỳ I năm học 2024-2025" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1 block">Chức danh người ký</label>
+                    <input type="text" id="certSigner" placeholder="VD: Giáo viên chủ nhiệm" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1 block">Ngày ký</label>
+                    <input type="date" id="certDate" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Tên giáo viên ký</label>
+                <input type="text" id="certTeacherName" placeholder="VD: Vũ Tiến Lực" class="w-full border-2 border-amber-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400">
+            </div>
+        </div>
+        <!-- Danh sách học sinh -->
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <p class="text-xs font-bold text-gray-500">Chọn học sinh <span id="certSelectedCount" class="text-amber-600">(0)</span></p>
+                <div class="flex gap-2">
+                    <button onclick="certSelectAll(true)" class="text-xs text-amber-600 font-bold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">✅ Tất cả</button>
+                    <button onclick="certSelectAll(false)" class="text-xs text-gray-400 font-bold bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">☐ Bỏ chọn</button>
+                </div>
+            </div>
+            <div id="certStudentList" class="flex flex-col gap-2 max-h-52 overflow-y-auto no-scrollbar"></div>
+        </div>
+    </div>
+    <div class="p-4 border-t flex gap-3 flex-shrink-0">
+        <button onclick="closeBatchCertModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button>
+        <button onclick="previewBatchCerts()" class="flex-1 py-3 bg-amber-500 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-amber-600 transition active:scale-95">
+            <i class="fas fa-eye"></i> Xem & Tải PDF
+        </button>
+    </div>
+</div>
+
+<!-- ====== GHI CHÚ & DẶN DÒ LỚP ====== -->
+<div id="classNotesBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[85] hidden" onclick="closeClassNotes()"></div>
+<div id="classNotesModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[90] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[92vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 bg-teal-100 rounded-xl flex items-center justify-center">
+                <i class="fas fa-clipboard-check text-teal-600"></i>
+            </div>
+            <div>
+                <h3 class="font-black text-gray-800 text-base leading-tight">Ghi chú & Dặn dò</h3>
+                <p id="classNotesSubtitle" class="text-xs text-gray-400 font-semibold mt-0.5"></p>
+            </div>
+        </div>
+        <button onclick="closeClassNotes()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Quick add -->
+    <div class="px-4 py-3 bg-teal-50 border-b flex-shrink-0">
+        <input type="text" id="noteItemContent" placeholder="✏️  Nội dung dặn dò..." maxlength="200"
+            class="w-full border-2 border-teal-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:border-teal-500 bg-white placeholder-gray-400"
+            onkeydown="if(event.key==='Enter')addClassNoteItem()">
+        <div class="flex gap-2 mt-2">
+            <div class="flex items-center gap-1.5 flex-1">
+                <i class="fas fa-calendar-alt text-teal-400 text-xs"></i>
+                <input type="date" id="noteItemDeadline" class="flex-1 border border-teal-200 rounded-xl px-2 py-1.5 text-xs font-bold text-gray-700 focus:outline-none focus:border-teal-500 bg-white">
+            </div>
+            <button onclick="addClassNoteItem()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-1.5 rounded-xl text-sm flex items-center gap-1.5 transition active:scale-95 shadow">
+                <i class="fas fa-plus text-xs"></i> Thêm
+            </button>
+        </div>
+    </div>
+    <!-- Note list -->
+    <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-3" id="classNotesList"></div>
+</div>
+
+<!-- ====== PROJECTOR AWARD OVERLAY ====== -->
+<div id="projectorAwardOverlay" class="fixed inset-0 z-[220] hidden flex flex-col items-center justify-center px-6 select-none" style="background:rgba(5,8,20,0.96)" onclick="_closeProjectorAward()">
+    <!-- Progress bar -->
+    <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-white bg-opacity-10 overflow-hidden">
+        <div id="projProgressBar" class="h-full bg-white bg-opacity-40" style="width:100%"></div>
+    </div>
+    <!-- Hint -->
+    <p class="absolute top-5 right-5 text-white text-opacity-20 text-xs font-semibold tracking-wide">Chạm để đóng</p>
+    <!-- Class label -->
+    <p id="projClassLabel" class="text-white text-opacity-40 text-sm font-bold mb-5 tracking-widest uppercase"></p>
+    <!-- Avatar -->
+    <img id="projStudentAvatar" src="" alt="" class="rounded-full object-contain shadow-2xl mb-5" style="width:140px;height:140px;padding:6px;border:3px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.08)">
+    <!-- Student name -->
+    <div id="projStudentName" class="text-white font-black text-center leading-tight" style="font-size:clamp(2.8rem,9vw,5.5rem);letter-spacing:-1px;text-shadow:0 4px 24px rgba(0,0,0,0.6)"></div>
+    <!-- Skill name -->
+    <div id="projSkillWrap" class="mt-5 px-8 py-4 rounded-3xl text-center max-w-2xl mx-auto" style="border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);backdrop-filter:blur(8px)">
+        <div id="projSkillName" class="font-black text-center tracking-tight leading-tight"
+             style="font-size:clamp(2.2rem,7vw,4.5rem);text-shadow:0 0 40px currentColor,0 4px 20px rgba(0,0,0,0.5)"></div>
+    </div>
+    <!-- Points (huge) -->
+    <div id="projPointsNum" class="font-black mt-2" style="font-size:clamp(5.5rem,20vw,11rem);line-height:1;letter-spacing:-3px;text-shadow:0 8px 40px rgba(0,0,0,0.5)"></div>
+    <!-- Total -->
+    <div id="projTotalPoints" class="font-bold mt-4" style="font-size:clamp(1rem,3vw,1.8rem);color:rgba(255,255,255,0.45)"></div>
+</div>
+
+<!-- ====== SỔ ĐIỂM BỘ MÔN ====== -->
+<div id="subjectGradesBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[85] hidden" onclick="closeSubjectGrades()"></div>
+<div id="subjectGradesModal" class="fixed inset-0 bg-white z-[90] transform translate-y-full transition-transform duration-300 ease-out flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0 bg-violet-600 text-white">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white bg-opacity-20 flex items-center justify-center"><i class="fas fa-table text-white"></i></div>
+            <div>
+                <h3 class="font-black text-base leading-tight">Sổ điểm bộ môn</h3>
+                <p id="sgSubtitle" class="text-xs opacity-80 mt-0.5"></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="sgSyncGSheet()" id="btnSgSync" class="flex items-center gap-1.5 text-xs font-bold bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1.5 rounded-lg transition"><i id="sgSyncIcon" class="fas fa-cloud-upload-alt text-sm"></i><span id="sgSyncLabel">GSheet</span></button>
+            <button onclick="closeSubjectGrades()" class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center hover:bg-opacity-30"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <!-- Controls bar row 1: môn + kỳ + TX buttons + export -->
+    <div class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b bg-violet-50 flex-shrink-0">
+        <div class="flex items-center gap-1.5">
+            <label class="text-xs font-bold text-violet-700">Môn:</label>
+            <select id="sgSubject" onchange="sgSave()" class="text-xs font-bold border border-violet-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:border-violet-500">
+                <option value="Toán">Toán</option><option value="Ngữ văn">Ngữ văn</option>
+                <option value="Tiếng Anh">Tiếng Anh</option><option value="Vật lí">Vật lí</option>
+                <option value="Hóa học">Hóa học</option><option value="Sinh học">Sinh học</option>
+                <option value="Lịch sử">Lịch sử</option><option value="Địa lí">Địa lí</option>
+                <option value="GDCD">GDCD</option><option value="Tin học">Tin học</option>
+                <option value="Công nghệ">Công nghệ</option><option value="Thể dục">Thể dục</option>
+                <option value="Khác">Khác...</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <label class="text-xs font-bold text-violet-700">HK:</label>
+            <select id="sgSemester" onchange="sgSave()" class="text-xs font-bold border border-violet-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:border-violet-500">
+                <option value="HK1">HK1</option><option value="HK2">HK2</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-1 ml-auto flex-wrap">
+            <button onclick="sgAddTX()" class="text-xs font-bold bg-violet-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-violet-700 transition flex items-center gap-1"><i class="fas fa-plus"></i>TX</button>
+            <button onclick="sgRemoveTX()" id="sgRemoveTXBtn" class="text-xs font-bold bg-gray-100 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 transition flex items-center gap-1"><i class="fas fa-minus"></i>TX</button>
+            <button onclick="openSgQuickEntry()" class="text-xs font-bold bg-fuchsia-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-fuchsia-700 transition flex items-center gap-1"><i class="fas fa-bolt"></i>Nhập nhanh</button>
+            <button onclick="sgDownloadTemplate()" class="text-xs font-bold bg-blue-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-blue-600 transition flex items-center gap-1"><i class="fas fa-download"></i>Tải mẫu</button>
+            <label class="text-xs font-bold bg-amber-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-amber-600 transition flex items-center gap-1 cursor-pointer"><i class="fas fa-upload"></i>Nhập file<input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="sgHandleImport(event)"></label>
+            <button onclick="sgExportExcel()" class="text-xs font-bold bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-emerald-700 transition flex items-center gap-1"><i class="fas fa-file-excel"></i>Xuất Excel</button>
+        </div>
+    </div>
+    <!-- Filter + message bar row 2 -->
+    <div class="flex flex-wrap items-center gap-2 px-4 py-2 border-b bg-gray-50 flex-shrink-0">
+        <span class="text-xs font-bold text-gray-500">Lọc ĐTB:</span>
+        <div class="flex gap-1" id="sgFilterChips">
+            <button onclick="sgSetFilter('all')" class="sg-chip active text-xs font-bold px-2.5 py-1 rounded-full border border-gray-300 bg-white text-gray-600 hover:border-violet-400 transition" data-filter="all">Tất cả</button>
+            <button onclick="sgSetFilter('gioi')" class="sg-chip text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" data-filter="gioi">≥ 8 Giỏi</button>
+            <button onclick="sgSetFilter('kha')" class="sg-chip text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition" data-filter="kha">6.5–7.9 Khá</button>
+            <button onclick="sgSetFilter('tb')" class="sg-chip text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition" data-filter="tb">5–6.4 TB</button>
+            <button onclick="sgSetFilter('yeu')" class="sg-chip text-xs font-bold px-2.5 py-1 rounded-full border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition" data-filter="yeu">&lt; 5 Yếu</button>
+            <button onclick="sgSetFilter('no_dtb')" class="sg-chip text-xs font-bold px-2.5 py-1 rounded-full border border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-200 transition" data-filter="no_dtb">Chưa có ĐTB</button>
+        </div>
+        <div class="flex items-center gap-1.5 ml-auto">
+            <select id="sgMsgTemplate" class="text-xs font-bold border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none">
+                <option value="formal">📋 Trang trọng</option>
+                <option value="friendly">😊 Thân thiện</option>
+                <option value="warning">⚠️ Cảnh báo</option>
+            </select>
+            <button onclick="sgBatchMsg()" class="text-xs font-bold bg-rose-500 text-white px-3 py-1.5 rounded-lg hover:bg-rose-600 transition flex items-center gap-1"><i class="fas fa-envelope-open-text"></i>Gửi hàng loạt (<span id="sgFilterCount">0</span>)</button>
+        </div>
+    </div>
+    <!-- Legend -->
+    <div class="px-4 py-1 flex gap-3 text-xs text-gray-400 bg-gray-50 border-b flex-shrink-0">
+        <span><b class="text-gray-600">TX</b> hệ số 1</span>
+        <span><b class="text-violet-600">GK</b> hệ số 2</span>
+        <span><b class="text-orange-600">CK</b> hệ số 3</span>
+        <span><b class="text-emerald-600">ĐTB</b> = (ΣTX + GK×2 + CK×3) ÷ (nTX+5)</span>
+    </div>
+    <!-- Table -->
+    <div class="flex-1 overflow-auto">
+        <table id="sgTable" class="w-full text-xs border-collapse min-w-max">
+            <thead id="sgThead"></thead>
+            <tbody id="sgTbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Quick column entry panel -->
+<div id="sgQuickBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden" onclick="closeSgQuickEntry()"></div>
+<div id="sgQuickPanel" class="fixed top-0 right-0 h-full w-full max-w-sm bg-white z-[110] shadow-2xl transform translate-x-full transition-transform duration-300 ease-out flex flex-col hidden">
+    <div class="flex items-center justify-between px-4 py-3 bg-fuchsia-600 text-white flex-shrink-0">
+        <div>
+            <h3 class="font-black text-base">⚡ Nhập nhanh theo cột</h3>
+            <p id="sgQESubtitle" class="text-xs opacity-80 mt-0.5"></p>
+        </div>
+        <button onclick="closeSgQuickEntry()" class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Column selector -->
+    <div class="px-4 py-3 border-b bg-fuchsia-50 flex-shrink-0">
+        <p class="text-xs font-bold text-fuchsia-700 mb-2">Chọn cột cần nhập:</p>
+        <div id="sgQEColBtns" class="flex flex-wrap gap-2"></div>
+        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Nhấn <kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">Enter</kbd> hoặc <kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">↓</kbd> để chuyển xuống dòng tiếp</p>
+    </div>
+    <!-- Numpad điểm nhanh -->
+    <div class="px-3 py-2.5 border-b bg-white flex-shrink-0">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">⚡ Tap điểm nhanh</p>
+        <div class="grid grid-cols-7 gap-1 mb-1">
+            <button onclick="sgQESetGrade(3)"   class="sg-numpad-btn py-2 bg-red-50   text-red-600   font-bold rounded-lg border border-red-200   hover:bg-red-100   active:scale-95 transition text-sm">3</button>
+            <button onclick="sgQESetGrade(4)"   class="sg-numpad-btn py-2 bg-red-50   text-red-600   font-bold rounded-lg border border-red-200   hover:bg-red-100   active:scale-95 transition text-sm">4</button>
+            <button onclick="sgQESetGrade(5)"   class="sg-numpad-btn py-2 bg-amber-50 text-amber-600 font-bold rounded-lg border border-amber-200 hover:bg-amber-100 active:scale-95 transition text-sm">5</button>
+            <button onclick="sgQESetGrade(6)"   class="sg-numpad-btn py-2 bg-amber-50 text-amber-600 font-bold rounded-lg border border-amber-200 hover:bg-amber-100 active:scale-95 transition text-sm">6</button>
+            <button onclick="sgQESetGrade(7)"   class="sg-numpad-btn py-2 bg-blue-50  text-blue-600  font-bold rounded-lg border border-blue-200  hover:bg-blue-100  active:scale-95 transition text-sm">7</button>
+            <button onclick="sgQESetGrade(8)"   class="sg-numpad-btn py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">8</button>
+            <button onclick="sgQESetGrade(9)"   class="sg-numpad-btn py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">9</button>
+        </div>
+        <div class="grid grid-cols-7 gap-1">
+            <button onclick="sgQESetGrade(5.5)" class="sg-numpad-btn py-2 bg-amber-50 text-amber-600 font-bold rounded-lg border border-amber-200 hover:bg-amber-100 active:scale-95 transition text-xs">5.5</button>
+            <button onclick="sgQESetGrade(6.5)" class="sg-numpad-btn py-2 bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200 hover:bg-amber-100 active:scale-95 transition text-xs">6.5</button>
+            <button onclick="sgQESetGrade(7.5)" class="sg-numpad-btn py-2 bg-blue-50  text-blue-700  font-bold rounded-lg border border-blue-200  hover:bg-blue-100  active:scale-95 transition text-xs">7.5</button>
+            <button onclick="sgQESetGrade(8.5)" class="sg-numpad-btn py-2 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-xs">8.5</button>
+            <button onclick="sgQESetGrade(9.5)" class="sg-numpad-btn py-2 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-xs">9.5</button>
+            <button onclick="sgQESetGrade(10)"  class="sg-numpad-btn py-2 bg-purple-50 text-purple-700 font-bold rounded-lg border border-purple-200 hover:bg-purple-100 active:scale-95 transition text-xs">10</button>
+            <button onclick="sgQESetGrade('')"  class="sg-numpad-btn py-2 bg-gray-100 text-gray-500 font-bold rounded-lg border border-gray-200 hover:bg-gray-200 active:scale-95 transition text-xs"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <!-- Student list -->
+    <div class="flex-1 overflow-auto" id="sgQEList"></div>
+    <!-- Footer: progress + done -->
+    <div class="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-gray-500">Đã nhập: <b id="sgQEFilledCount" class="text-fuchsia-700">0</b> / <span id="sgQETotal">0</span></span>
+            <button onclick="closeSgQuickEntry()" class="text-xs font-bold bg-fuchsia-600 text-white px-4 py-2 rounded-xl hover:bg-fuchsia-700 transition"><i class="fas fa-check mr-1"></i>Xong</button>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5">
+            <div id="sgQEProgress" class="bg-fuchsia-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Batch message modal -->
+<div id="sgMsgBackdrop" class="fixed inset-0 bg-black bg-opacity-60 z-[100] hidden" onclick="closeSgMsg()"></div>
+<div id="sgMsgModal" class="fixed inset-4 bg-white z-[110] rounded-2xl shadow-2xl transform scale-95 opacity-0 transition-all duration-200 flex flex-col hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b bg-rose-600 text-white rounded-t-2xl flex-shrink-0">
+        <div>
+            <h3 class="font-black text-base" id="sgMsgTitle">Tin nhắn đánh giá</h3>
+            <p class="text-xs opacity-80" id="sgMsgSubtitle"></p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="sgCopyAllMsg()" class="text-xs font-bold bg-white bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition flex items-center gap-1"><i class="fas fa-copy"></i> Sao chép tất cả</button>
+            <button onclick="sgExportMsgExcel()" class="text-xs font-bold bg-white bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition flex items-center gap-1"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+            <button onclick="closeSgMsg()" class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div id="sgMsgList" class="flex-1 overflow-auto p-4 space-y-3"></div>
+</div>
+
+<!-- ====== SƠ ĐỒ CHỖ NGỒI PHÒNG THI ====== -->
+<div id="seatingConfigBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[85] hidden" onclick="closeSeatingConfig()"></div>
+<div id="seatingConfigModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[90] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[92vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b flex-shrink-0">
+        <div>
+            <h3 class="font-black text-gray-800 text-lg">🏫 Sơ đồ phòng thi</h3>
+            <p id="seatingConfigSubtitle" class="text-xs text-gray-400 mt-0.5"></p>
+        </div>
+        <button onclick="closeSeatingConfig()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Room config -->
+    <div class="px-4 py-3 bg-gray-50 border-b flex-shrink-0 flex flex-wrap gap-3 items-center">
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-gray-600">SBD bắt đầu:</span>
+            <input type="number" id="seatingStartNum" value="1" min="1" max="9999" class="w-20 border-2 border-gray-200 rounded-xl text-center font-black text-gray-800 py-1.5 text-sm focus:outline-none focus:border-indigo-400">
+        </div>
+        <div class="flex items-center gap-2 text-xs text-gray-500 font-semibold bg-white rounded-xl px-3 py-1.5 border border-gray-200">
+            <i class="fas fa-table text-indigo-400"></i> 4 dãy × 6 bàn × 2 chỗ = 48 SBD
+        </div>
+        <div class="ml-auto">
+            <span id="seatingGoodCount" class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">⭐ 0 học tốt</span>
+        </div>
+    </div>
+    <!-- Instructions -->
+    <div class="px-4 pt-2.5 pb-1 flex-shrink-0 flex items-center gap-2 text-xs text-gray-500">
+        <i class="fas fa-info-circle text-indigo-400"></i>
+        <span>Bấm <b>⭐</b> để đánh dấu học tốt — sẽ được xếp ngồi đầu phòng</span>
+    </div>
+    <!-- Student list -->
+    <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-2" id="seatingStudentList"></div>
+    <!-- Generate -->
+    <div class="p-4 border-t flex-shrink-0">
+        <button onclick="generateSeating()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black rounded-2xl shadow-lg flex items-center justify-center gap-2 text-base active:scale-95 transition">
+            <i class="fas fa-table"></i> Tạo sơ đồ chỗ ngồi
+        </button>
+    </div>
+</div>
+
+<!-- SEATING RESULT OVERLAY -->
+<div id="seatingResultOverlay" class="fixed inset-0 z-[95] hidden flex flex-col overflow-hidden" style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2744 100%)">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-4 pt-10 pb-3 flex-shrink-0">
+        <button onclick="closeSeatingResult()" class="w-9 h-9 bg-white bg-opacity-15 rounded-full flex items-center justify-center text-white hover:bg-opacity-25 transition">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="text-center flex-1 px-2">
+            <h2 id="seatingResultTitle" class="text-white font-black text-base leading-tight"></h2>
+            <p id="seatingResultSub" class="text-white text-opacity-60 text-xs mt-0.5"></p>
+        </div>
+        <div class="flex gap-1.5">
+            <button onclick="reshuffleSeating()" class="flex items-center gap-1 bg-white bg-opacity-15 hover:bg-opacity-25 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs transition">
+                <i class="fas fa-random"></i>
+            </button>
+            <button onclick="exportSeatingExcel()" class="flex items-center gap-1 bg-green-500 hover:bg-green-400 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs transition">
+                <i class="fas fa-file-excel"></i>
+            </button>
+            <button onclick="printSeating()" class="flex items-center gap-1 bg-white text-indigo-800 font-bold px-2.5 py-1.5 rounded-xl text-xs transition">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
+    </div>
+    <!-- Chart area -->
+    <div class="flex-1 overflow-auto p-3 no-scrollbar" id="seatingScrollArea">
+        <!-- BGT -->
+        <div class="bg-indigo-700 bg-opacity-80 border border-indigo-500 border-opacity-50 text-white text-center font-black py-2.5 rounded-xl mb-3 text-sm tracking-wide shadow-lg">
+            🏛️ BAN GIÁM THỊ / GIÁO VIÊN COI THI
+        </div>
+        <!-- Grid -->
+        <div id="seatingChartGrid"></div>
+        <!-- Door -->
+        <div class="border-2 border-dashed border-white border-opacity-20 text-white text-opacity-40 text-center text-xs font-bold py-2 rounded-xl mt-3 tracking-widest">
+            🚪 CỬA RA VÀO
+        </div>
+    </div>
+</div>
+
+<!-- PRINT AREA (hidden, used when printing seating chart) -->
+<div id="seatingPrintArea"></div>
+
+<!-- ====== CHIA NHÓM NGẪU NHIÊN – SETTINGS MODAL ====== -->
+<div id="groupDividerBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[85] hidden" onclick="closeGroupDivider()"></div>
+<div id="groupDividerModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[90] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl">
+    <div class="p-5 border-b flex justify-between items-center bg-violet-50 rounded-t-3xl">
+        <div>
+            <h3 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-object-group text-violet-600"></i> Chia nhóm ngẫu nhiên</h3>
+            <p id="groupDividerSubtitle" class="text-xs text-gray-400 mt-0.5"></p>
+        </div>
+        <button onclick="closeGroupDivider()" class="w-9 h-9 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-5 flex flex-col gap-5">
+        <!-- Mode toggle -->
+        <div>
+            <p class="text-xs font-bold text-gray-500 mb-2">Chia theo</p>
+            <div class="flex gap-2">
+                <button id="groupModeByGroup" onclick="setGroupMode('byGroup')" class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-violet-600 text-white shadow transition">Số nhóm</button>
+                <button id="groupModeBySize"  onclick="setGroupMode('bySize')"  class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Số HS/nhóm</button>
+            </div>
+        </div>
+        <!-- Number input -->
+        <div class="flex flex-col items-center gap-3">
+            <p id="groupInputLabel" class="text-sm font-bold text-gray-600">Số nhóm</p>
+            <div class="flex items-center gap-4">
+                <button onclick="adjustGroupNum(-1)" class="w-12 h-12 bg-violet-100 text-violet-700 rounded-full font-black text-2xl flex items-center justify-center hover:bg-violet-200 active:scale-95 transition">−</button>
+                <div class="w-20 h-20 rounded-2xl bg-violet-600 flex items-center justify-center shadow-lg">
+                    <span id="groupNumDisplay" class="text-4xl font-black text-white">4</span>
+                </div>
+                <button onclick="adjustGroupNum(1)" class="w-12 h-12 bg-violet-100 text-violet-700 rounded-full font-black text-2xl flex items-center justify-center hover:bg-violet-200 active:scale-95 transition">+</button>
+            </div>
+            <p id="groupPreviewText" class="text-xs text-gray-400 font-semibold"></p>
+        </div>
+        <!-- Options -->
+        <div class="flex gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="groupShowAvatar" checked class="w-4 h-4 accent-violet-600 rounded">
+                <span class="text-sm font-semibold text-gray-600">Hiện ảnh đại diện</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="groupEqualSize" checked class="w-4 h-4 accent-violet-600 rounded">
+                <span class="text-sm font-semibold text-gray-600">Đều nhóm</span>
+            </label>
+        </div>
+        <button onclick="startGroupDivide()" class="w-full py-4 bg-violet-600 text-white font-black text-lg rounded-2xl shadow-lg hover:bg-violet-700 active:scale-95 transition flex items-center justify-center gap-2">
+            <i class="fas fa-random"></i> Chia nhóm ngay!
+        </button>
+    </div>
+</div>
+
+<!-- ====== CHIA NHÓM – KẾT QUẢ FULL SCREEN ====== -->
+<div id="groupResultOverlay" class="fixed inset-0 z-[95] hidden flex flex-col overflow-hidden" style="background:#1e1b4b">
+    <!-- Top bar -->
+    <div class="flex justify-between items-center px-4 py-3 flex-shrink-0" style="background:rgba(0,0,0,0.3)">
+        <button onclick="closeGroupResult()" class="flex items-center gap-2 text-white text-opacity-70 hover:text-opacity-100 font-bold text-sm"><i class="fas fa-arrow-left"></i> Đóng</button>
+        <h2 id="groupResultTitle" class="text-white font-black text-base"></h2>
+        <div class="flex gap-2">
+            <button onclick="_randomCall()" class="flex items-center gap-1.5 bg-pink-500 hover:bg-pink-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95 shadow">
+                <i class="fas fa-dice"></i> Gọi ngẫu nhiên
+            </button>
+            <button onclick="openCompetition()" class="flex items-center gap-1.5 bg-orange-400 hover:bg-orange-300 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95 shadow">
+                <i class="fas fa-trophy"></i> Thi đấu
+            </button>
+            <button onclick="openTreasureSetup()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95 shadow">
+                🗺️ Kho Báu
+            </button>
+            <button id="btnAwardAllGroups" onclick="_awardAllGroups()" class="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95">
+                <i class="fas fa-star"></i> Cả lớp
+            </button>
+            <button onclick="reshuffleGroups()" class="flex items-center gap-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95">
+                <i class="fas fa-random"></i> Xáo lại
+            </button>
+            <button onclick="toggleGroupProjector()" id="btnGroupProjector" class="flex items-center gap-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition active:scale-95">
+                <i class="fas fa-expand"></i> Chiếu
+            </button>
+        </div>
+    </div>
+    <!-- Groups scroll area -->
+    <div id="groupResultList" class="flex-1 overflow-y-auto p-4 no-scrollbar"></div>
+</div>
+
+<!-- ====== COMPETITION OVERLAY ====== -->
+<div id="competitionOverlay" class="fixed inset-0 z-[96] hidden flex flex-col" style="background:linear-gradient(155deg,#1e1b4b 0%,#1e3a8a 60%,#14532d 100%)">
+    <!-- Header -->
+    <div class="flex-shrink-0 flex items-center justify-between px-4 py-3" style="background:rgba(0,0,0,0.35)">
+        <button onclick="closeCompetition()" class="flex items-center gap-2 text-white text-opacity-70 hover:text-opacity-100 font-bold text-sm active:scale-95">
+            <i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Thoát</span>
+        </button>
+        <div class="text-center">
+            <p id="compRoundLabel" class="text-white font-black text-base tracking-wide">Vòng 1</p>
+            <div id="compRoundDots" class="flex gap-1 justify-center mt-1"></div>
+        </div>
+        <button onclick="endCompetition()" class="flex items-center gap-1.5 bg-yellow-400 text-gray-900 font-black px-3 py-1.5 rounded-xl text-xs active:scale-95 transition shadow">
+            <i class="fas fa-flag-checkered"></i> Kết thúc
+        </button>
+    </div>
+
+    <!-- Score summary bar -->
+    <div class="flex-shrink-0 px-4 py-2.5 overflow-x-auto no-scrollbar" style="background:rgba(0,0,0,0.2)">
+        <div id="compScoreBar" class="flex gap-2 justify-center flex-wrap"></div>
+    </div>
+
+    <!-- Instruction -->
+    <p id="compInstruction" class="text-center text-white text-opacity-50 text-xs font-semibold py-1.5 px-4">
+        Chọn Đúng / Sai cho từng nhóm, sau đó nhấn Chốt
+    </p>
+
+    <!-- Group grid -->
+    <div id="compGroupGrid" class="flex-1 overflow-y-auto p-3 no-scrollbar grid gap-3"></div>
+
+    <!-- Finalize button -->
+    <div class="flex-shrink-0 p-4 pb-6">
+        <button id="btnCompFinalize" onclick="finalizeRound()"
+            class="w-full py-4 text-gray-900 font-black text-lg rounded-2xl shadow-2xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+            style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">
+            <i class="fas fa-gavel"></i> Chốt kết quả vòng <span id="btnFinalizeRound">1</span>
+        </button>
+    </div>
+
+    <!-- Round result panel (slides up from bottom) -->
+    <div id="compResultPanel" class="hidden absolute inset-0 flex flex-col" style="background:rgba(10,5,40,0.96)">
+        <div class="flex-1 flex flex-col items-center justify-center gap-4 p-5 overflow-y-auto">
+            <div class="text-center">
+                <p class="text-yellow-300 text-xs font-black uppercase tracking-widest">🏁 Kết quả</p>
+                <p class="text-white font-black text-xl mt-0.5">Vòng <span id="compResultRoundNum">1</span></p>
+            </div>
+            <div id="compResultList" class="w-full max-w-sm space-y-2.5"></div>
+            <div id="compStarSection" class="w-full max-w-sm"></div>
+        </div>
+        <div class="flex-shrink-0 p-4 pb-6 flex gap-3">
+            <button onclick="nextRound()" class="flex-1 py-3.5 bg-white text-gray-900 font-black text-base rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fas fa-forward"></i> Vòng tiếp
+            </button>
+            <button onclick="endCompetition()" class="flex-1 py-3.5 text-gray-900 font-black text-base rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+                style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">
+                <i class="fas fa-flag-checkered"></i> Kết thúc
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ====== COMPETITION RANKING OVERLAY ====== -->
+<div id="compRankingOverlay" class="fixed inset-0 z-[97] hidden flex flex-col" style="background:linear-gradient(155deg,#0f172a 0%,#1e1b4b 50%,#0c1a0c 100%)">
+    <!-- Header -->
+    <div class="flex-shrink-0 flex items-center justify-between px-4 py-4" style="background:rgba(0,0,0,0.4)">
+        <button onclick="closeCompRanking()" class="text-white text-opacity-70 hover:text-opacity-100 font-bold text-sm flex items-center gap-2">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="text-white font-black text-base flex items-center gap-2">
+            <i class="fas fa-trophy text-yellow-400"></i> Bảng xếp hạng thi đấu
+        </h2>
+        <div class="w-8"></div>
+    </div>
+    <!-- Stats summary -->
+    <div id="compStatsSummary" class="flex-shrink-0 px-4 py-2 text-center">
+        <p id="compStatsText" class="text-white text-opacity-50 text-xs font-semibold"></p>
+    </div>
+    <!-- Leaderboard -->
+    <div id="compRankingList" class="flex-1 overflow-y-auto px-4 pb-2 space-y-3 no-scrollbar"></div>
+    <!-- Award buttons -->
+    <div class="flex-shrink-0 px-4 pb-6 pt-2 space-y-2.5 border-t" style="border-color:rgba(255,255,255,0.1)">
+        <p class="text-white text-opacity-50 text-xs text-center font-semibold">Cho điểm kỹ năng theo thứ hạng:</p>
+        <div id="compAwardButtons" class="flex gap-2 flex-wrap"></div>
+        <button onclick="_awardAllCompGroups()" class="w-full py-3 bg-dojo-blue text-white font-black rounded-2xl active:scale-95 transition text-sm shadow-lg">
+            <i class="fas fa-users mr-1.5"></i> Cho điểm tất cả các nhóm
+        </button>
+    </div>
+</div>
+
+<!-- ====== TREASURE HUNT SETUP MODAL ====== -->
+<div id="thSetupBg" class="fixed inset-0 bg-black/70 z-[100] hidden" onclick="closeTreasureSetup()"></div>
+<div id="thSetupModal" class="fixed bottom-0 left-0 w-full bg-gray-900 rounded-t-3xl z-[101] transform translate-y-full transition-transform duration-300 ease-out max-h-[92vh] flex flex-col">
+    <div class="shrink-0 px-5 pt-5 pb-4 border-b border-white/10 flex items-center justify-between">
+        <h2 class="text-white font-black text-lg">🗺️ Truy Tìm Kho Báu</h2>
+        <button onclick="closeTreasureSetup()" class="w-9 h-9 rounded-full bg-white/10 text-white/70 font-bold">✕</button>
+    </div>
+    <!-- Grid size -->
+    <div class="shrink-0 px-5 pt-4">
+        <p class="text-white/50 text-xs font-black uppercase tracking-wider mb-2">Kích thước bản đồ</p>
+        <div class="flex gap-2">
+            <button id="thGrid5" onclick="_thPickGrid(5)" class="flex-1 py-3 rounded-xl font-black text-sm">5×5</button>
+            <button id="thGrid6" onclick="_thPickGrid(6)" class="flex-1 py-3 rounded-xl font-black text-sm">6×6</button>
+            <button id="thGrid7" onclick="_thPickGrid(7)" class="flex-1 py-3 rounded-xl font-black text-sm">7×7</button>
+            <button id="thGrid8" onclick="_thPickGrid(8)" class="flex-1 py-3 rounded-xl font-black text-sm">8×8</button>
+        </div>
+    </div>
+    <!-- Scenario list -->
+    <div class="shrink-0 px-5 pt-4">
+        <p class="text-white/50 text-xs font-black uppercase tracking-wider mb-2">Chọn kịch bản (6 sẵn có)</p>
+        <div id="thScenList" class="grid grid-cols-2 gap-2.5"></div>
+    </div>
+    <!-- Special squares preview -->
+    <div class="shrink-0 px-5 pt-3 pb-1">
+        <p class="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-1.5">Ô đặc biệt trong kịch bản này:</p>
+        <div id="thSpecialPreview" class="flex flex-wrap gap-1.5"></div>
+    </div>
+    <!-- Custom rule input -->
+    <div class="shrink-0 px-5 pt-3">
+        <p class="text-white/50 text-xs font-black uppercase tracking-wider mb-2">📝 Luật thêm tự chọn (tuỳ chọn)</p>
+        <textarea id="thCustomRuleInput" rows="3" placeholder="VD: Nhóm đến ô 12 được câu hỏi bonus&#10;Nhóm về đích được +5 điểm thưởng..."
+            class="w-full rounded-2xl text-sm text-white p-3 resize-none"
+            style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);outline:none;line-height:1.5"></textarea>
+    </div>
+    <!-- Start -->
+    <div class="shrink-0 p-5">
+        <button onclick="startTreasureHunt()" class="w-full py-4 rounded-2xl font-black text-base active:scale-95 transition shadow-xl flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#1f2937">
+            <i class="fas fa-map-marked-alt"></i> Bắt đầu hành trình!
+        </button>
+    </div>
+</div>
+
+<!-- ====== TREASURE HUNT GAME OVERLAY ====== -->
+<div id="thOverlay" class="fixed inset-0 z-[96] hidden flex flex-col overflow-hidden">
+    <!-- Top bar -->
+    <div class="shrink-0 flex items-center justify-between px-4 py-2.5" style="background:rgba(0,0,0,0.45)">
+        <button onclick="closeTreasureHunt()" class="text-white/60 font-bold text-sm flex items-center gap-1.5 active:scale-90"><i class="fas fa-times"></i></button>
+        <h2 id="thTitle" class="text-white font-black text-sm"></h2>
+        <button onclick="endTreasureHunt()" class="text-amber-300 text-xs font-black flex items-center gap-1"><i class="fas fa-flag-checkered"></i> Kết thúc</button>
+    </div>
+    <!-- Middle: legend (left) + board (center) + groups (right) -->
+    <div class="flex-1 min-h-0 flex flex-row overflow-hidden">
+        <!-- Left: special squares legend (wider, large text) -->
+        <div id="thLegendPanel" class="shrink-0 overflow-y-auto no-scrollbar py-2 px-2" style="width:162px;display:flex;flex-direction:column;gap:7px;background:rgba(0,0,0,0.45)"></div>
+        <!-- Center: board -->
+        <div id="thBoardWrap" class="flex-1 min-w-0 flex items-center justify-center" style="padding:4px">
+            <div id="thBoard" class="grid" style="gap:2px"></div>
+        </div>
+        <!-- Right: group positions — one large line per group -->
+        <div id="thGroupBar" class="shrink-0 overflow-y-auto no-scrollbar py-2 px-1.5" style="width:100px;display:flex;flex-direction:column;gap:5px;background:rgba(0,0,0,0.45)"></div>
+    </div>
+    <!-- Action panel -->
+    <div class="shrink-0 px-4 pb-5 pt-3" style="background:rgba(0,0,0,0.5)">
+        <div class="flex items-center gap-2 mb-2">
+            <span id="thRoundBadge" class="px-2.5 py-1 rounded-lg text-xs font-black text-white" style="background:rgba(255,255,255,0.18)">Vòng 1</span>
+            <p id="thRoundLabel" class="text-white/50 text-xs font-semibold">— Chọn nhóm trả lời đúng:</p>
+        </div>
+        <div id="thCorrectBtns" class="flex gap-2 flex-wrap mb-3"></div>
+        <!-- Roll section (shown during picking phase) -->
+        <div id="thRollSection">
+            <button id="thRollBtn" onclick="thRollDice()"
+                class="w-full py-3.5 rounded-2xl font-black text-base active:scale-95 transition flex items-center justify-center gap-2 shadow-xl"
+                style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:white">
+                🎲 Tung xúc sắc!
+            </button>
+        </div>
+        <!-- Finalize section (shown after rolling) -->
+        <div id="thFinalizeSection" class="hidden">
+            <button id="thFinalizeBtn" onclick="thNextRound()"
+                class="w-full py-3.5 rounded-2xl font-black text-base active:scale-95 transition flex items-center justify-center gap-2 shadow-xl"
+                style="background:linear-gradient(135deg,#059669,#047857);color:white">
+                ✅ Chốt vòng 1 — Sang vòng 2
+            </button>
+        </div>
+    </div>
+    <!-- Dice overlay — large vertical list, projector-friendly -->
+    <div id="thDiceOverlay" class="hidden absolute inset-0 flex flex-col" style="background:rgba(0,0,0,0.93);z-index:7">
+        <div class="shrink-0 flex items-center justify-between px-5 pt-5 pb-2">
+            <p id="thDiceTitle" class="text-white/50 text-xs font-black uppercase tracking-widest"></p>
+            <span id="thDiceStatus" class="text-amber-300 text-sm font-black"></span>
+        </div>
+        <div id="thDiceList" class="flex-1 overflow-y-auto px-3 py-2"></div>
+        <div id="thDiceFooter" class="shrink-0 p-5 pb-6 hidden">
+            <button id="thDiceChot" onclick="thCloseDiceOverlay()"
+                class="w-full py-4 rounded-2xl font-black text-xl active:scale-95 transition shadow-xl flex items-center justify-center gap-3"
+                style="background:linear-gradient(135deg,#059669,#047857);color:white">
+                ✅ Chốt vòng — Sang vòng tiếp
+            </button>
+        </div>
+    </div>
+    <!-- Special square popup -->
+    <div id="thSpecialPopup" class="hidden absolute inset-0 flex items-center justify-center" style="background:rgba(0,0,0,0.8);z-index:10">
+        <div class="bg-gray-900 rounded-3xl p-7 mx-5 text-center max-w-xs shadow-2xl" style="border:1.5px solid rgba(255,255,255,0.12)">
+            <p id="thPopupIcon" class="text-6xl mb-3 leading-none"></p>
+            <p id="thPopupGroup" class="text-white/50 text-sm font-bold mb-1"></p>
+            <p id="thPopupLabel" class="text-white font-black text-lg leading-snug mb-5"></p>
+            <button onclick="thClosePopup()" class="px-10 py-3 rounded-2xl font-black text-base active:scale-95 transition shadow-lg" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#1f2937">OK!</button>
+        </div>
+    </div>
+    <!-- Winner screen -->
+    <div id="thWinnerScreen" class="hidden absolute inset-0 flex flex-col items-center justify-center px-6" style="background:rgba(10,5,0,0.94);z-index:11">
+        <div class="text-8xl mb-4" style="animation:badgePop 0.6s cubic-bezier(.175,.885,.32,1.275) forwards">🏆</div>
+        <p class="text-amber-300 text-xs font-black uppercase tracking-widest mb-2">🎉 Đã về đích!</p>
+        <p id="thWinnerLabel" class="text-white font-black text-3xl mb-2"></p>
+        <p id="thWinnerMembers" class="text-white/50 text-sm text-center mb-2"></p>
+        <p id="thBonusPtsInfo" class="text-amber-300 text-sm font-bold mb-8"></p>
+        <div class="flex gap-3 flex-wrap justify-center w-full">
+            <button id="thAwardWinnerBtn" class="flex-1 py-3.5 rounded-2xl font-black text-sm active:scale-95 shadow-lg flex items-center justify-center gap-2 max-w-[180px]" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#1f2937">
+                <i class="fas fa-star"></i> Cho điểm nhóm này
+            </button>
+            <button onclick="thShowFinalRanking()" class="flex-1 py-3.5 rounded-2xl font-black text-sm bg-white/10 text-white active:scale-95 max-w-[180px]">
+                📊 Bảng xếp hạng
+            </button>
+        </div>
+    </div>
+    <!-- Final ranking -->
+    <div id="thFinalRanking" class="hidden absolute inset-0 flex flex-col" style="background:rgba(10,5,0,0.96);z-index:12">
+        <div class="shrink-0 flex items-center justify-between px-4 py-4 border-b border-white/10">
+            <h3 class="text-white font-black text-base">📊 Xếp hạng cuối</h3>
+            <button onclick="document.getElementById('thFinalRanking').classList.add('hidden')" class="text-white/50 font-bold">✕</button>
+        </div>
+        <div id="thFinalList" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
+        <div class="shrink-0 p-4 pb-6 space-y-2">
+            <div id="thFinalAwardBtns" class="flex gap-2 flex-wrap"></div>
+            <button onclick="thAwardAll()" class="w-full py-3 rounded-2xl font-black text-sm bg-dojo-blue text-white active:scale-95 shadow">
+                <i class="fas fa-users mr-1"></i> Cho điểm tất cả nhóm
+            </button>
+            <a href="https://chucmungsinhnhat-chi.vercel.app/" target="_blank" rel="noopener"
+               class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-black text-sm active:scale-95 transition"
+               style="background:linear-gradient(135deg,#be185d,#7c3aed);color:white;box-shadow:0 0 18px rgba(190,24,93,0.5);text-decoration:none">
+                🎁 Trao giải đặc biệt
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- RANDOM CALL MODAL -->
+<div id="randomCallBackdrop" class="fixed inset-0 bg-black bg-opacity-70 z-[105] hidden" onclick="closeRandomCall()"></div>
+<div id="randomCallModal" class="fixed inset-0 z-[106] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <!-- Header -->
+        <div id="randomCallHeader" class="px-6 pt-6 pb-4 text-center" style="background:linear-gradient(135deg,#6d28d9,#db2777)">
+            <p class="text-white text-opacity-80 text-xs font-bold uppercase tracking-widest mb-1">🎲 Gọi ngẫu nhiên</p>
+            <p id="randomCallGroupLabel" class="text-white font-black text-base"></p>
+        </div>
+        <!-- Spinning slot -->
+        <div class="px-6 py-6 text-center">
+            <div id="randomCallSpinner" class="mb-3 h-20 overflow-hidden relative flex items-center justify-center">
+                <div id="randomCallReel" class="text-4xl font-black text-purple-700 transition-all duration-75 text-center leading-none"></div>
+            </div>
+            <div id="randomCallAvatar" class="hidden mb-3 flex justify-center">
+                <img id="randomCallAvatarImg" class="w-20 h-20 rounded-full border-4 border-purple-300 shadow-lg object-contain bg-gray-50" src="">
+            </div>
+            <div id="randomCallName" class="text-2xl font-black text-gray-800 mb-0.5 hidden"></div>
+            <div id="randomCallStt" class="text-sm text-gray-400 font-bold mb-4 hidden"></div>
+            <!-- Action buttons (shown after reveal) -->
+            <div id="randomCallActions" class="hidden flex gap-3">
+                <button onclick="_randomCallResult(true)" class="flex-1 py-3 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-base shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-check-circle"></i> Đúng
+                </button>
+                <button onclick="_randomCallResult(false)" class="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white font-black rounded-2xl text-base shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-times-circle"></i> Sai
+                </button>
+            </div>
+            <div id="randomCallSpinBtn" class="hidden">
+                <button onclick="_randomCallAgain()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl text-sm shadow active:scale-95 transition">
+                    <i class="fas fa-dice mr-1"></i> Gọi lại
+                </button>
+            </div>
+            <!-- Result feedback -->
+            <div id="randomCallFeedback" class="hidden mt-3 py-3 px-4 rounded-2xl text-base font-black text-center"></div>
+        </div>
+        <div class="px-6 pb-5">
+            <button onclick="closeRandomCall()" class="w-full py-2.5 bg-gray-100 text-gray-500 font-bold rounded-2xl text-sm hover:bg-gray-200 transition">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEWER OVERLAY – chế độ xem chỉ đọc -->
+<div id="viewerOverlay" class="fixed inset-0 z-[100] hidden bg-gray-50 overflow-y-auto">
+    <div class="max-w-lg mx-auto pb-8">
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center z-10 shadow-sm">
+            <button onclick="closeViewer()" class="text-gray-500 font-bold flex items-center gap-2 text-sm"><i class="fas fa-times"></i> Đóng</button>
+            <span class="text-xs text-teal-600 font-bold flex items-center gap-1"><i class="fas fa-lock text-xs"></i> Chỉ xem</span>
+            <button onclick="copyViewerLink()" id="btnCopyViewerLink" class="text-teal-600 font-bold text-sm flex items-center gap-1"><i class="fas fa-link"></i> Sao chép link</button>
+        </div>
+        <div id="viewerContent" class="p-4"></div>
+    </div>
+</div>
+
+<!-- SHARE LINK MODAL -->
+<div id="shareLinkBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden" onclick="closeShareLinkModal()"></div>
+<div id="shareLinkModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[115] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl">
+    <div class="p-4 border-b flex justify-between items-center">
+        <div>
+            <h3 id="shareLinkTitle" class="font-bold text-gray-800">Chia sẻ xem điểm</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Link chỉ xem – không thể chỉnh sửa</p>
+        </div>
+        <button onclick="closeShareLinkModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-4 flex flex-col gap-3">
+        <div class="bg-gray-50 rounded-xl p-3 border border-gray-200">
+            <p class="text-xs text-gray-400 font-bold mb-1">LINK XEM ĐIỂM:</p>
+            <p id="shareLinkUrl" class="text-xs text-gray-700 break-all leading-relaxed select-all"></p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="copyShareLink()" class="flex-1 py-3 bg-teal-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2">
+                <i class="fas fa-copy"></i> Sao chép
+            </button>
+            <button onclick="previewShareLink()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl flex items-center justify-center gap-2">
+                <i class="fas fa-eye"></i> Xem thử
+            </button>
+        </div>
+        <p id="shareLinkNote" class="text-[11px] text-gray-400 text-center leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div id="syncModal" class="fixed inset-0 z-[95] hidden flex flex-col bg-dojo-bg overflow-hidden">
+    <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 pt-10 pb-5 relative flex-shrink-0">
+        <button onclick="closeSyncModal()" class="absolute top-4 right-4 w-9 h-9 bg-white bg-opacity-20 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center"><i class="fas fa-cloud text-2xl"></i></div>
+            <div>
+                <h2 class="text-lg font-black">Đồng bộ Google Sheets</h2>
+                <p id="syncLastTime" class="text-xs opacity-75 mt-0.5">Chưa đồng bộ lần nào</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 no-scrollbar">
+
+        <!-- Status badge -->
+        <div id="syncStatusBadge" class="hidden flex items-center gap-2 p-3 rounded-xl text-sm font-bold"></div>
+
+        <!-- Bước hướng dẫn (khóa mật khẩu) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <button onclick="toggleSyncGuide()" class="w-full p-4 flex justify-between items-center text-left">
+                <span class="font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-lock text-amber-400"></i> Hướng dẫn cài đặt lần đầu</span>
+                <i id="syncGuideIcon" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+            </button>
+            <!-- Password gate -->
+            <div id="syncGuidePwGate" class="hidden px-4 pb-4 border-t border-gray-50">
+                <p class="text-xs text-gray-500 mt-3 mb-2 font-semibold"><i class="fas fa-lock text-amber-400 mr-1"></i>Nhập mật khẩu để xem hướng dẫn:</p>
+                <div class="flex gap-2">
+                    <input type="password" id="syncGuidePw" placeholder="Mật khẩu..." class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-400" onkeydown="if(event.key==='Enter')checkSyncGuidePassword()">
+                    <button onclick="checkSyncGuidePassword()" class="px-4 py-2 bg-amber-500 text-white font-bold rounded-xl text-sm hover:bg-amber-600 transition">Xác nhận</button>
+                </div>
+                <p id="syncGuidePwErr" class="text-xs text-red-500 mt-1 hidden">Mật khẩu không đúng!</p>
+            </div>
+            <div id="syncGuide" class="hidden px-4 pb-4 border-t border-gray-50">
+                <ol class="text-sm text-gray-600 flex flex-col gap-2 mt-3">
+                    <li class="flex gap-2 items-start"><span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">1</span><span>Mở <b>Google Sheets</b> → <b>Tiện ích mở rộng</b> → <b>Apps Script</b></span></li>
+                    <li class="flex gap-2 items-start"><span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">2</span><span>Xóa code mặc định, dán đoạn code bên dưới vào rồi bấm <b>Lưu (Ctrl+S)</b></span></li>
+                    <li class="flex gap-2 items-start"><span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">3</span><span>Bấm <b>Triển khai</b> → <b>Triển khai mới</b> → chọn loại <b>Ứng dụng web</b></span></li>
+                    <li class="flex gap-2 items-start"><span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">4</span><span>"Ai có quyền truy cập" chọn <b class="text-red-600">"Tất cả mọi người"</b> <span class="text-red-500 text-xs">(⚠️ không phải "có tài khoản Google")</span> → bấm <b>Triển khai</b></span></li>
+                    <li class="flex gap-2 items-start"><span class="w-5 h-5 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">5</span>
+                        <span>Cửa sổ hiện ra có <b>URL ứng dụng web</b> dạng:<br>
+                        <code class="text-[10px] bg-gray-100 rounded px-1 break-all">https://script.google.com/macros/s/<b class="text-green-700">AKfycb...</b>/exec</code><br>
+                        Sao chép phần <b class="text-green-700">AKfycb...</b> (Deployment ID) rồi dán vào ô bên dưới</span>
+                    </li>
+                </ol>
+                <!-- Warning box -->
+                <div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 flex gap-2">
+                    <i class="fas fa-triangle-exclamation mt-0.5 flex-shrink-0"></i>
+                    <div><b>Lưu ý:</b> Cần nhập <b>Deployment ID</b> (bắt đầu bằng <code class="bg-amber-100 px-1 rounded">AKfyc</code>, dài ~80 ký tự), <u>không phải</u> Script ID ngắn trong Project Settings.</div>
+                </div>
+                <!-- Apps Script code block -->
+                <div class="mt-4 bg-gray-900 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
+                    <!-- Header bar -->
+                    <div class="flex items-center justify-between px-3 py-2 bg-gray-800 border-b border-gray-700">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-red-500 opacity-80"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500 opacity-80"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500 opacity-80"></span>
+                            <span class="ml-2 text-[10px] text-gray-400 font-mono">Code.gs — Google Apps Script</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleScriptExpand()" id="scriptExpandBtn"
+                                class="text-[10px] text-gray-300 bg-gray-700 px-2 py-1 rounded-lg hover:bg-gray-600 font-bold flex items-center gap-1">
+                                <i class="fas fa-expand-alt text-[9px]"></i> Mở rộng
+                            </button>
+                            <button onclick="copySyncScript()"
+                                class="text-[10px] bg-green-600 text-white px-3 py-1 rounded-lg font-bold hover:bg-green-500 flex items-center gap-1">
+                                <i class="fas fa-copy text-[9px]"></i> Sao chép
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Code -->
+                    <pre id="syncScriptCode" class="text-[10px] text-green-300 overflow-x-auto whitespace-pre leading-relaxed p-3 transition-all duration-300" style="max-height:320px;overflow-y:auto"></pre>
+                    <!-- Gradient fade at bottom when collapsed -->
+                    <div id="scriptFade" class="h-8 bg-gradient-to-t from-gray-900 to-transparent -mt-8 pointer-events-none relative z-10"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deployment ID setting -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <label class="text-xs font-bold text-gray-500 mb-0.5 block">Deployment ID (Web App) của bạn</label>
+            <p class="text-xs text-gray-400 mb-2">Bắt đầu bằng <code class="bg-gray-100 px-1 rounded">AKfyc</code> · Để trống = dùng link đồng bộ chung mặc định</p>
+            <div class="flex gap-2">
+                <input type="text" id="syncUrl" placeholder="AKfycbxxxxxxxxxxxxxxxx..." class="flex-1 border-2 border-gray-200 p-3 rounded-xl text-sm focus:outline-none focus:border-green-500 min-w-0 font-mono">
+                <button onclick="testSyncConnection()" class="px-4 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition text-sm flex-shrink-0">Kiểm tra</button>
+            </div>
+            <p id="syncUrlPreview" class="text-[10px] text-gray-400 mt-1 break-all hidden"></p>
+            <div id="syncIdWarning" class="hidden mt-1 text-[10px] text-amber-600 flex items-center gap-1"><i class="fas fa-triangle-exclamation"></i> Có vẻ chưa đúng — Deployment ID phải bắt đầu bằng "AKfyc" và dài hơn 50 ký tự.</div>
+            <button onclick="saveSyncUrl()" class="mt-2 w-full py-2.5 bg-gray-800 text-white font-bold rounded-xl text-sm hover:bg-gray-700 transition">Lưu</button>
+        </div>
+
+        <!-- Sync actions -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-700 mb-3">Đồng bộ dữ liệu</h3>
+            <div class="flex flex-col gap-3">
+                <button onclick="pushToGSheet()" id="btnPush" class="w-full py-3 bg-green-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-green-700 transition">
+                    <i class="fas fa-cloud-upload-alt"></i> Đẩy lên Google Sheets
+                    <span class="text-xs opacity-75 font-normal">(ghi đè)</span>
+                </button>
+                <button onclick="pullFromGSheet()" id="btnPull" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 hover:bg-blue-700 transition">
+                    <i class="fas fa-cloud-download-alt"></i> Tải về từ Google Sheets
+                    <span class="text-xs opacity-75 font-normal">(ghi đè local)</span>
+                </button>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-3 text-center">⚠️ Đẩy lên sẽ ghi đè dữ liệu trên Sheet. Tải về sẽ ghi đè dữ liệu local.</p>
+        </div>
+
+        <!-- Sync scope -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-700 mb-3">Dữ liệu được đồng bộ</h3>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Danh sách lớp</span></div>
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Học sinh & điểm</span></div>
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Lịch sử chấm điểm</span></div>
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Điểm số môn học</span></div>
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Phân kỳ thi đua</span></div>
+                <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl"><i class="fas fa-check text-green-600"></i><span class="font-semibold text-gray-700">Kỹ năng tùy chỉnh</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-[80] transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2 whitespace-nowrap">
+    <i class="fas fa-check-circle text-dojo-green text-xl"></i>
+    <span id="toastMessage">Thông báo</span>
+</div>
+
+<!-- Audio -->
+<audio id="soundPositive" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+<audio id="soundNegative" src="https://assets.mixkit.co/active_storage/sfx/2953/2953-preview.mp3" preload="auto"></audio>
+<audio id="soundTick" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3" preload="auto"></audio>
+<audio id="soundTaDa" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+
+<!-- BOTTOM NAV -->
+<nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 pb-4 text-[10px] font-semibold text-gray-400 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+    <button id="nav-classroom" onclick="switchView('classroom')" class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-dojo-blue transition-colors"><i class="fas fa-chalkboard text-lg"></i><span>Lớp học</span></button>
+    <button id="nav-report"    onclick="switchView('report')"    class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-chart-pie text-lg"></i><span>Báo cáo</span></button>
+    <button id="nav-grades"    onclick="switchView('grades')"    class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-graduation-cap text-lg"></i><span>Điểm số</span></button>
+    <button id="nav-history"   onclick="switchView('history')"   class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-history text-lg"></i><span>Lịch sử</span></button>
+    <button id="nav-meeting"   onclick="switchView('meeting')"   class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors relative"><i class="fas fa-book-open text-lg"></i><span>Sổ họp</span><span id="meetingBadge" class="hidden absolute -top-0.5 right-2 bg-red-500 text-white text-[9px] font-black rounded-full px-1 min-w-[16px] text-center"></span></button>
+    <button id="nav-settings"  onclick="switchView('settings')"  class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-sliders-h text-lg"></i><span>Kỹ năng</span></button>
+</nav>
+
+
+<!-- GAME MENU MODAL -->
+<div id="gameMenuModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 z-50 hidden items-center justify-center transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-3xl max-w-lg w-full mx-4 relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500"></div>
+        <button onclick="closeGameMenu()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
+        
+        <h2 class="text-2xl font-black text-gray-800 mb-2"><i class="fas fa-gamepad text-indigo-500 mr-2"></i>Kho Trò Chơi</h2>
+        <p class="text-gray-500 text-sm mb-6">Chọn một trò chơi để hâm nóng lớp học!</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Quả bom hẹn giờ -->
+            <button onclick="closeGameMenu(); openTimeBomb();" class="flex flex-col items-center p-4 bg-red-50 border-2 border-red-100 rounded-2xl hover:border-red-400 hover:bg-red-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-bomb text-4xl text-red-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Quả Bom Hẹn Giờ</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!</p>
+            </button>
+            
+            <!-- Đánh Trùm -->
+            <button onclick="closeGameMenu(); openBossBattle();" class="flex flex-col items-center p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl hover:border-indigo-400 hover:bg-indigo-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-dragon text-4xl text-indigo-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Chinh Phục Cực Địa</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Cả lớp hợp lực đánh trùm. Trả lời đúng để gây sát thương!</p>
+            </button>
+
+            <!-- Đấu Trường Thẻ Bài -->
+            <button onclick="closeGameMenu(); openCardFlip();" class="flex flex-col items-center p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-clone text-4xl text-emerald-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Đấu Trường Thẻ Bài</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Lật thẻ bí ẩn để nhận điểm thưởng lớn hoặc cạm bẫy!</p>
+            </button>
+            
+            <!-- Kéo Co Hạng Nặng -->
+            <button onclick="closeGameMenu(); openTugOfWar();" class="flex flex-col items-center p-4 bg-orange-50 border-2 border-orange-100 rounded-2xl hover:border-orange-400 hover:bg-orange-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-people-arrows text-4xl text-orange-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Kéo Co Hạng Nặng</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Chia 2 phe đối kháng trực tiếp. Trả lời đúng để kéo cờ!</p>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- TUG OF WAR MODAL -->
+<div id="tugOfWarModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden flex-col transition-opacity duration-300">
+    
+    <!-- SETUP SCREEN -->
+    <div id="tugSetupScreen" class="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-900 to-red-900">
+        <button onclick="closeTugOfWar()" class="absolute top-6 right-6 w-12 h-12 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full text-white flex items-center justify-center backdrop-blur transition"><i class="fas fa-times text-2xl"></i></button>
+        
+        <i class="fas fa-people-arrows text-7xl text-white mb-6 animate-pulse"></i>
+        <h2 class="text-5xl font-black text-white text-glow mb-4 text-center">KÉO CO HẠNG NẶNG</h2>
+        <p class="text-white text-opacity-80 text-xl mb-10 text-center max-w-xl">Hệ thống sẽ tự động chia lớp thành 2 phe. Trả lời ĐÚNG kéo dây về phe mình, SAI bị kéo ngược lại!</p>
+        
+        <div class="bg-white bg-opacity-10 backdrop-blur-md p-8 rounded-3xl w-full max-w-md border border-white border-opacity-20">
+            <label class="block text-white font-bold mb-4 text-lg text-center"><i class="fas fa-clock mr-2"></i>Nhập Thời Gian (Phút)</label>
+            <div class="flex gap-3 mb-8 justify-center">
+                <input type="number" id="tugTimeInput" value="10" min="10" class="w-1/2 py-3 px-4 rounded-xl text-center text-gray-800 font-black text-3xl shadow-inner border-2 border-orange-300 focus:outline-none focus:border-orange-500 bg-white">
+                <span class="text-white text-2xl font-bold flex items-center">Phút</span>
+            </div>
+            
+            <button onclick="startTugOfWar()" class="w-full py-4 bg-gradient-to-r from-blue-500 to-red-500 hover:from-blue-400 hover:to-red-400 text-white font-black text-2xl rounded-2xl transition shadow-[0_0_20px_rgba(255,255,255,0.3)] border-2 border-white border-opacity-50 active:scale-95"><i class="fas fa-play mr-2"></i> BẮT ĐẦU CHIA PHE</button>
+        </div>
+    </div>
+
+    <!-- RULES SCREEN -->
+    <div id="thRulesScreen" class="w-full h-full flex flex-col items-center justify-center p-12 bg-gray-900 text-white hidden relative">
+        <button onclick="closeTreasureHunt()" class="absolute top-6 right-6 w-12 h-12 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full text-white flex items-center justify-center backdrop-blur transition z-50"><i class="fas fa-times text-2xl"></i></button>
+        <div class="text-[120px] mb-4" id="thRulesEmoji">🗺️</div>
+        <h2 id="thRulesTitle" class="text-6xl md:text-7xl font-black text-glow mb-12 text-center text-yellow-400">LUẬT CHƠI</h2>
+        <div class="max-w-5xl w-full text-center space-y-8 bg-black bg-opacity-40 p-12 rounded-3xl border border-white border-opacity-20 shadow-2xl">
+            <p id="thRulesDesc" class="text-3xl md:text-4xl leading-relaxed font-semibold"></p>
+            <p class="text-2xl md:text-3xl text-gray-300 italic border-t border-gray-600 pt-8 mt-8">Cẩn thận với các ô <span class="text-red-400 font-bold uppercase underline">Lốc Xoáy / Dịch Chuyển</span>! Nếu dẫm phải, nhóm sẽ bị cuốn về <b>Ô số 1</b> và bị phạt <b>-2 điểm</b> vào sổ ngay lập tức!</p>
+        </div>
+        <button onclick="startTreasureHunt()" class="mt-16 px-16 py-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full text-white font-black text-4xl shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-105 transition hover:shadow-[0_0_50px_rgba(16,185,129,0.8)]"><i class="fas fa-play mr-4"></i> BẮT ĐẦU CHƠI</button>
+    </div>
+
+    <!-- PLAY SCREEN -->
+    <div id="tugPlayScreen" class="w-full h-full hidden flex-col relative overflow-hidden">
+        <!-- Split Background -->
+        <div class="absolute inset-0 flex">
+            <div class="w-1/2 h-full bg-blue-900 border-r-8 border-yellow-400"></div>
+            <div class="w-1/2 h-full bg-red-900 border-l-8 border-yellow-400"></div>
+        </div>
+        
+        <!-- Header -->
+        <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-10">
+            <div class="bg-black bg-opacity-50 backdrop-blur rounded-2xl px-6 py-3 border border-white border-opacity-20">
+                <div class="text-white font-bold text-sm uppercase tracking-widest text-center mb-1">Thời Gian Còn Lại</div>
+                <div id="tugTimer" class="text-4xl font-black text-yellow-400 text-glow">05:00</div>
+            </div>
+            
+            <button onclick="forceStopTug()" class="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition shadow-lg border border-red-400 flex items-center"><i class="fas fa-flag-checkered mr-2"></i> KẾT THÚC SỚM</button>
+        </div>
+        
+        <!-- Center Arena -->
+        <div class="flex-1 flex flex-col items-center justify-center z-10 w-full relative">
+            
+            <!-- Teams Info -->
+            <div class="w-full flex justify-between px-6 absolute top-28 bottom-40 z-0">
+                <!-- Blue Team List -->
+                <div class="text-left w-[calc(50%-220px)] flex flex-col">
+                    <div id="tugBlueList" class="flex-1 overflow-hidden grid grid-cols-1 xl:grid-cols-2 gap-3 text-blue-100 font-black text-xl md:text-2xl leading-tight content-start"></div>
+                </div>
+                
+                <!-- Red Team List -->
+                <div class="text-right w-[calc(50%-220px)] flex flex-col">
+                    <div id="tugRedList" class="flex-1 overflow-hidden grid grid-cols-1 xl:grid-cols-2 gap-3 text-red-100 font-black text-xl md:text-2xl leading-tight content-start text-left" dir="ltr"></div>
+                </div>
+            </div>
+            
+            <!-- Student Picker -->
+            <div class="bg-black bg-opacity-60 backdrop-blur-xl rounded-3xl border-2 border-white border-opacity-20 p-8 flex flex-col items-center justify-center shadow-2xl relative w-[400px] mt-10">
+                <p class="text-gray-300 font-bold text-sm mb-4 uppercase tracking-widest text-center">Đại Diện Trả Lời</p>
+                
+                <div id="tugStudentAvatarWrapper" class="w-40 h-40 rounded-full mb-4 overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.2)] border-8 border-gray-500 flex items-center justify-center transition-all bg-gray-800">
+                    <i class="fas fa-user-secret text-7xl text-gray-500"></i>
+                </div>
+                <h3 id="tugStudentName" class="text-4xl font-black text-white text-glow mb-2 text-center leading-tight">Sẵn sàng...</h3>
+                <div id="tugStudentTeam" class="text-2xl font-black mb-6 uppercase tracking-widest h-8 drop-shadow-md"></div>
+                
+                
+                <button id="tugPickBtn" onclick="pickNextTugStudent()" class="w-full py-5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-black text-2xl rounded-2xl transition shadow-[0_0_20px_rgba(234,179,8,0.5)] border-2 border-yellow-300 active:scale-95 flex items-center justify-center gap-2"><i class="fas fa-dice fa-spin-hover"></i> GỌI NGƯỜI</button>
+                
+                <div id="tugActionBtns" class="flex gap-4 w-full hidden">
+                    <button onclick="tugAnswer(false)" class="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-2xl transition border-2 border-gray-500 active:scale-95 shadow-md text-xl"><i class="fas fa-times"></i> SAI</button>
+                    <button onclick="tugAnswer(true)" class="flex-1 py-4 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl transition border-2 border-green-300 active:scale-95 shadow-[0_0_15px_rgba(34,197,94,0.5)] text-xl"><i class="fas fa-check"></i> ĐÚNG</button>
+                </div>
+            </div>
+            
+            <!-- The Rope -->
+            <div class="w-full mt-20 relative px-10 h-32 flex items-center">
+                <!-- Rope Line -->
+                <div class="absolute left-10 right-10 h-6 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] bg-amber-700 rounded-full border-y-4 border-amber-900 shadow-2xl"></div>
+                
+                <!-- The Flag -->
+                <div id="tugFlag" class="absolute h-32 w-4 bg-yellow-400 shadow-[0_0_20px_rgba(250,204,21,1)] transition-all duration-700 ease-out z-20 flex flex-col items-center justify-center" style="left: 50%; transform: translateX(-50%);">
+                    <div class="w-16 h-16 bg-red-600 rounded-full border-4 border-white flex items-center justify-center shadow-lg absolute">
+                        <i class="fas fa-ribbon text-white text-3xl"></i>
+                    </div>
+                </div>
+                
+                <div class="absolute left-10 text-white text-4xl opacity-50 font-black"><i class="fas fa-caret-left"></i> VẠCH XANH</div>
+                <div class="absolute right-10 text-white text-4xl opacity-50 font-black">VẠCH ĐỎ <i class="fas fa-caret-right"></i></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RESULT SCREEN -->
+    <div id="tugResultScreen" class="w-full h-full hidden flex-col items-center justify-center p-6 relative overflow-hidden bg-gray-900">
+        <!-- Confetti layer handled by CSS/JS if needed, or just static bg -->
+        <i id="tugResultIcon" class="fas fa-trophy text-8xl drop-shadow-lg text-yellow-400 mb-6 scale-in-center"></i>
+        <h2 id="tugResultTitle" class="text-6xl font-black mb-4 uppercase tracking-wider text-center">ĐỘI XANH THẮNG!</h2>
+        <p id="tugResultMessage" class="text-2xl text-white text-opacity-80 font-medium text-center max-w-2xl mb-10">Cả đội được cộng +2 điểm!</p>
+        
+        <button onclick="closeTugOfWar()" class="px-10 py-5 bg-white text-gray-900 hover:bg-gray-200 font-black text-2xl rounded-full transition shadow-xl active:scale-95"><i class="fas fa-sign-out-alt mr-2"></i> THOÁT TRÒ CHƠI</button>
+    </div>
+</div>
+
+<!-- CARD FLIP MODAL -->
+<div id="cardFlipModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden flex-col transition-opacity duration-300 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] p-4">
+    
+    <!-- Top Bar -->
+    <div class="flex justify-between items-center w-full mb-4">
+        <h2 class="text-3xl font-black text-emerald-400 drop-shadow-md flex items-center gap-2">
+            <i class="fas fa-clone"></i> Đấu Trường Thẻ Bài
+        </h2>
+        <div class="flex gap-4 items-center">
+            <button onclick="resetCardFlip()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg"><i class="fas fa-sync-alt mr-2"></i> Tráo Thẻ Mới</button>
+            <button onclick="closeCardFlip()" class="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full text-white flex items-center justify-center backdrop-blur transition"><i class="fas fa-times text-xl"></i></button>
+        </div>
+    </div>
+    
+    <div class="flex flex-col lg:flex-row flex-1 gap-6 w-full h-full min-h-0">
+        
+        <!-- Left Panel: Student Caller -->
+        <div class="w-full lg:w-1/4 xl:w-1/5 bg-white bg-opacity-10 backdrop-blur-xl rounded-3xl border border-white border-opacity-20 p-6 flex flex-col items-center justify-center shadow-2xl relative overflow-hidden shrink-0">
+            <p class="text-emerald-200 font-bold text-lg mb-4 uppercase tracking-widest text-center">Người Lật Thẻ</p>
+            <div id="cardStudentAvatar" class="w-32 h-32 bg-white rounded-full mx-auto mb-4 overflow-hidden shadow-inner border-4 border-emerald-400 flex items-center justify-center transition-all">
+                <i class="fas fa-user-secret text-6xl text-gray-300"></i>
+            </div>
+            <h3 id="cardStudentName" class="text-3xl font-black text-white text-glow mb-8 text-center drop-shadow-lg leading-tight h-16">Chưa có ai...</h3>
+            
+            <button id="cardPickBtn" onclick="pickNextCardStudent()" class="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-2xl rounded-2xl transition shadow-[0_0_20px_rgba(16,185,129,0.5)] border-2 border-emerald-300 active:scale-95 flex items-center justify-center gap-2"><i class="fas fa-dice fa-spin-hover"></i> GỌI NGƯỜI</button>
+            
+            <div id="cardActionBtns" class="flex flex-col gap-2 w-full hidden">
+                <p class="text-[10px] text-white text-center font-bold uppercase mb-1">Đánh giá câu trả lời</p>
+                <div class="flex gap-2 w-full">
+                    <button onclick="setCardMode(false)" class="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white font-bold rounded-xl transition border-2 border-red-300 active:scale-95 shadow-md text-sm"><i class="fas fa-times"></i> SAI</button>
+                    <button onclick="setCardMode(true)" class="flex-1 py-3 bg-green-500 hover:bg-green-400 text-white font-bold rounded-xl transition border-2 border-green-300 active:scale-95 shadow-md text-sm"><i class="fas fa-check"></i> ĐÚNG</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Cards Grid -->
+        <div class="flex-1 w-full bg-white bg-opacity-5 backdrop-blur-md rounded-3xl border border-white border-opacity-10 p-4 shadow-inner flex items-center justify-center min-h-0">
+            <div id="cardsGrid" class="w-full h-full grid grid-cols-4 grid-rows-3 gap-3 md:gap-4 lg:gap-6">
+                <!-- Cards injected by JS -->
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- BOSS BATTLE MODAL -->
+<div id="bossBattleModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden items-center justify-center transition-opacity duration-300 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+    
+    <!-- Setup Screen -->
+    <div id="bossSetupScreen" class="bg-white p-6 rounded-3xl max-w-sm w-full mx-4 text-center shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-3 bg-indigo-500"></div>
+        <h2 class="text-2xl font-black mb-4 text-indigo-600 mt-2"><i class="fas fa-dragon"></i> Chinh Phục Trùm</h2>
+        
+        <div class="mb-4 text-left bg-gray-50 p-3 rounded-xl">
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Máu Của Trùm (HP)</label>
+            <div class="flex gap-2">
+                <button class="boss-hp-btn flex-1 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 font-bold border-2 border-indigo-500 text-sm" onclick="setBossHp(50)">50</button>
+                <button class="boss-hp-btn flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-bold border-2 border-transparent hover:bg-gray-200 text-sm" onclick="setBossHp(100)">100</button>
+                <button class="boss-hp-btn flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-bold border-2 border-transparent hover:bg-gray-200 text-sm" onclick="setBossHp(150)">150</button>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1 italic text-center">*Mỗi câu trả lời đúng trừ 10 HP</p>
+        </div>
+        
+        <div class="mb-6 text-left bg-gray-50 p-3 rounded-xl">
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Thời Gian</label>
+            <div class="flex gap-2">
+                <button class="boss-time-btn flex-1 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 font-bold border-2 border-indigo-500 text-sm" onclick="setBossTime(600)">10 Phút</button>
+                <button class="boss-time-btn flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-bold border-2 border-transparent hover:bg-gray-200 text-sm" onclick="setBossTime(900)">15 Phút</button>
+                <button class="boss-time-btn flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-bold border-2 border-transparent hover:bg-gray-200 text-sm" onclick="setBossTime(1200)">20 Phút</button>
+            </div>
+        </div>
+        
+        <div class="flex gap-2">
+            <button onclick="closeBossBattle()" class="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">Đóng</button>
+            <button onclick="startBossBattle()" class="flex-1 py-3 bg-indigo-600 text-white font-black text-lg rounded-xl hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-500/50">XUẤT TRẬN</button>
+        </div>
+    </div>
+    
+    <!-- Play Screen -->
+    <div id="bossPlayScreen" class="hidden flex-col items-center w-full h-full relative p-4 max-w-4xl mx-auto">
+        <button onclick="forceStopBoss()" class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full text-white flex items-center justify-center backdrop-blur transition z-50"><i class="fas fa-times text-lg"></i></button>
+        
+        <!-- Header: Timer -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-md px-6 py-2 rounded-full border border-white border-opacity-20 mb-4 shadow-lg">
+            <div id="bossTimer" class="text-4xl font-mono font-black text-white tracking-widest drop-shadow-md">03:00</div>
+        </div>
+        
+        <!-- Boss Area -->
+        <div class="flex-1 w-full flex flex-col items-center justify-center relative">
+            <div id="bossImageContainer" class="relative transition-transform duration-100">
+                <img id="bossImage" src="https://api.dicebear.com/7.x/bottts/svg?seed=BossLevel99&backgroundColor=transparent" class="w-48 h-48 sm:w-64 sm:h-64 drop-shadow-[0_0_30px_rgba(239,68,68,0.6)] z-10 relative">
+                <!-- Slash effect container -->
+                <div id="bossSlashEffect" class="absolute inset-0 flex items-center justify-center hidden z-20 pointer-events-none">
+                    <i class="fas fa-bolt text-yellow-300 text-7xl opacity-80 drop-shadow-[0_0_10px_rgba(253,224,71,0.8)]" style="transform: rotate(45deg);"></i>
+                </div>
+            </div>
+            
+            <!-- Health Bar -->
+            <div class="w-full max-w-md mt-6 bg-gray-800 rounded-full h-8 border-4 border-gray-900 shadow-2xl relative overflow-hidden">
+                <div id="bossHpBarFill" class="bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-300" style="width: 100%;"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-white font-black text-sm drop-shadow-md">
+                    <span id="bossHpText">100 / 100 HP</span>
+                </div>
+            </div>
+            <p class="text-gray-400 text-xs mt-2 uppercase font-bold tracking-widest">Trùm Lười Biếng</p>
+        </div>
+        
+        <!-- Random Student Attack Panel -->
+        <div class="w-full mt-4 bg-white bg-opacity-10 backdrop-blur-xl p-6 rounded-3xl border border-white border-opacity-20 shadow-2xl flex flex-col items-center">
+            <p class="text-indigo-200 font-bold text-sm mb-2 uppercase tracking-widest">Đang Gọi Trả Lời</p>
+            <div id="bossCurrentStudentAvatar" class="w-24 h-24 bg-white rounded-full mx-auto mb-3 overflow-hidden shadow-inner border-4 border-white flex items-center justify-center"></div>
+            <h3 id="bossCurrentStudentName" class="text-4xl sm:text-5xl font-black text-white text-glow mb-4 text-center drop-shadow-lg">Đang Chọn...</h3>
+            
+            <button id="bossPickBtn" onclick="pickNextBossStudent()" class="mb-6 px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white font-black text-xl rounded-2xl transition shadow-[0_0_15px_rgba(59,130,246,0.6)] border-2 border-blue-400 backdrop-blur-md active:scale-95 flex items-center justify-center gap-2 w-full max-w-xs"><i class="fas fa-dice fa-spin-hover"></i> GỌI NGẪU NHIÊN</button>
+
+            <div id="bossActionBtns" class="flex gap-4 w-full max-w-md hidden">
+                <button onclick="bossWrongAnswer()" class="flex-1 py-4 bg-gray-600 bg-opacity-50 hover:bg-opacity-80 text-white font-bold rounded-2xl transition border border-gray-400 backdrop-blur-md active:scale-95"> SAI (Bỏ qua)</button>
+                <button onclick="bossCorrectAnswer()" class="flex-1 py-4 bg-green-500 hover:bg-green-400 text-white font-black text-2xl rounded-2xl transition shadow-[0_0_20px_rgba(34,197,94,0.5)] border-2 border-green-300 active:scale-95"><i class="fas fa-bolt"></i> ĐÚNG (-10 HP)</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Result Screen -->
+    <div id="bossResultScreen" class="hidden flex-col items-center justify-center w-full h-full p-4 relative z-20">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+            <!-- Confetti or dark bg injected via JS classes -->
+            <div id="bossResultHeader" class="w-full h-32 absolute top-0 left-0 flex items-center justify-center">
+                <i id="bossResultIcon" class="fas fa-trophy text-6xl drop-shadow-lg"></i>
+            </div>
+            
+            <div class="pt-32">
+                <h2 id="bossResultTitle" class="text-4xl font-black mb-2 uppercase tracking-wider">CHIẾN THẮNG!</h2>
+                <p id="bossResultMessage" class="text-gray-600 font-bold mb-8">Trùm đã bị tiêu diệt. Cả lớp được +2 điểm!</p>
+                <button onclick="closeBossBattle()" class="w-full py-4 bg-gray-900 text-white font-black text-lg rounded-2xl shadow-lg hover:bg-black active:scale-95 transition uppercase tracking-widest">Hoàn Tất</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<audio id="soundBossHit" src="https://assets.mixkit.co/active_storage/sfx/2744/2744-preview.mp3" preload="auto"></audio>
+<audio id="soundBossWin" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+<audio id="soundBossLose" src="https://assets.mixkit.co/active_storage/sfx/2953/2953-preview.mp3" preload="auto"></audio>
+
+<!-- BOMB GAME MODAL -->
+<div id="bombGameModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden items-center justify-center transition-opacity duration-300">
+    <!-- Cài đặt trước khi chơi -->
+    <div id="bombSetupScreen" class="bg-white p-6 rounded-2xl max-w-sm w-full mx-4 text-center">
+        <h2 class="text-2xl font-black mb-4 text-red-600"><i class="fas fa-bomb"></i> Quả Bom Hẹn Giờ</h2>
+        <p class="text-gray-600 mb-6 text-sm">Cài đặt thời gian nổ bom:</p>
+        <div class="flex gap-2 justify-center mb-6">
+            <button class="time-btn flex-1 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold border-2 border-transparent hover:bg-gray-200 transition" onclick="setTimeBomb(30)">30s</button>
+            <button class="time-btn flex-1 py-2 rounded-xl bg-red-50 text-red-600 font-bold border-2 border-red-500 transition" onclick="setTimeBomb(60)">60s</button>
+            <button class="time-btn flex-1 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold border-2 border-transparent hover:bg-gray-200 transition" onclick="setTimeBomb(90)">90s</button>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="closeTimeBomb()" class="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">Đóng</button>
+            <button onclick="startTimeBomb()" class="flex-1 py-3 bg-red-500 text-white font-black text-lg rounded-xl hover:bg-red-600 active:scale-95 transition shadow-lg shadow-red-500/50">BẮT ĐẦU</button>
+        </div>
+    </div>
+    
+    <!-- Màn hình chơi -->
+    <div id="bombPlayScreen" class="hidden flex-col items-center justify-center w-full h-full relative">
+        <div id="bombFlashBg" class="absolute inset-0 hidden"></div>
+        <div class="relative z-10 flex flex-col items-center">
+            <div id="bombTimer" class="text-7xl font-black text-white mb-8 drop-shadow-xl font-mono tracking-tighter">01:00</div>
+            
+            <div id="bombIconContainer" class="relative mb-12">
+                <i class="fas fa-bomb text-[120px] text-gray-200 drop-shadow-2xl"></i>
+                <div id="bombSpark" class="absolute top-2 right-2 text-yellow-400 text-4xl hidden"><i class="fas fa-fire"></i></div>
+            </div>
+            
+            <div class="bg-white bg-opacity-10 backdrop-blur-md px-8 py-4 rounded-3xl text-center shadow-2xl border border-white border-opacity-20 min-w-[280px]">
+                <p class="text-red-300 font-bold text-sm uppercase tracking-widest mb-2">Đang Cầm Bom</p>
+                <div id="bombStudentAvatar" class="w-20 h-20 bg-white rounded-full mx-auto mb-2 overflow-hidden shadow-inner border-4 border-white flex items-center justify-center"></div>
+                <h3 id="bombStudentName" class="text-3xl font-black text-white text-glow">Tên Học Sinh</h3>
+            </div>
+            
+            <div id="bombActionButtons" class="flex gap-4 mt-12 w-full max-w-md px-4">
+                <button onclick="bombIncorrect()" class="flex-1 py-4 bg-gray-600 bg-opacity-50 hover:bg-opacity-80 text-white font-bold rounded-2xl transition border border-gray-400 backdrop-blur-md"> SAI (Giữ)</button>
+                <button onclick="bombPass()" class="flex-1 py-4 bg-green-500 hover:bg-green-400 text-white font-black text-xl rounded-2xl transition shadow-[0_0_20px_rgba(34,197,94,0.5)] border-2 border-green-300 active:scale-95"><i class="fas fa-hand-holding-medical"></i> ĐÚNG (Ném)</button>
+            </div>
+            
+            <button id="bombClosePlayBtn" onclick="forceStopBomb()" class="absolute top-6 right-6 w-12 h-12 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full text-white flex items-center justify-center backdrop-blur transition"><i class="fas fa-times text-xl"></i></button>
+        </div>
+    </div>
+    
+    <!-- Màn hình kết quả -->
+    <div id="bombResultScreen" class="hidden flex-col items-center justify-center w-full h-full p-4 relative z-20">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full text-center shadow-2xl">
+            <h2 class="text-4xl font-black text-red-600 mb-2 uppercase italic tracking-wider">BÙM !!!</h2>
+            <div class="w-24 h-24 bg-red-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                <i class="fas fa-skull-crossbones text-5xl text-red-500"></i>
+            </div>
+            <p class="text-gray-500 font-bold mb-1">Nạn nhân cuối cùng:</p>
+            <h3 id="bombLoserName" class="text-2xl font-black text-gray-800 mb-6">Tên</h3>
+            
+            <div class="bg-gray-50 rounded-xl p-4 mb-6 text-sm">
+                <p class="font-bold text-gray-700 mb-2 border-b pb-2">Những người an toàn (+1 Điểm)</p>
+                <div id="bombWinnersList" class="flex flex-wrap gap-1.5 justify-center mt-2 max-h-32 overflow-y-auto no-scrollbar">
+                </div>
+            </div>
+            
+            <button onclick="closeTimeBomb()" class="w-full py-4 bg-red-500 text-white font-black text-lg rounded-2xl shadow-lg hover:bg-red-600 active:scale-95 transition">ĐÓNG & LƯU ĐIỂM</button>
+        </div>
+    </div>
+</div>
+
+<audio id="soundBombTick" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3" preload="auto" loop></audio>
+<audio id="soundBombExplode" src="https://assets.mixkit.co/active_storage/sfx/2771/2771-preview.mp3" preload="auto"></audio>
+<audio id="soundBombPass" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
+
+
+    <script src="js/constants.js"></script>
+    <script src="js/nhan-xet-tu-ong.js"></script>
+    <script src="js/skill-presets-bo-ky-nang-mau.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/local-storage.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/milestones.js"></script>
+    <script src="js/view-switching.js"></script>
+    <script src="js/sidebar-class-management.js"></script>
+    <script src="js/google-classroom-import.js"></script>
+    <script src="js/students.js"></script>
+    <script src="js/points-modal.js"></script>
+    <script src="js/edit-delete-student.js"></script>
+    <script src="js/random-selection.js"></script>
+    <script src="js/report-periods.js"></script>
+    <script src="js/hoc-ba.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/settings-skills-manager.js"></script>
+    <script src="js/stt-panel.js"></script>
+    <script src="js/student-profile-statistics.js"></script>
+    <script src="js/student-goals-muc-tieu-ca-nhan.js"></script>
+    <script src="js/so-hop-meeting-notes.js"></script>
+    <script src="js/grade-records-anh-gia-hoc-tap.js"></script>
+    <script src="js/phieu-nhan-xet-tuan-tu-ong.js"></script>
+    <script src="js/so-lien-lac-ien-tu.js"></script>
+    <script src="js/viewer-chia-se-xem-iem-chi-oc.js"></script>
+    <script src="js/google-sheets-sync.js"></script>
+    <script src="js/auto-sync-tu-ong-ay-len-va-keo-ve-google-sheets.js"></script>
+    <script src="js/so-iem-bo-mon-subject-grade-book.js"></script>
+    <script src="js/grade-comparison-improvement-awards.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/certificate-chung-nhan-thanh-tich.js"></script>
+    <script src="js/ghi-chu-dan-do-lop.js"></script>
+    <script src="js/chieu-iem-projector-award-display.js"></script>
+    <script src="js/so-o-cho-ngoi-phong-thi.js"></script>
+    <script src="js/chia-nhom-ngau-nhien.js"></script>
+    <script src="js/che-o-thi-au-competition-mode.js"></script>
+    <script src="js/treasure-hunt.js"></script>
+        <script src="js/time-bomb.js"></script>
+        <script src="js/boss-battle.js"></script>
+        <script src="js/card-flip.js"></script>
+        <script src="js/tug-of-war.js"></script>
+    <script src="js/init.js"></script>
+</body>
+</html>
