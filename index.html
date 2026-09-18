@@ -81,6 +81,7 @@
             <button class="text-orange-500 text-xs font-bold bg-orange-50 px-2.5 py-1.5 rounded-full hover:bg-orange-100 transition border border-orange-100 shadow-sm flex items-center" onclick="startRandomSelection()"><i class="fas fa-random mr-1"></i>Gọi</button>
             <button class="text-red-500 text-xs font-bold bg-red-50 px-2.5 py-1.5 rounded-full hover:bg-red-100 transition border border-red-100 shadow-sm flex items-center" onclick="openGameMenu()"><i class="fas fa-gamepad mr-1"></i>Minigames</button>
             <button class="text-teal-600 text-xs font-bold bg-teal-50 px-2.5 py-1.5 rounded-full hover:bg-teal-100 transition border border-teal-100 shadow-sm flex items-center" onclick="openTeacherHandbook()"><i class="fas fa-book-open-reader mr-1"></i>Sổ tay</button>
+            <button class="text-blue-600 text-xs font-bold bg-blue-50 px-2.5 py-1.5 rounded-full hover:bg-blue-100 transition border border-blue-100 shadow-sm flex items-center" onclick="openSgkLookup()"><i class="fas fa-search mr-1"></i>Tra SGK</button>
             <button class="text-violet-600 text-xs font-bold bg-violet-50 px-2.5 py-1.5 rounded-full hover:bg-violet-100 transition border border-violet-100 shadow-sm flex items-center" onclick="openGroupDivider()"><i class="fas fa-object-group mr-1"></i>Nhóm</button>
             <button id="btnSttPanel" class="text-purple-600 text-xs font-bold bg-purple-50 px-2.5 py-1.5 rounded-full hover:bg-purple-100 transition border border-purple-100 shadow-sm flex items-center" onclick="toggleSttPanel()"><i class="fas fa-hashtag mr-1"></i>STT</button>
             <button class="text-dojo-blue text-xs font-bold bg-blue-50 px-2.5 py-1.5 rounded-full hover:bg-blue-100 transition shadow-sm flex items-center" onclick="awardAll()"><i class="fas fa-users mr-1"></i>Cả lớp</button>
@@ -2041,6 +2042,14 @@
     <button id="nav-settings"  onclick="switchView('settings')"  class="flex flex-col items-center gap-0.5 p-1 w-[16%] text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-sliders-h text-lg"></i><span>Kỹ năng</span></button>
 </nav>
 
+
+<!-- SGK LOOKUP MODAL -->
+<div id="sgkLookupModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 z-50 hidden items-center justify-center transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl w-11/12 h-[90vh] relative overflow-hidden shadow-2xl flex flex-col">
+        <button onclick="closeSgkLookup()" class="absolute top-4 right-4 w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 flex items-center justify-center transition z-[100]"><i class="fas fa-times"></i></button>
+        <iframe src="tra-cuu-sgk.html" class="w-full h-full border-none rounded-3xl"></iframe>
+    </div>
+</div>
 
 <!-- TEACHER HANDBOOK MODAL -->
 <div id="teacherHandbookModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 z-50 hidden items-center justify-center transition-opacity duration-300 backdrop-blur-sm">
