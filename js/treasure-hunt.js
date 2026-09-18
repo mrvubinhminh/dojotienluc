@@ -230,6 +230,44 @@ function _thBuildSpecials(scenario, total) {
     });
 }
 
+
+function showTreasureRules() {
+    if (!_groupResult || !_groupResult.length) {
+        alert('Cần tạo nhóm trước!'); return;
+    }
+    
+    // Hide Setup Modal
+
+    const rulesScreen = document.getElementById('thRulesScreen');
+    if (rulesScreen) {
+        rulesScreen.classList.add('hidden');
+        rulesScreen.classList.remove('flex');
+    }
+    closeTreasureSetup();
+
+    
+    // Update Rules Screen content
+    const scen = TREASURE_SCENARIOS[_thPickedScen];
+    const rulesEmoji = document.getElementById('thRulesEmoji');
+    const rulesTitle = document.getElementById('thRulesTitle');
+    const rulesDesc = document.getElementById('thRulesDesc');
+    
+    if (rulesEmoji) rulesEmoji.textContent = scen.emoji;
+    if (rulesTitle) {
+        rulesTitle.textContent = `Luật Chơi: ${scen.name}`;
+        rulesTitle.style.color = scen.color;
+        rulesTitle.style.textShadow = `0 0 20px ${scen.color}`;
+    }
+    if (rulesDesc) rulesDesc.textContent = scen.desc;
+    
+    // Show Rules Screen
+    const rulesScreen = document.getElementById('thRulesScreen');
+    if (rulesScreen) {
+        rulesScreen.classList.remove('hidden');
+        rulesScreen.classList.add('flex', 'z-[999]'); // Ensure it's on top
+    }
+}
+
 function startTreasureHunt() {
     if (!_groupResult || !_groupResult.length) {
         alert('Cần tạo nhóm trước!'); return;
@@ -259,7 +297,14 @@ function startTreasureHunt() {
         roundBonus:  _groupResult.map(() => 0),
     };
 
+
+    const rulesScreen = document.getElementById('thRulesScreen');
+    if (rulesScreen) {
+        rulesScreen.classList.add('hidden');
+        rulesScreen.classList.remove('flex');
+    }
     closeTreasureSetup();
+
     setTimeout(() => {
         document.getElementById('thTitle').textContent = `${scen.emoji} ${scen.name} · ${grid}×${grid}`;
         document.getElementById('thOverlay').classList.remove('hidden');
