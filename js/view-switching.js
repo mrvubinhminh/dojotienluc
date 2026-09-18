@@ -37,3 +37,19 @@ function closeTeacherHandbook() {
         modal.classList.remove('flex');
     }
 }
+
+function openSgkLookup() {
+    const modal = document.getElementById('sgkLookupModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeSgkLookup() {
+    const modal = document.getElementById('sgkLookupModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
