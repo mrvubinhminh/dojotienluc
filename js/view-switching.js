@@ -20,3 +20,20 @@ function switchView(view) {
     else if(view==='meeting') renderMeetingView();
 }
 
+
+// Teacher Handbook functions
+function openTeacherHandbook() {
+    const modal = document.getElementById('teacherHandbookModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeTeacherHandbook() {
+    const modal = document.getElementById('teacherHandbookModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}

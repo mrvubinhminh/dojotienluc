@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Tay Nghiệp Vụ Sư Phạm - Phương Pháp & Kỹ Thuật Dạy Học Tích Cực</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #1d4ed8 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12);
+        }
+        .step-badge {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+
+    <header class="gradient-header text-white shadow-xl sticky top-0 z-50 border-b border-blue-500/20">
+        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <span class="bg-amber-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    <i class="fa-solid fa-star text-amber-900 mr-1"></i> Tư liệu chuyên môn THPT
+                </span>
+                <h1 class="text-2xl md:text-3xl font-extrabold mt-2 tracking-tight">
+                    <i class="fa-solid fa-book-open-reader mr-2 text-amber-300"></i> Sổ Tay Kỹ Thuật Dạy Học Tích Cực
+                </h1>
+                <p class="text-blue-100 text-sm mt-1">Đổi mới phương pháp giảng dạy - Phát huy tối đa năng lực học sinh - Xây dựng lớp học kết nối</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <div class="text-xs text-blue-200">Biên soạn bởi</div>
+                    <div class="text-sm font-semibold text-white">GV. 20 Năm Kinh Nghiệm</div>
+                </div>
+                <div class="bg-blue-900/60 p-3 rounded-xl border border-blue-400/30 text-amber-300 shadow-inner">
+                    <i class="fa-solid fa-chalkboard-user text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-sm border-b border-slate-200 py-3.5 sticky top-[76px] md:top-[88px] z-40 backdrop-blur-md bg-white/95">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+                <button onclick="filterTechniques('all')" class="tech-tab px-4 py-2 text-xs md:text-sm font-semibold rounded-lg bg-blue-600 text-white transition whitespace-nowrap shadow-sm">
+                    <i class="fa-solid fa-border-all mr-1.5"></i> Tất cả (9 Kỹ thuật)
+                </button>
+                <button onclick="filterTechniques('nhanh')" class="tech-tab px-3.5 py-2 text-xs md:text-sm font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+                    <i class="fa-solid fa-bolt mr-1 text-amber-500"></i> Thu nhận nhanh
+                </button>
+                <button onclick="filterTechniques('tuongtac')" class="tech-tab px-3.5 py-2 text-xs md:text-sm font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+                    <i class="fa-solid fa-comments mr-1 text-blue-500"></i> Tương tác & Cặp đôi
+                </button>
+                <button onclick="filterTechniques('tuduy')" class="tech-tab px-3.5 py-2 text-xs md:text-sm font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+                    <i class="fa-solid fa-lightbulb mr-1 text-purple-500"></i> Tư duy & Sáng tạo
+                </button>
+            </div>
+            <div class="w-full sm:w-80">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="searchInput" onkeyup="searchTechniques()" placeholder="Tìm kiếm kỹ thuật, bước thực hiện..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div id="techniquesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- 1. KỸ THUẬT TIA CHỚP -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="nhanh" data-title="kỹ thuật tia chớp lightning flash thu nhận ý kiến nhanh">
+                <div>
+                    <div class="bg-amber-500 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-bolt mr-2 text-amber-200"></i> 1. Kỹ Thuật Tia Chớp</h3>
+                        <span class="text-[11px] bg-amber-700/40 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Thu nhận nhanh</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-amber-50/60 p-2.5 rounded-lg border border-amber-100">
+                            <strong>Định nghĩa:</strong> Thu nhận ý kiến nhanh trong lớp học: Đơn giản - Nhanh chóng - Hiệu quả.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-amber-600 mr-1.5"></i> 5 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">1</span> <div><strong>Đặt câu hỏi:</strong> Giáo viên đưa câu hỏi rõ ràng, tập trung nội dung cần thu phản hồi (VD: "Điều quan trọng nhất em học được hôm nay là gì?").</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">2</span> <div><strong>Nêu quy tắc:</strong> 1-2 câu hoặc thời gian ngắn; một người nói, những người khác chăm chú lắng nghe.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">3</span> <div><strong>Phản hồi lần lượt:</strong> Học sinh lần lượt đưa ra ý kiến cá nhân ngắn gọn, đi thẳng vào vấn đề.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">4</span> <div><strong>Không bình luận - không tranh luận:</strong> Tuyệt đối không nhận xét hay tranh luận để giữ tốc độ kỹ thuật.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">5</span> <div><strong>Ghi nhận & kết thúc:</strong> Giáo viên lắng nghe, ghi nhanh ý nổi bật và quyết định bước tiếp theo.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-amber-50/80 border-l-4 border-amber-500 p-3 text-xs text-amber-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Ngắn gọn, súc tích, đi thẳng vào vấn đề; lắng nghe và tôn trọng mọi ý kiến!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. KỸ THUẬT Ổ BI -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuongtac" data-title="kỹ thuật ổ bi inside outside circle đổi bạn trao đổi">
+                <div>
+                    <div class="bg-blue-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-circle-nodes mr-2 text-blue-200"></i> 2. Kỹ Thuật Ổ Bi</h3>
+                        <span class="text-[11px] bg-blue-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Đổi bạn trao đổi</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-blue-50/60 p-2.5 rounded-lg border border-blue-100">
+                            <strong>Định nghĩa:</strong> Học sinh trao đổi theo từng cặp, luân phiên thay đổi bạn để chia sẻ kiến thức với nhiều người.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-blue-600 mr-1.5"></i> 6 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">1</span> <div><strong>Xác định nội dung:</strong> Giao vấn đề/câu hỏi ngắn gọn, phù hợp mục tiêu bài học.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">2</span> <div><strong>Tạo hai vòng tròn:</strong> Vòng trong quay ra ngoài, vòng ngoài quay vào trong đối diện nhau.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">3</span> <div><strong>Trao đổi theo cặp:</strong> Trình bày, lắng nghe và đặt câu hỏi trong thời gian quy định (VD: 2 phút).</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">4</span> <div><strong>Xoay vòng - Đổi bạn:</strong> Hết giờ, vòng ngoài dịch chuyển để hình thành cặp đôi mới.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">5</span> <div><strong>Tiếp tục trao đổi:</strong> Tiếp nhận góc nhìn mới, hoàn thiện câu trả lời của bản thân.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-blue-100 text-blue-800 shrink-0">6</span> <div><strong>Tổng hợp & kết luận:</strong> Chia sẻ ý tưởng nổi bật trước lớp, giáo viên chuẩn hóa kiến thức.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-blue-50/80 border-l-4 border-blue-600 p-3 text-xs text-blue-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Đổi bạn trao đổi $\rightarrow$ Tiếp nhận góc nhìn mới $\rightarrow$ Làm giàu hiểu biết.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. KỸ THUẬT HỎI - ĐÁP THEO CẶP -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuongtac" data-title="kỹ thuật hỏi đáp theo cặp hỏi để hiểu đáp để học">
+                <div>
+                    <div class="bg-indigo-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-comments mr-2 text-indigo-200"></i> 3. Hỏi - Đáp Theo Cặp</h3>
+                        <span class="text-[11px] bg-indigo-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Hỏi để hiểu</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-indigo-50/60 p-2.5 rounded-lg border border-indigo-100">
+                            <strong>Định nghĩa:</strong> Học sinh cùng trao đổi thông qua việc đặt câu hỏi, trả lời và phản hồi về nội dung học tập.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-indigo-600 mr-1.5"></i> 7 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">1</span> <div><strong>Xác định nội dung:</strong> Lựa chọn kiến thức, chủ đề cần thảo luận và xác định mục tiêu.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">2</span> <div><strong>Tổ chức cặp & giao nhiệm vụ:</strong> Ghép cặp học sinh, nêu rõ yêu cầu thời gian.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">3</span> <div><strong>Chuẩn bị câu hỏi:</strong> Giáo viên cung cấp hoặc hướng dẫn học sinh tự xây dựng câu hỏi.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">4</span> <div><strong>Hỏi - Đáp lượt 1:</strong> A hỏi - B trả lời; lắng nghe, yêu cầu làm rõ khi cần thiết.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">5</span> <div><strong>Đổi vai - Hỏi đáp lượt 2:</strong> B hỏi - A trả lời, đảm bảo cả hai đều nói và nghe.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">6</span> <div><strong>Kiểm tra & hoàn thiện:</strong> Cùng đối chiếu, bổ sung thông tin còn thiếu hoặc chưa chính xác.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-indigo-100 text-indigo-800 shrink-0">7</span> <div><strong>Chia sẻ & tổng kết:</strong> Mời một số cặp chia sẻ trước lớp để giáo viên nhận xét, chuẩn hóa.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-indigo-50/80 border-l-4 border-indigo-600 p-3 text-xs text-indigo-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Hỏi để làm rõ $\rightarrow$ Đáp để diễn đạt hiểu biết $\rightarrow$ Phản hồi để học sâu hơn.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. KỸ THUẬT PHIẾU MỘT PHÚT -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="nhanh" data-title="kỹ thuật phiếu một phút one minute paper viết ngắn suy nghĩ sâu">
+                <div>
+                    <div class="bg-emerald-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-note-sticky mr-2 text-emerald-200"></i> 4. Phiếu Một Phút</h3>
+                        <span class="text-[11px] bg-emerald-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Viết ngắn - Suy nghĩ sâu</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-100">
+                            <strong>Định nghĩa:</strong> Học sinh viết phản hồi ngắn về điều đã học, điều chưa rõ hoặc suy nghĩ trong thời gian ngắn.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-emerald-600 mr-1.5"></i> 6 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">1</span> <div><strong>Xác định mục tiêu phản hồi:</strong> Kiểm tra mức độ hiểu bài, thu thập vướng mắc của học sinh.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">2</span> <div><strong>Đưa ra 1-2 câu hỏi ngắn:</strong> VD: "Điều quan trọng nhất em học được hôm nay là gì? Điều gì còn chưa hiểu?"</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">3</span> <div><strong>Học sinh viết độc lập:</strong> Suy nghĩ và viết câu trả lời trong 1-3 phút, không trao đổi với bạn.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">4</span> <div><strong>Thu thập phản hồi:</strong> Thu phiếu giấy hoặc nhận câu trả lời qua nền tảng điện tử.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">5</span> <div><strong>Phân tích nhanh kết quả:</strong> Phân loại: Đã hiểu, Còn chưa rõ, Hiểu lầm phổ biến, Câu hỏi hay.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-emerald-100 text-emerald-800 shrink-0">6</span> <div><strong>Phản hồi & điều chỉnh dạy học:</strong> Sử dụng kết quả để củng cố kiến thức ở tiết học tiếp theo.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-emerald-50/80 border-l-4 border-emerald-600 p-3 text-xs text-emerald-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Học sinh nhìn lại việc học $\rightarrow$ Giáo viên nhìn thấy việc học của học sinh.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. KỸ THUẬT BỂ CÁ -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuongtac" data-title="kỹ thuật bể cá fishbowl thảo luận sâu quan sát">
+                <div>
+                    <div class="bg-teal-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-fish mr-2 text-teal-200"></i> 5. Kỹ Thuật Bể Cá</h3>
+                        <span class="text-[11px] bg-teal-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Thảo luận sâu</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-teal-50/60 p-2.5 rounded-lg border border-teal-100">
+                            <strong>Định nghĩa:</strong> Thảo luận sâu hơn qua quan sát. Một nhóm thảo luận trực tiếp, các nhóm còn lại quan sát và học hỏi.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-teal-600 mr-1.5"></i> 5 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-teal-100 text-teal-800 shrink-0">1</span> <div><strong>Nêu vấn đề & giao nhiệm vụ:</strong> Đưa ra câu hỏi mở, tình huống thảo luận phù hợp mục tiêu.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-teal-100 text-teal-800 shrink-0">2</span> <div><strong>Tổ chức "bể cá":</strong> Chia lớp thành Vòng trong (thảo luận trực tiếp) và Vòng ngoài (quan sát, ghi chép).</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-teal-100 text-teal-800 shrink-0">3</span> <div><strong>Thảo luận trong "bể":</strong> Trình bày quan điểm, đưa minh chứng, lắng nghe và phản hồi ý kiến.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-teal-100 text-teal-800 shrink-0">4</span> <div><strong>Quan sát & phản hồi:</strong> Vòng ngoài chia sẻ những gì quan sát được, đặt câu hỏi bổ লইয়sung.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-teal-100 text-teal-800 shrink-0">5</span> <div><strong>Tổng hợp & kết luận:</strong> Giáo viên cùng học sinh tổng hợp quan điểm, làm rõ kiến thức cốt lõi.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-teal-50/80 border-l-4 border-teal-600 p-3 text-xs text-teal-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Thảo luận có mục tiêu $\rightarrow$ Quan sát có nhiệm vụ $\rightarrow$ Lắng nghe & Tôn trọng.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. KỸ THUẬT SƠ ĐỒ TƯ DUY -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuduy" data-title="kỹ thuật sơ đồ tư duy mind map tổ chức kiến thức">
+                <div>
+                    <div class="bg-purple-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-network-wired mr-2 text-purple-200"></i> 6. Sơ Đồ Tư Duy</h3>
+                        <span class="text-[11px] bg-purple-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Tổ chức kiến thức</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-purple-50/60 p-2.5 rounded-lg border border-purple-100">
+                            <strong>Định nghĩa:</strong> Tổ chức kiến thức trực quan thông qua từ khóa, nhánh và hình ảnh để kết nối ý tưởng.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-purple-600 mr-1.5"></i> 6 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">1</span> <div><strong>Xác định chủ đề trung tâm:</strong> Đặt ở vị trí trung tâm, kết hợp từ khóa, biểu tượng hoặc hình ảnh.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">2</span> <div><strong>Xác định các ý chính:</strong> Tìm nội dung quan trọng liên quan trực tiếp để tạo thành các nhánh chính.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">3</span> <div><strong>Phát triển các nhánh phụ:</strong> Bổ sung ý nhỏ, ví dụ, đặc điểm từ mỗi nhánh chính để làm rõ nội dung.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">4</span> <div><strong>Sử dụng từ khóa & hình ảnh:</strong> Ưu tiên từ khóa ngắn gọn, biểu tượng thay vì viết câu văn dài dòng.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">5</span> <div><strong>Thiết lập mối liên hệ:</strong> Dùng đường nối, mũi tên thể hiện quan hệ tương hỗ giữa các nội dung.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-purple-100 text-purple-800 shrink-0">6</span> <div><strong>Kiểm tra & hoàn thiện:</strong> Rà soát sơ đồ về độ đủ nội dung, cấu trúc logic và tính thẩm mỹ.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-purple-50/80 border-l-4 border-purple-600 p-3 text-xs text-purple-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Mind map không chỉ để "trang trí" mà giúp học sinh tổ chức, kết nối và tái cấu trúc tri thức.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. KỸ THUẬT KWL -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuduy" data-title="kỹ thuật kwl know want learn kết nối hiểu biết tò mò">
+                <div>
+                    <div class="bg-amber-700 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-table-cells mr-2 text-amber-200"></i> 7. Kỹ Thuật KWL</h3>
+                        <span class="text-[11px] bg-amber-900/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Kết nối hiểu biết</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-amber-50/60 p-2.5 rounded-lg border border-amber-100">
+                            <strong>Định nghĩa:</strong> Know - Want - Learn: Kích hoạt kiến thức nền, khơi gợi tò mò và tổng kết hành trình học tập.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-amber-700 mr-1.5"></i> 6 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">1</span> <div><strong>Xác định chủ đề:</strong> Giới thiệu chủ đề bài học và chuẩn bị bảng K-W-L trước lớp.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">2</span> <div><strong>K (Khơi gợi điều đã biết):</strong> Học sinh suy nghĩ và ghi những gì mình đã biết về chủ đề vào cột K.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">3</span> <div><strong>W (Xác định điều muốn biết):</strong> Đặt câu hỏi và ghi những điều muốn tìm hiểu thêm vào cột W.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">4</span> <div><strong>Tổ chức hoạt động học tập:</strong> Nghiên cứu tài liệu, quan sát, thảo luận khám phá nội dung bài học.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">5</span> <div><strong>L (Ghi lại điều đã học):</strong> Ghi vào cột L những kiến thức, câu trả lời mới thu nhận được sau khi học.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-amber-100 text-amber-800 shrink-0">6</span> <div><strong>Đối chiếu & phản tư:</strong> Nhìn lại cả 3 cột để đánh giá sự thay đổi nhận thức và tiến bộ của bản thân.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-amber-50/80 border-l-4 border-amber-700 p-3 text-xs text-amber-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Giúp học sinh tự nhìn thấy hành trình tiến bộ và mở rộng tri thức của chính mình.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. KỸ THUẬT ĐẶT CÂU HỎI TRONG DẠY HỌC -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="nhanh" data-title="kỹ thuật đặt câu hỏi trong dạy học khơi mở tư duy sâu">
+                <div>
+                    <div class="bg-rose-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-circle-question mr-2 text-rose-200"></i> 8. Kỹ Thuật Đặt Câu Hỏi</h3>
+                        <span class="text-[11px] bg-rose-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Hỏi đúng cách</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-rose-50/60 p-2.5 rounded-lg border border-rose-100">
+                            <strong>Định nghĩa:</strong> Hỏi đúng cách - Khơi mở tư duy - Tạo học tập sâu hơn thông qua các mức độ câu hỏi phù hợp.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-rose-600 mr-1.5"></i> 5 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-rose-100 text-rose-800 shrink-0">1</span> <div><strong>Xác định mục tiêu câu hỏi:</strong> Dựa theo Thang đo Bloom (Nhớ, Hiểu, Vận dụng, Phân tích, Đánh giá, Sáng tạo).</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-rose-100 text-rose-800 shrink-0">2</span> <div><strong>Thiết kế câu hỏi:</strong> Viết câu hỏi rõ nghĩa, kết hợp câu hỏi đóng, câu hỏi mở và gợi mở đào sâu.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-rose-100 text-rose-800 shrink-0">3</span> <div><strong>Đặt câu hỏi & chờ suy nghĩ:</strong> Nêu câu hỏi cho cả lớp và dành thời gian chờ (Wait time) để học sinh suy ngẫm.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-rose-100 text-rose-800 shrink-0">4</span> <div><strong>Thu nhận & đào sâu câu trả lời:</strong> Lắng nghe và tiếp tục hỏi ("Vì sao em nghĩ như vậy?", "Bằng chứng nào...?").</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-rose-100 text-rose-800 shrink-0">5</span> <div><strong>Phản hồi - Tổng hợp - Điều chỉnh:</strong> Ghi nhận ý kiến, làm rõ điểm chưa đầy đủ và điều chỉnh hoạt động.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-rose-50/80 border-l-4 border-rose-600 p-3 text-xs text-rose-900 rounded-r-lg shadow-sm">
+                        <strong>Điểm cốt lõi:</strong> Câu hỏi tốt không chỉ tìm ra đáp án mà mở ra nhiều cơ hội tư duy sâu sắc hơn.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. KỸ THUẬT XYZ (635) -->
+            <div class="tech-card bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between" data-category="tuduy" data-title="kỹ thuật xyz 635 sáng tạo nhiều ý tưởng giải pháp tốt hơn">
+                <div>
+                    <div class="bg-cyan-600 p-4 text-white flex justify-between items-center shadow-sm">
+                        <h3 class="font-bold text-base md:text-lg"><i class="fa-solid fa-lightbulb mr-2 text-cyan-200"></i> 9. Kỹ Thuật XYZ (635)</h3>
+                        <span class="text-[11px] bg-cyan-800/50 px-2.5 py-1 rounded-md font-semibold tracking-wide uppercase">Tạo nhiều ý tưởng</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-slate-500 italic mb-4 bg-cyan-50/60 p-2.5 rounded-lg border border-cyan-100">
+                            <strong>Định nghĩa:</strong> Kỹ thuật sáng tạo nhóm (6 người, 3 ý tưởng mỗi người, 5 phút mỗi lượt) để thu thập giải pháp tối ưu.
+                        </p>
+                        <div class="space-y-3 text-xs text-slate-700">
+                            <p class="font-semibold text-slate-900 border-b pb-1"><i class="fa-solid fa-list-ol text-cyan-600 mr-1.5"></i> 7 Bước thực hiện chuẩn:</p>
+                            <ol class="space-y-2 text-slate-600">
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">1</span> <div><strong>Xác định vấn đề:</strong> Giáo viên đưa ra câu hỏi hoặc vấn đề mở, có nhiều hướng giải quyết.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">2</span> <div><strong>Tổ chức nhóm & giao phiếu:</strong> Chia học sinh thành các nhóm 6 người, phát phiếu ghi ý tưởng.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">3</span> <div><strong>Viết 3 ý tưởng:</strong> Trong 5 phút, mỗi học sinh độc lập viết 3 ý tưởng hoặc giải pháp lên phiếu.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">4</span> <div><strong>Chuyển phiếu & phát triển ý tưởng:</strong> Chuyển phiếu cho thành viên tiếp theo đọc, bổ sung hoặc phát triển ý mới từ gợi ý có sẵn.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">5</span> <div><strong>Lặp lại các lượt:</strong> Tiếp tục chuyển vòng tròn cho đến hết vòng các thành viên (6 lượt).</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">6</span> <div><strong>Tổng hợp & đánh giá:</strong> Nhóm gộp ý tưởng, loại bỏ trùng lặp và thảo luận chọn giải pháp phù hợp tiêu chí.</div></li>
+                                <li class="flex gap-2 items-start"><span class="step-badge bg-cyan-100 text-cyan-800 shrink-0">7</span> <div><strong>Lựa chọn & kết luận:</strong> Nhóm trình bày trước lớp, giáo viên nhận xét và kết nối nội dung bài học.</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="bg-cyan-50/80 border-l-4 border-cyan-600 p-3 text-xs text-cyan-900 rounded-r-lg shadow-sm">
+                        <strong>Nguyên tắc cốt lõi:</strong> Tạo và phát triển ý tưởng trước $\rightarrow$ Đánh giá và chọn lọc sau.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="noResults" class="hidden text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200 mt-6">
+            <i class="fa-solid fa-face-question text-5xl text-slate-300 mb-3"></i>
+            <h4 class="text-base font-semibold text-slate-700">Không tìm thấy kỹ thuật phù hợp</h4>
+            <p class="text-xs text-slate-500 mt-1">Hãy thử tìm kiếm với từ khóa khác hoặc bấm "Tất cả" để xem toàn bộ danh mục.</p>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-white mt-16 py-10 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex justify-center items-center space-x-2 text-amber-400 mb-3">
+                <i class="fa-solid fa-graduation-cap text-xl"></i>
+                <span class="font-bold text-base text-white">Sổ Tay Nghiệp Vụ Sư Phạm THPT</span>
+            </div>
+            <p class="text-xs text-slate-400 max-w-xl mx-auto leading-relaxed">
+                Đồng hành cùng giáo viên trên con đường đổi mới phương pháp dạy học, phát triển phẩm chất và năng lực học sinh theo chương trình giáo dục phổ thông mới.
+            </p>
+            <p class="mt-6 text-xs text-slate-500 border-t border-slate-800 pt-6">
+                © 2026 - Biên soạn và thiết kế chuyên nghiệp dành cho cộng đồng giáo viên sáng tạo.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function filterTechniques(category) {
+            // Update active tab styles
+            const tabs = document.querySelectorAll('.tech-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                tab.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.currentTarget.classList.remove('bg-slate-100', 'text-slate-600');
+            event.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+
+            // Filter card elements
+            const cards = document.querySelectorAll('.tech-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            checkEmptyState(visibleCount);
+        }
+
+        function searchTechniques() {
+            const input = document.getElementById('searchInput').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.tech-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title');
+                const textContent = card.innerText.toLowerCase();
+                if (title.includes(input) || textContent.includes(input)) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            checkEmptyState(visibleCount);
+        }
+
+        function checkEmptyState(count) {
+            const noResults = document.getElementById('noResults');
+            if (count === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
