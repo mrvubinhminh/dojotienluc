@@ -238,11 +238,6 @@ function showTreasureRules() {
     
     // Hide Setup Modal
 
-    const rulesScreen = document.getElementById('thRulesScreen');
-    if (rulesScreen) {
-        rulesScreen.classList.add('hidden');
-        rulesScreen.classList.remove('flex');
-    }
     closeTreasureSetup();
 
     
