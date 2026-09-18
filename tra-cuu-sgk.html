@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu Mục Lục Sách Giáo Khoa Lớp 9 - Tích hợp Mục Tiêu Học Tập</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3b82f6', 
+                        secondary: '#10b981', 
+                        dark: '#1e293b', 
+                        light: '#f8fafc', 
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        
+        .accordion-content.active {
+            max-height: 5000px; /* Tăng max-height để chứa text trọng tâm */
+            opacity: 1;
+        }
+
+        .subject-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .highlight {
+            background-color: #fef08a; 
+            font-weight: 600;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        /* Chỉnh sửa style cho mục tiêu bài học */
+        .objective-text {
+            display: block;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            padding: 8px 12px;
+            background-color: #f0f9ff;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.825rem;
+            color: #1e40af;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary text-white p-2 rounded-lg">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-dark">Tra Cứu SGK Lớp 9 (Pro)</h1>
+                        <p class="text-sm text-slate-500">Tích hợp Trọng tâm ôn thi & Mục tiêu bài học</p>
+                    </div>
+                </div>
+                
+                <div class="relative w-full md:w-96">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-slate-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" 
+                        class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow" 
+                        placeholder="Tìm kiếm bài học, từ khóa...">
+                    <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-times-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-8">
+            <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Môn Học</h2>
+            <div class="flex flex-wrap gap-2" id="subjectFilters">
+                <button class="filter-btn active px-4 py-2 bg-primary text-white rounded-full text-sm font-medium transition-colors" data-subject="all">
+                    Tất cả
+                </button>
+            </div>
+        </div>
+
+        <div id="contentArea" class="space-y-6"></div>
+        
+        <div id="noResults" class="hidden text-center py-12">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-slate-900">Không tìm thấy kết quả</h3>
+            <p class="text-slate-500 mt-1">Vui lòng thử lại với từ khóa khác.</p>
+        </div>
+
+    </main>
+
+    <script>
+        const textbookData = [
+            {
+                id: "toan",
+                title: "Toán 9 (Có Trọng tâm)",
+                icon: "fa-calculator",
+                color: "bg-blue-500",
+                textColor: "text-blue-500",
+                sections: [
+                    {
+                        title: "TẬP MỘT",
+                        chapters: [
+                            {
+                                title: "Chương I. Phương trình và hệ hai phương trình bậc nhất hai ẩn",
+                                items: [
+                                    "Bài 1: Khái niệm phương trình và hệ hai phương trình bậc nhất hai ẩn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Hiểu khái niệm, nhận biết nghiệm của HPT. Nắm được ý nghĩa hình học (giao điểm 2 đường thẳng) của hệ phương trình.</span>",
+                                    "Bài 2: Giải hệ hai phương trình bậc nhất hai ẩn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Thành thạo 2 phương pháp kinh điển: Thế và Cộng đại số. Biết cách sử dụng máy tính cầm tay (CASIO/VINACAL) để thử lại kết quả.</span>",
+                                    "Bài 3: Giải bài toán bằng cách lập hệ phương trình<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Kỹ năng cốt lõi: 'Dịch' ngôn ngữ tự nhiên sang ngôn ngữ đại số. Đặt ẩn số, đặt ĐIỀU KIỆN cho ẩn chính xác.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương II. Phương trình và bất phương trình bậc nhất một ẩn",
+                                items: [
+                                    "Bài 4: Phương trình quy về phương trình bậc nhất một ẩn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Kỹ năng giải Phương trình Tích $(A.B=0)$ và Phương trình chứa ẩn ở mẫu. TUYỆT ĐỐI không quên ĐKXĐ trước khi quy đồng.</span>",
+                                    "Bài 5: Bất đẳng thức và tính chất<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Hiểu sâu sắc tính chất nhân với số âm thì phải ĐỔI CHIỀU bất đẳng thức. Làm quen tư duy so sánh.</span>",
+                                    "Bài 6: Bất phương trình bậc nhất một ẩn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Giải BPT thuần thục, biểu diễn chính xác tập nghiệm trên trục số (phân biệt dấu ngoặc tròn `()` và ngoặc vuông `[]`).</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương III. Căn bậc hai và căn bậc ba",
+                                items: [
+                                    "Bài 7: Căn bậc hai và căn thức bậc hai<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Nắm vững ĐKXĐ của $\sqrt{A}$ ($A \ge 0$) và Hằng đẳng thức xương sống: $\sqrt{A^2} = |A|$.</span>",
+                                    "Bài 8: Khai căn bậc hai với phép nhân và phép chia<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Áp dụng linh hoạt quy tắc khai phương một tích, một thương. Hiểu rõ lúc nào tách, lúc nào gộp căn.</span>",
+                                    "Bài 9: Biến đổi đơn giản và rút gọn biểu thức chứa căn thức bậc hai<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Câu 1 không thể thiếu trong đề thi vào 10: Rút gọn biểu thức tổng hợp, trục căn thức ở mẫu, đưa thừa số ra ngoài dấu căn.</span>",
+                                    "Bài 10: Căn bậc ba và căn thức bậc ba<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Khác với căn bậc hai, căn bậc ba tính được cho cả số âm. Hiểu tính chất cơ bản $\sqrt[3]{A^3} = A$.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương IV. Hệ thức lượng trong tam giác vuông",
+                                items: [
+                                    "Bài 11: Tỉ số lượng giác của góc nhọn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Ghi nhớ thần chú 'Sin đi học, Cos khóc hoài...'. Khai thác tốt máy tính để tìm góc, tìm cạnh.</span>",
+                                    "Bài 12: Một số hệ thức giữa cạnh, góc trong tam giác vuông và ứng dụng<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Giải tam giác vuông, ứng dụng đo chiều cao cây, khoảng cách thực tế. Ghi nhớ 4 hệ thức lượng kinh điển ($h^2 = b'.c'$, $ah = bc$...).</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương V. Đường tròn",
+                                items: [
+                                    "Bài 13: Mở đầu về đường tròn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Sự xác định tâm, đường kính là dây cung lớn nhất. Tính chất đối xứng cực kỳ quan trọng.</span>",
+                                    "Bài 14: Cung và dây của một đường tròn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Định lí về đường kính vuông góc với dây cung thì đi qua trung điểm dây đó.</span>",
+                                    "Bài 15: Độ dài của cung tròn. Diện tích hình quạt tròn và hình vành khuyên<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Vận dụng đúng công thức $l = \frac{\pi R n}{180}$ và $S = \frac{\pi R^2 n}{360}$. Rất hay ra trong bài toán thực tế.</span>",
+                                    "Bài 16: Vị trí tương đối của đường thẳng và đường tròn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Trọng điểm môn hình: Tính chất 2 tiếp tuyến cắt nhau. Chứng minh vuông góc, phân giác từ các tiếp tuyến.</span>",
+                                    "Bài 17: Vị trí tương đối của hai đường tròn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Khái niệm cắt nhau, tiếp xúc, ngoài nhau. Tính chất đường nối tâm là trục đối xứng của phần chung.</span>"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title: "TẬP HAI",
+                        chapters: [
+                            {
+                                title: "Chương VI. Hàm số y = ax² (a ≠ 0). Phương trình bậc hai một ẩn",
+                                items: [
+                                    "Bài 18: Hàm số y = ax² (a ≠ 0)<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Tính đồng biến, nghịch biến theo hệ số $a$. Kỹ năng vẽ Parabol sạch, chuẩn và tìm giao điểm của (P) và (d).</span>",
+                                    "Bài 19: Phương trình bậc hai một ẩn<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Thuộc nằm lòng công thức tính $\Delta$ và $\Delta'$. Biện luận số nghiệm của phương trình theo tham số $m$.</span>",
+                                    "Bài 20: Định lí Viète và ứng dụng<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Công cụ siêu mạnh: Nhẩm nghiệm, giải HPT đối xứng, tìm 2 số khi biết tổng và tích, lập phương trình. Chắc chắn có trong đề tuyển sinh.</span>",
+                                    "Bài 21: Giải bài toán bằng cách lập phương trình<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Ứng dụng PT bậc hai vào các bài toán chuyển động (thay đổi vận tốc), bài toán năng suất, làm chung làm riêng.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương VII. Tần số và tần số tương đối",
+                                items: [
+                                    "Bài 22: Bảng tần số và biểu đồ tần số<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Thống kê cơ bản, lập bảng và trực quan hóa dữ liệu chính xác.</span>",
+                                    "Bài 23: Bảng tần số tương đối và biểu đồ tần số tương đối<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Đọc hiểu biểu đồ hình quạt tròn (thể hiện tỉ lệ phần trăm).</span>",
+                                    "Bài 24: Bảng tần số, tần số tương đối ghép nhóm và biểu đồ<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Kỹ năng xử lý dữ liệu lớn bằng cách chia nhóm.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương VIII. Xác suất của biến cố",
+                                items: [
+                                    "Bài 25: Phép thử ngẫu nhiên và không gian mẫu<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Xác định đúng tập hợp tất cả các kết quả có thể xảy ra. Liệt kê không sót.</span>",
+                                    "Bài 26: Xác suất của biến cố liên quan tới phép thử<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Công thức cốt lõi: $P(A) = \\frac{n(A)}{n(\Omega)}$. Rèn tư duy đếm số trường hợp thuận lợi.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương IX. Đường tròn ngoại tiếp và đường tròn nội tiếp",
+                                items: [
+                                    "Bài 27: Góc nội tiếp<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Mối liên hệ: Góc nội tiếp = 1/2 Số đo cung bị chắn. Cực kỳ quan trọng để chứng minh các góc bằng nhau.</span>",
+                                    "Bài 28: Đường tròn ngoại tiếp và nội tiếp tam giác<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Tâm ĐT ngoại tiếp = Giao 3 trung trực. Tâm ĐT nội tiếp = Giao 3 phân giác. Phân biệt rõ ràng.</span>",
+                                    "Bài 29: Tứ giác nội tiếp<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Trái tim của Hình học lớp 9! Ghi nhớ 4 dấu hiệu nhận biết tứ giác nội tiếp (Đặc biệt: Tổng 2 góc đối = 180 độ, 2 đỉnh kề nhìn 1 cạnh dưới góc bằng nhau).</span>",
+                                    "Bài 30: Đa giác đều<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Đặc điểm đối xứng hoàn hảo của đa giác đều nội tiếp đường tròn.</span>"
+                                ]
+                            },
+                            {
+                                title: "Chương X. Một số hình khối trong thực tiễn",
+                                items: [
+                                    "Bài 31: Hình trụ và hình nón<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Phân biệt đường sinh (l), chiều cao (h), bán kính (r). Thuộc công thức $S_{xq}$ và $V$. (Thường là câu cho điểm).</span>",
+                                    "Bài 32: Hình cầu<span class='objective-text'><i class='fa-solid fa-bullseye text-blue-500 mr-1'></i><b>Trọng tâm:</b> Khái niệm mặt cầu, khối cầu. Công thức Thể tích và Diện tích mặt cầu.</span>"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            // Các môn khác giữ nguyên cấu trúc
+            {
+                id: "nguvan",
+                title: "Ngữ Văn 9",
+                icon: "fa-feather",
+                color: "bg-purple-500",
+                textColor: "text-purple-500",
+                sections: [
+                    {
+                        title: "TẬP MỘT",
+                        chapters: [
+                            {
+                                title: "Bài 1: Thế giới kì ảo (Truyện truyền kì)",
+                                items: ["Đọc: Chuyện người con gái Nam Xương, Dế chọi, Sơn Tinh – Thuỷ Tinh"]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Code JS rendering giữ nguyên như nguyên bản của bạn...
+        const contentArea = document.getElementById('contentArea');
+        const subjectFiltersContainer = document.getElementById('subjectFilters');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const noResultsEl = document.getElementById('noResults');
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function renderContent(data) {
+            contentArea.innerHTML = '';
+            let hasResults = false;
+
+            data.forEach(subject => {
+                if (currentFilter !== 'all' && subject.id !== currentFilter) return;
+
+                const filteredSections = processSearch(subject.sections, searchQuery);
+                if (filteredSections.length === 0 && searchQuery) return;
+                hasResults = true;
+
+                const subjectCard = document.createElement('div');
+                subjectCard.className = 'subject-card bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6';
+                
+                let html = `
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors" onclick="toggleAccordion('subject-${subject.id}')">
+                        <div class="flex items-center gap-3">
+                            <div class="${subject.color} text-white w-10 h-10 rounded-lg flex items-center justify-center shadow-inner">
+                                <i class="fa-solid ${subject.icon} text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-bold ${subject.textColor}">${subject.title}</h2>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300" id="icon-subject-${subject.id}"></i>
+                    </div>
+                    <div id="subject-${subject.id}" class="accordion-content active">
+                        <div class="p-6 space-y-8">
+                `;
+
+                filteredSections.forEach(section => {
+                    html += `
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-400 tracking-wider uppercase mb-4 border-b border-slate-100 pb-2">${highlightText(section.title, searchQuery)}</h3>
+                            <div class="space-y-6">
+                    `;
+
+                    section.chapters.forEach(chapter => {
+                        html += `
+                            <div class="pl-2 border-l-2 border-${subject.textColor.split('-')[1]}-200">
+                                <h4 class="font-semibold text-slate-800 mb-2">${highlightText(chapter.title, searchQuery)}</h4>
+                                <ul class="space-y-2 text-sm text-slate-600 list-none pl-4">
+                        `;
+                        
+                        chapter.items.forEach(item => {
+                            html += `<li class="relative before:content-['•'] before:absolute before:-left-4 before:text-slate-300">${highlightText(item, searchQuery)}</li>`;
+                        });
+
+                        html += `</ul></div>`;
+                    });
+
+                    html += `</div></div>`;
+                });
+
+                html += `</div></div>`;
+                subjectCard.innerHTML = html;
+                contentArea.appendChild(subjectCard);
+            });
+
+            if (!hasResults) {
+                noResultsEl.classList.remove('hidden');
+            } else {
+                noResultsEl.classList.add('hidden');
+            }
+        }
+
+        function processSearch(sections, query) {
+            if (!query) return sections;
+            const lowerQuery = query.toLowerCase();
+            
+            return sections.map(section => {
+                const sectionMatches = section.title.toLowerCase().includes(lowerQuery);
+                const filteredChapters = section.chapters.map(chapter => {
+                    const chapterMatches = chapter.title.toLowerCase().includes(lowerQuery);
+                    const filteredItems = chapter.items.filter(item => item.toLowerCase().includes(lowerQuery));
+                    
+                    if (chapterMatches || filteredItems.length > 0 || sectionMatches) {
+                        return {
+                            ...chapter,
+                            items: (chapterMatches || sectionMatches) && filteredItems.length === 0 ? chapter.items : filteredItems
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+
+                if (sectionMatches || filteredChapters.length > 0) {
+                    return {
+                        ...section,
+                        chapters: sectionMatches && filteredChapters.length === 0 ? section.chapters : filteredChapters
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            
+            // Xử lý cẩn thận để không replace vào các thẻ HTML <span class="...">
+            // Tạo 1 regex chỉ match text nằm ngoài thẻ HTML. (Cách tạm thời an toàn nhất)
+            // Vì đây là HTML nâng cao, ta có thể bỏ highlight nếu text có chứa class html 
+            if(text.includes('<span class=')) {
+                return text; // Giữ nguyên không highlight thẻ HTML để tránh vỡ giao diện
+            }
+            
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        window.toggleAccordion = function(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                content.style.maxHeight = '0';
+                content.style.opacity = '0';
+                icon.style.transform = 'rotate(-90deg)';
+            } else {
+                content.classList.add('active');
+                content.style.maxHeight = '5000px'; 
+                content.style.opacity = '1';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
+
+        function initFilters() {
+            textbookData.forEach(subject => {
+                const btn = document.createElement('button');
+                btn.className = `filter-btn px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-sm font-medium hover:bg-slate-50 transition-colors whitespace-nowrap`;
+                btn.dataset.subject = subject.id;
+                btn.innerText = subject.title;
+                btn.onclick = () => setFilter(subject.id, btn);
+                subjectFiltersContainer.appendChild(btn);
+            });
+        }
+
+        function setFilter(subjectId, activeBtn = null) {
+            currentFilter = subjectId;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.subject === subjectId) {
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary');
+                    btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+                    btn.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+                }
+            });
+            renderContent(textbookData);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            if (searchQuery.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+                document.querySelectorAll('.accordion-content').forEach(el => {
+                    el.classList.add('active');
+                    el.style.maxHeight = '5000px';
+                    el.style.opacity = '1';
+                    const icon = document.getElementById('icon-' + el.id);
+                    if(icon) icon.style.transform = 'rotate(0deg)';
+                });
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+            renderContent(textbookData);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            clearSearchBtn.classList.add('hidden');
+            renderContent(textbookData);
+            searchInput.focus();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFilters();
+            document.querySelector('[data-subject="all"]').onclick = function() {
+                setFilter('all', this);
+            };
+            // Default filter là Toán 9 để giáo viên vào xem ngay
+            setFilter('toan'); 
+        });
+
+    </script>
+</body>
+</html>
