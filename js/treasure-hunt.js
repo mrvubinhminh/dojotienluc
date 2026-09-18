@@ -14,7 +14,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.50, type: 'forward', step: 4, icon: '🌺', label: 'Hoa chỉ lối! Tiến 4 ô' },
             { frac: 0.63, type: 'back',    step: 3, icon: '🪲', label: 'Bọ tấn công! Lùi 3 ô' },
             { frac: 0.78, type: 'bonus',   pts:  3, icon: '🏺', label: 'Bình cổ! +3 điểm' },
-            { frac: 0.88, type: 'goto',    sq:   1, icon: '🌀', label: 'Xoáy nước! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.88, type: 'goto',    sq:   1, icon: '🌀', label: 'Xoáy nước! Mất lượt (Đứng yên tại chỗ)' },
         ]
     },
     {
@@ -28,7 +28,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.55, type: 'forward', step: 3, icon: '🌌', label: 'Lỗ đen dương! Tiến 3 ô' },
             { frac: 0.65, type: 'back',    step: 4, icon: '🌑', label: 'Hố đen! Lùi 4 ô' },
             { frac: 0.80, type: 'bonus',   pts:  3, icon: '👾', label: 'Alien thân thiện! +3 điểm' },
-            { frac: 0.90, type: 'goto',    sq:   1, icon: '🌀', label: 'Cổng dịch chuyển! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.90, type: 'goto',    sq:   1, icon: '🌀', label: 'Cổng dịch chuyển! Mất lượt (Đứng yên tại chỗ)' },
         ]
     },
     {
@@ -55,7 +55,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.53, type: 'forward', step: 4, icon: '🐙', label: 'Bạch tuộc ném! Tiến 4 ô' },
             { frac: 0.67, type: 'back',    step: 3, icon: '🌊', label: 'Sóng lớn! Lùi 3 ô' },
             { frac: 0.80, type: 'bonus',   pts:  3, icon: '🐚', label: 'Ốc thần! +3 điểm' },
-            { frac: 0.91, type: 'goto',    sq:   1, icon: '🌀', label: 'Xoáy hải lưu! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.91, type: 'goto',    sq:   1, icon: '🌀', label: 'Xoáy hải lưu! Mất lượt (Đứng yên tại chỗ)' },
         ]
     },
     {
@@ -82,7 +82,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.52, type: 'forward', step: 4, icon: '🦁', label: 'Sư tử trợ giúp! Tiến 4 ô' },
             { frac: 0.66, type: 'back',    step: 3, icon: '💀', label: 'Bẫy hầm mộ! Lùi 3 ô' },
             { frac: 0.79, type: 'bonus',   pts:  4, icon: '🔮', label: 'Bình tiên! +4 điểm' },
-            { frac: 0.90, type: 'goto',    sq:   1, icon: '🌀', label: 'Bẫy dịch chuyển! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.90, type: 'goto',    sq:   1, icon: '🌀', label: 'Bẫy dịch chuyển! Mất lượt (Đứng yên tại chỗ)' },
         ]
     }
 ,
@@ -97,7 +97,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.55, type: 'forward', step: 4, icon: '⛵', label: 'Thuận buồm! Tiến 4 ô' },
             { frac: 0.68, type: 'back',    step: 3, icon: '⚓', label: 'Rơi mỏ neo! Lùi 3 ô' },
             { frac: 0.81, type: 'bonus',   pts:  3, icon: '🗡️', label: 'Kiếm xịn! +3 điểm' },
-            { frac: 0.92, type: 'goto',    sq:   1, icon: '🌀', label: 'Bão lốc xoáy! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.92, type: 'goto',    sq:   1, icon: '🌀', label: 'Bão lốc xoáy! Mất lượt (Đứng yên tại chỗ)' },
         ]
     },
     {
@@ -111,7 +111,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.52, type: 'forward', step: 4, icon: '🌴', label: 'Ốc đảo ma thuật! Tiến 4 ô' },
             { frac: 0.65, type: 'back',    step: 3, icon: '🌪️', label: 'Bão cát mù mịt! Lùi 3 ô' },
             { frac: 0.78, type: 'bonus',   pts:  3, icon: '💎', label: 'Kim cương thô! +3 điểm' },
-            { frac: 0.90, type: 'goto',    sq:   1, icon: '🕳️', label: 'Cát lún! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.90, type: 'goto',    sq:   1, icon: '🕳️', label: 'Cát lún! Mất lượt (Đứng yên tại chỗ)' },
         ]
     },
     {
@@ -125,7 +125,7 @@ const TREASURE_SCENARIOS = [
             { frac: 0.58, type: 'forward', step: 3, icon: '🦕', label: 'Khủng long cổ dài! Tiến 3 ô' },
             { frac: 0.69, type: 'back',    step: 2, icon: '🦖', label: 'T-Rex rượt! Lùi 2 ô' },
             { frac: 0.83, type: 'bonus',   pts:  4, icon: '🥚', label: 'Trứng khủng long! +4 điểm' },
-            { frac: 0.91, type: 'goto',    sq:   1, icon: '🌀', label: 'Vực sâu! Về ô 1 & Phạt -2Đ' },
+            { frac: 0.91, type: 'goto',    sq:   1, icon: '🌀', label: 'Vực sâu! Mất lượt (Đứng yên tại chỗ)' },
         ]
     }
 ];
@@ -209,7 +209,7 @@ function _thUpdateSpecialPreview() {
     const specials = _thBuildSpecials(s, total);
     const preview = document.getElementById('thSpecialPreview');
     if (!preview) return;
-    const typeLabel = { forward: 'Tiến', back: 'Lùi', bonus: 'Điểm', goto: 'Về ô' };
+    const typeLabel = { forward: 'Tiến', back: 'Lùi', bonus: 'Điểm', goto: 'Đứng yên' };
     preview.innerHTML = specials.map(sp => {
         const st = TH_TYPE_STYLE[sp.type];
         return `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-white"
@@ -294,7 +294,7 @@ function _thRenderLegend() {
         forward: { color: '#4ade80', sym: '↑', label: 'Tiến ô' },
         back:    { color: '#f87171', sym: '↓', label: 'Lùi ô' },
         bonus:   { color: '#fbbf24', sym: '🎁', label: 'Hộp quà bí mật' },
-        goto:    { color: '#a78bfa', sym: '⤾', label: 'Về ô' },
+        goto:    { color: '#a78bfa', sym: '⤾', label: 'Đứng yên' },
     };
 
     // Type summary rows — large text
@@ -318,7 +318,7 @@ function _thRenderLegend() {
         const detail = sp.type === 'forward' ? `+${sp.step} ô`
                      : sp.type === 'back'    ? `-${sp.step} ô`
                      : sp.type === 'bonus'   ? `GV quy định`
-                     : `→ ô ${sp.sq}`;
+                     : `Mất lượt`;
         return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.05);border-left:3px solid ${tc.color}90">
             <span style="font-size:26px;line-height:1;flex-shrink:0">${sp.icon}</span>
             <div>
@@ -737,16 +737,9 @@ function _thTriggerSpecial(gi, sp) {
     } else if (sp.type === 'bonus') {
         // Mystery gift box — teacher decides reward verbally, no auto pts
     } else if (sp.type === 'goto') {
-        positions[gi] = sp.sq;
-        moved = true;
-        
-        // Deduct 2 points for whole group
-        const groupMembers = _groupResult[gi];
-        if(groupMembers && groupMembers.length > 0) {
-            _isGroupAward = true;
-            _groupTargetIds = groupMembers.map(s => s.id);
-            addPoints('custom', -2, 'Bẫy lốc xoáy (Trở về ô 1)');
-        }
+        // Stand still, no point deduction
+        positions[gi] = sp.sq; 
+        moved = false; // Just show popup, no real movement needed
     }
 
     // Show popup
