@@ -22,7 +22,11 @@ function openActiveSeatingConfig(layout) {
         'cluster': 'Nhóm 4 (Cluster)',
         'ushape': 'Chữ U kép (Double U-Shape)',
         'station': 'Mô hình Trạm (Stations)',
-        'herringbone': 'Xương cá (Herringbone)'
+        'herringbone': 'Xương cá (Herringbone)',
+            'fishbowl': 'Bể cá (Fishbowl)',
+            'conveyor': 'Lẩu băng chuyền (Conveyor Belt)',
+        'fishbowl': 'Bể cá (Fishbowl)',
+        'conveyor': 'Lẩu băng chuyền (Conveyor Belt)'
     };
     
     document.getElementById('alSeatingConfigSubtitle').innerText = `${cls?.name||''} · ${cnt} học sinh · ${layoutNames[layout]}`;
@@ -111,7 +115,11 @@ function generateActiveSeating() {
             'cluster': 'Nhóm 4 (Cluster)',
             'ushape': 'Chữ U kép (Double U)',
             'station': 'Mô hình Trạm (Stations)',
-            'herringbone': 'Xương cá (Herringbone)'
+            'herringbone': 'Xương cá (Herringbone)',
+            'fishbowl': 'Bể cá (Fishbowl)',
+            'conveyor': 'Lẩu băng chuyền (Conveyor Belt)',
+        'fishbowl': 'Bể cá (Fishbowl)',
+        'conveyor': 'Lẩu băng chuyền (Conveyor Belt)'
         };
         const cls = classes.find(c=>c.id===currentClassId);
         document.getElementById('alSeatingResultTitle').innerText = `Sơ đồ ${layoutNames[currentLayout]}`;
@@ -316,6 +324,90 @@ function _renderActiveSeatingChart() {
         </div>`;
     }
     
+    
+    // --- 5. BỂ CÁ (FISHBOWL) ---
+    // Inner: 4 desks (cluster). Outer: 20 desks (6 top, 6 bottom, 4 left, 4 right)
+    else if (currentLayout === 'fishbowl') {
+        html += `
+        <div class="relative w-full max-w-[95vw] mx-auto min-h-[70vh] flex items-center justify-center pt-8">
+            <div class="bg-gray-800 text-white px-12 py-2 rounded-b-xl font-black tracking-widest shadow-lg absolute top-0 z-10">BỤC GIẢNG</div>
+            
+            <!-- OUTER TOP (6 desks) -->
+            <div class="absolute top-16 left-1/2 -translate-x-1/2 flex justify-between gap-4 w-full px-32">
+                ${_deskHtml(0, stMap, true)} ${_deskHtml(1, stMap, true)} ${_deskHtml(2, stMap, true)} 
+                ${_deskHtml(3, stMap, true)} ${_deskHtml(4, stMap, true)} ${_deskHtml(5, stMap, true)}
+            </div>
+            
+            <!-- OUTER BOTTOM (6 desks) -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex justify-between gap-4 w-full px-32 rotate-180">
+                ${_deskHtml(6, stMap, true)} ${_deskHtml(7, stMap, true)} ${_deskHtml(8, stMap, true)} 
+                ${_deskHtml(9, stMap, true)} ${_deskHtml(10, stMap, true)} ${_deskHtml(11, stMap, true)}
+            </div>
+            
+            <!-- OUTER LEFT (4 desks) -->
+            <div class="absolute top-1/2 left-8 -translate-y-1/2 flex flex-col justify-center gap-6 w-52 rotate-90">
+                ${_deskHtml(12, stMap, true)} ${_deskHtml(13, stMap, true)} ${_deskHtml(14, stMap, true)} ${_deskHtml(15, stMap, true)}
+            </div>
+            
+            <!-- OUTER RIGHT (4 desks) -->
+            <div class="absolute top-1/2 right-8 -translate-y-1/2 flex flex-col justify-center gap-6 w-52 -rotate-90">
+                ${_deskHtml(16, stMap, true)} ${_deskHtml(17, stMap, true)} ${_deskHtml(18, stMap, true)} ${_deskHtml(19, stMap, true)}
+            </div>
+            
+            <!-- INNER FISHBOWL (4 desks) -->
+            <div class="relative bg-blue-50 border-4 border-blue-200 rounded-[3rem] p-8 shadow-inner w-[600px] h-[400px] flex items-center justify-center">
+                <div class="absolute top-2 right-6">
+                    <button onclick="awardActiveSeatingGroup('Bể Cá (Trung Tâm)', 20, 21, 22, 23)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-3 py-1.5 rounded-full shadow transition text-sm">Cộng điểm Bể Cá</button>
+                </div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-200/50 text-[8rem] z-0 pointer-events-none">
+                    <i class="fas fa-fish"></i>
+                </div>
+                <div class="grid grid-cols-2 gap-8 z-10 w-full px-4">
+                    <div class="w-full">${_deskHtml(20, stMap, true)}</div>
+                    <div class="w-full rotate-180">${_deskHtml(21, stMap, true)}</div>
+                    <div class="w-full">${_deskHtml(22, stMap, true)}</div>
+                    <div class="w-full rotate-180">${_deskHtml(23, stMap, true)}</div>
+                </div>
+            </div>
+        </div>`;
+    }
+    
+    // --- 6. LẨU BĂNG CHUYỀN (CONVEYOR BELT) ---
+    // 2 parallel lines facing each other. Each line has 12 desks.
+    else if (currentLayout === 'conveyor') {
+        html += `
+        <div class="relative w-full max-w-[95vw] mx-auto min-h-[70vh] flex flex-col items-center justify-center py-12">
+            <div class="bg-gray-800 text-white px-12 py-2 rounded-b-xl font-black tracking-widest shadow-lg absolute top-0 z-10">BỤC GIẢNG</div>
+            
+            <div class="w-full flex flex-col items-center gap-12 mt-8 overflow-x-auto pb-8 px-4">
+                
+                <!-- ROW A (TOP - 12 desks) -->
+                <div class="flex items-center gap-4 relative min-w-max">
+                    <div class="absolute -left-32 top-1/2 -translate-y-1/2">
+                        <button onclick="awardActiveSeatingGroup('Dãy A (Băng chuyền)', 0,1,2,3,4,5,6,7,8,9,10,11)" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-2 rounded-xl shadow transition text-sm flex flex-col items-center gap-1"><i class="fas fa-star"></i>Cộng Dãy A</button>
+                    </div>
+                    ${[0,1,2,3,4,5,6,7,8,9,10,11].map(d => `<div class="w-48">${_deskHtml(d, stMap, true)}</div>`).join('')}
+                </div>
+                
+                <!-- AISLE (CONVEYOR BELT) -->
+                <div class="w-full border-t-2 border-b-2 border-dashed border-gray-300 h-16 flex items-center justify-center relative bg-gray-50/50">
+                    <div class="absolute left-1/4 text-gray-300 text-2xl animate-pulse"><i class="fas fa-angle-double-right"></i></div>
+                    <div class="absolute left-3/4 text-gray-300 text-2xl animate-pulse"><i class="fas fa-angle-double-left"></i></div>
+                    <span class="text-gray-400 font-black tracking-widest text-lg uppercase"><i class="fas fa-sync-alt mr-2"></i>Băng chuyền thảo luận</span>
+                </div>
+                
+                <!-- ROW B (BOTTOM - 12 desks, rotated to face Row A) -->
+                <div class="flex items-center gap-4 relative min-w-max rotate-180">
+                    <div class="absolute -left-32 top-1/2 -translate-y-1/2 rotate-180">
+                        <button onclick="awardActiveSeatingGroup('Dãy B (Băng chuyền)', 12,13,14,15,16,17,18,19,20,21,22,23)" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-2 rounded-xl shadow transition text-sm flex flex-col items-center gap-1"><i class="fas fa-star"></i>Cộng Dãy B</button>
+                    </div>
+                    ${[12,13,14,15,16,17,18,19,20,21,22,23].map(d => `<div class="w-48">${_deskHtml(d, stMap, true)}</div>`).join('')}
+                </div>
+                
+            </div>
+        </div>`;
+    }
+
     grid.innerHTML = html;
 }
 
