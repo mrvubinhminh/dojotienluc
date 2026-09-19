@@ -137,13 +137,13 @@ function _seatHtml(seatIndex, stMap, showNumber = false) {
     const good = sid && _alSeatingGood.has(sid);
     
     return `
-    <div class="flex flex-col items-center justify-center p-1.5 ${good?'bg-indigo-50 border-indigo-200':'bg-white border-gray-200'} ${!st?'bg-gray-50 border-dashed':''} border rounded-lg shadow-sm h-full w-full relative transition">
-        ${good?'<div class="absolute -top-2 -right-2 text-indigo-500 text-[10px] bg-white rounded-full p-0.5 shadow-sm">⭐</div>':''}
-        ${showNumber ? `<div class="absolute top-0.5 left-1 text-[8px] text-gray-400 font-bold">${seatIndex+1}</div>` : ''}
-        <div class="text-[11px] font-bold ${st?'text-gray-800':'text-gray-300'} leading-tight text-center truncate w-full" title="${st?.name||''}">
+    <div class="flex flex-col items-center justify-center p-2 sm:p-3 ${good?'bg-indigo-50 border-indigo-200':'bg-white border-gray-200'} ${!st?'bg-gray-50 border-dashed':''} border rounded-lg shadow-sm h-full w-full relative transition">
+        ${good?'<div class="absolute -top-2 -right-2 text-indigo-500 text-xs sm:text-sm bg-white rounded-full p-0.5 shadow-sm">⭐</div>':''}
+        ${showNumber ? `<div class="absolute top-0.5 left-1 text-[10px] text-gray-400 font-bold">${seatIndex+1}</div>` : ''}
+        <div class="text-xl sm:text-2xl font-bold ${st?'text-gray-800':'text-gray-300'} leading-tight text-center truncate w-full" title="${st?.name||''}">
             ${st ? st.name.split(' ').pop() : '—'}
         </div>
-        ${st?`<div class="text-[9px] text-gray-500 truncate w-full text-center mt-0.5">${st.name.split(' ').slice(0,-1).join(' ')||''}</div>`:''}
+        ${st?`<div class="text-xs sm:text-sm text-gray-500 truncate w-full text-center mt-0.5">${st.name.split(' ').slice(0,-1).join(' ')||''}</div>`:''}
     </div>`;
 }
 
@@ -152,7 +152,7 @@ function _deskHtml(deskIndex, stMap) {
     const s1 = deskIndex * 2;
     const s2 = deskIndex * 2 + 1;
     return `
-    <div class="flex gap-1 bg-gray-100 p-1.5 rounded-xl border border-gray-300 shadow-sm w-full h-full min-h-[50px]">
+    <div class="flex gap-1 bg-gray-100 p-2 sm:p-3 rounded-xl border border-gray-300 shadow-sm w-full h-full min-h-[90px]">
         ${_seatHtml(s1, stMap)}
         ${_seatHtml(s2, stMap)}
     </div>`;
@@ -168,7 +168,7 @@ function _renderActiveSeatingChart() {
     // --- 1. NHÓM 4 (CLUSTER) ---
     // 12 nhóm (mỗi nhóm 2 bàn đối diện nhau). Xếp thành grid 3 cột x 4 hàng.
     if (currentLayout === 'cluster') {
-        html += `<div class="grid grid-cols-3 gap-6 max-w-4xl mx-auto">`;
+        html += `<div class="grid grid-cols-3 gap-6 max-w-[95vw] mx-auto">`;
         for (let group = 0; group < 12; group++) {
             const desk1 = group * 2;
             const desk2 = group * 2 + 1;
@@ -185,7 +185,7 @@ function _renderActiveSeatingChart() {
     // --- 2. TRẠM (STATIONS) ---
     // 6 trạm (mỗi trạm 4 bàn ghép thành hình vuông/chữ nhật lớn). Grid 2 cột x 3 hàng.
     else if (currentLayout === 'station') {
-        html += `<div class="grid grid-cols-2 gap-8 max-w-4xl mx-auto">`;
+        html += `<div class="grid grid-cols-2 gap-8 max-w-[95vw] mx-auto">`;
         for (let station = 0; station < 6; station++) {
             const d1 = station*4, d2 = station*4+1, d3 = station*4+2, d4 = station*4+3;
             html += `
@@ -205,10 +205,10 @@ function _renderActiveSeatingChart() {
     // --- 3. XƯƠNG CÁ (HERRINGBONE) ---
     // Lối đi ở giữa. Hai bên xếp nghiêng. 12 bàn bên trái, 12 bàn bên phải.
     else if (currentLayout === 'herringbone') {
-        html += `<div class="flex justify-center gap-16 max-w-4xl mx-auto pb-8 pt-4">`;
+        html += `<div class="flex justify-center gap-16 max-w-[95vw] mx-auto pb-8 pt-4">`;
         
         // Cột trái
-        html += `<div class="flex flex-col gap-6 w-52">`;
+        html += `<div class="flex flex-col gap-6 w-80">`;
         for (let i = 0; i < 12; i++) {
             html += `<div style="transform: rotate(25deg); transform-origin: right center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
         }
@@ -218,7 +218,7 @@ function _renderActiveSeatingChart() {
         html += `<div class="w-12 border-x-2 border-dashed border-gray-200 flex flex-col justify-center items-center opacity-50"><i class="fas fa-arrow-up text-gray-300 text-3xl mb-8"></i><div style="writing-mode: vertical-rl; text-orientation: mixed;" class="text-gray-400 font-bold tracking-widest uppercase">Lối đi chính</div></div>`;
         
         // Cột phải
-        html += `<div class="flex flex-col gap-6 w-52">`;
+        html += `<div class="flex flex-col gap-6 w-80">`;
         for (let i = 12; i < 24; i++) {
             html += `<div style="transform: rotate(-25deg); transform-origin: left center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
         }
@@ -232,37 +232,37 @@ function _renderActiveSeatingChart() {
     // U Trong (Inner): Trái 3, Phải 3, Dưới 4 = 10 bàn
     else if (currentLayout === 'ushape') {
         html += `
-        <div class="relative w-full max-w-4xl mx-auto h-[700px] flex items-center justify-center">
+        <div class="relative w-full max-w-[95vw] mx-auto h-[900px] flex items-center justify-center">
             <div class="absolute top-0 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-8 py-2 rounded-b-xl font-black tracking-widest shadow-lg">BỤC GIẢNG</div>
             
             <!-- OUTER U -->
-            <div class="absolute top-16 left-0 flex flex-col gap-2 w-48"> <!-- Left outer: 4 -->
+            <div class="absolute top-16 left-0 flex flex-col gap-2 w-72"> <!-- Left outer: 4 -->
                 ${_deskHtml(0, stMap)} ${_deskHtml(1, stMap)} ${_deskHtml(2, stMap)} ${_deskHtml(3, stMap)}
             </div>
-            <div class="absolute top-16 right-0 flex flex-col gap-2 w-48"> <!-- Right outer: 4 -->
+            <div class="absolute top-16 right-0 flex flex-col gap-2 w-72"> <!-- Right outer: 4 -->
                 ${_deskHtml(4, stMap)} ${_deskHtml(5, stMap)} ${_deskHtml(6, stMap)} ${_deskHtml(7, stMap)}
             </div>
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-full px-24 justify-center"> <!-- Bottom outer: 6 -->
-                <div class="w-40 -rotate-90">${_deskHtml(8, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(9, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(10, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(11, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(12, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(13, stMap)}</div>
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-full px-32 justify-center"> <!-- Bottom outer: 6 -->
+                <div class="w-60 -rotate-90">${_deskHtml(8, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(9, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(10, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(11, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(12, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(13, stMap)}</div>
             </div>
 
             <!-- INNER U -->
-            <div class="absolute top-24 left-56 flex flex-col gap-2 w-48"> <!-- Left inner: 3 -->
+            <div class="absolute top-24 left-80 flex flex-col gap-2 w-72"> <!-- Left inner: 3 -->
                 ${_deskHtml(14, stMap)} ${_deskHtml(15, stMap)} ${_deskHtml(16, stMap)}
             </div>
-            <div class="absolute top-24 right-56 flex flex-col gap-2 w-48"> <!-- Right inner: 3 -->
+            <div class="absolute top-24 right-80 flex flex-col gap-2 w-72"> <!-- Right inner: 3 -->
                 ${_deskHtml(17, stMap)} ${_deskHtml(18, stMap)} ${_deskHtml(19, stMap)}
             </div>
             <div class="absolute bottom-40 left-1/2 -translate-x-1/2 flex gap-2 w-full justify-center"> <!-- Bottom inner: 4 -->
-                <div class="w-40 -rotate-90">${_deskHtml(20, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(21, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(22, stMap)}</div>
-                <div class="w-40 -rotate-90">${_deskHtml(23, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(20, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(21, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(22, stMap)}</div>
+                <div class="w-60 -rotate-90">${_deskHtml(23, stMap)}</div>
             </div>
             
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
