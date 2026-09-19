@@ -168,7 +168,7 @@ function _renderActiveSeatingChart() {
     // --- 1. NHÓM 4 (CLUSTER) ---
     // 12 nhóm (mỗi nhóm 2 bàn đối diện nhau). Xếp thành grid 3 cột x 4 hàng.
     if (currentLayout === 'cluster') {
-        html += `<div class="grid grid-cols-3 gap-6 max-w-[95vw] mx-auto">`;
+        html += `<div class="grid grid-cols-4 gap-6 max-w-[95vw] mx-auto">`;
         for (let group = 0; group < 12; group++) {
             const desk1 = group * 2;
             const desk2 = group * 2 + 1;
@@ -185,7 +185,7 @@ function _renderActiveSeatingChart() {
     // --- 2. TRẠM (STATIONS) ---
     // 6 trạm (mỗi trạm 4 bàn ghép thành hình vuông/chữ nhật lớn). Grid 2 cột x 3 hàng.
     else if (currentLayout === 'station') {
-        html += `<div class="grid grid-cols-2 gap-8 max-w-[95vw] mx-auto">`;
+        html += `<div class="grid grid-cols-3 gap-8 max-w-[95vw] mx-auto">`;
         for (let station = 0; station < 6; station++) {
             const d1 = station*4, d2 = station*4+1, d3 = station*4+2, d4 = station*4+3;
             html += `
@@ -205,22 +205,22 @@ function _renderActiveSeatingChart() {
     // --- 3. XƯƠNG CÁ (HERRINGBONE) ---
     // Lối đi ở giữa. Hai bên xếp nghiêng. 12 bàn bên trái, 12 bàn bên phải.
     else if (currentLayout === 'herringbone') {
-        html += `<div class="flex justify-center gap-16 max-w-[95vw] mx-auto pb-8 pt-4">`;
+        html += `<div class="flex justify-center gap-12 max-w-[95vw] mx-auto pb-4 pt-2">`;
         
-        // Cột trái
-        html += `<div class="flex flex-col gap-6 w-80">`;
+        // Cột trái (2 dãy, 6 hàng)
+        html += `<div class="grid grid-cols-2 gap-x-12 gap-y-4 w-[500px]">`;
         for (let i = 0; i < 12; i++) {
-            html += `<div style="transform: rotate(25deg); transform-origin: right center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
+            html += `<div style="transform: rotate(20deg); transform-origin: right center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
         }
         html += `</div>`;
         
         // Đường giữa
-        html += `<div class="w-12 border-x-2 border-dashed border-gray-200 flex flex-col justify-center items-center opacity-50"><i class="fas fa-arrow-up text-gray-300 text-3xl mb-8"></i><div style="writing-mode: vertical-rl; text-orientation: mixed;" class="text-gray-400 font-bold tracking-widest uppercase">Lối đi chính</div></div>`;
+        html += `<div class="w-16 border-x-2 border-dashed border-gray-200 flex flex-col justify-center items-center opacity-50"><i class="fas fa-arrow-up text-gray-300 text-3xl mb-4"></i><div style="writing-mode: vertical-rl; text-orientation: mixed;" class="text-gray-400 font-bold tracking-widest uppercase">Lối đi chính</div></div>`;
         
-        // Cột phải
-        html += `<div class="flex flex-col gap-6 w-80">`;
+        // Cột phải (2 dãy, 6 hàng)
+        html += `<div class="grid grid-cols-2 gap-x-12 gap-y-4 w-[500px]">`;
         for (let i = 12; i < 24; i++) {
-            html += `<div style="transform: rotate(-25deg); transform-origin: left center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
+            html += `<div style="transform: rotate(-20deg); transform-origin: left center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
         }
         html += `</div>`;
         
@@ -232,41 +232,56 @@ function _renderActiveSeatingChart() {
     // U Trong (Inner): Trái 3, Phải 3, Dưới 4 = 10 bàn
     else if (currentLayout === 'ushape') {
         html += `
-        <div class="relative w-full max-w-[95vw] mx-auto h-[900px] flex items-center justify-center">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-8 py-2 rounded-b-xl font-black tracking-widest shadow-lg">BỤC GIẢNG</div>
+        <div class="relative w-full max-w-[95vw] mx-auto min-h-[70vh] flex flex-col items-center pt-8">
+            <div class="bg-gray-800 text-white px-12 py-2 rounded-b-xl font-black tracking-widest shadow-lg absolute top-0 z-10">BỤC GIẢNG</div>
             
-            <!-- OUTER U -->
-            <div class="absolute top-16 left-0 flex flex-col gap-2 w-72"> <!-- Left outer: 4 -->
-                ${_deskHtml(0, stMap)} ${_deskHtml(1, stMap)} ${_deskHtml(2, stMap)} ${_deskHtml(3, stMap)}
-            </div>
-            <div class="absolute top-16 right-0 flex flex-col gap-2 w-72"> <!-- Right outer: 4 -->
-                ${_deskHtml(4, stMap)} ${_deskHtml(5, stMap)} ${_deskHtml(6, stMap)} ${_deskHtml(7, stMap)}
-            </div>
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-full px-32 justify-center"> <!-- Bottom outer: 6 -->
-                <div class="w-60 -rotate-90">${_deskHtml(8, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(9, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(10, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(11, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(12, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(13, stMap)}</div>
-            </div>
-
-            <!-- INNER U -->
-            <div class="absolute top-24 left-80 flex flex-col gap-2 w-72"> <!-- Left inner: 3 -->
-                ${_deskHtml(14, stMap)} ${_deskHtml(15, stMap)} ${_deskHtml(16, stMap)}
-            </div>
-            <div class="absolute top-24 right-80 flex flex-col gap-2 w-72"> <!-- Right inner: 3 -->
-                ${_deskHtml(17, stMap)} ${_deskHtml(18, stMap)} ${_deskHtml(19, stMap)}
-            </div>
-            <div class="absolute bottom-40 left-1/2 -translate-x-1/2 flex gap-2 w-full justify-center"> <!-- Bottom inner: 4 -->
-                <div class="w-60 -rotate-90">${_deskHtml(20, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(21, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(22, stMap)}</div>
-                <div class="w-60 -rotate-90">${_deskHtml(23, stMap)}</div>
+            <div class="flex-1 w-full flex justify-between px-4 mt-8 relative">
+                
+                <!-- OUTER U LEFT (4 desks) -->
+                <div class="flex flex-col justify-between gap-4 w-72 h-[60vh]">
+                    ${_deskHtml(0, stMap)} ${_deskHtml(1, stMap)} ${_deskHtml(2, stMap)} ${_deskHtml(3, stMap)}
+                </div>
+                
+                <!-- INNER U LEFT (3 desks) -->
+                <div class="flex flex-col justify-center gap-6 w-72 h-[60vh] absolute left-[22%]">
+                    ${_deskHtml(14, stMap)} ${_deskHtml(15, stMap)} ${_deskHtml(16, stMap)}
+                </div>
+                
+                <!-- INNER U RIGHT (3 desks) -->
+                <div class="flex flex-col justify-center gap-6 w-72 h-[60vh] absolute right-[22%]">
+                    ${_deskHtml(17, stMap)} ${_deskHtml(18, stMap)} ${_deskHtml(19, stMap)}
+                </div>
+                
+                <!-- OUTER U RIGHT (4 desks) -->
+                <div class="flex flex-col justify-between gap-4 w-72 h-[60vh]">
+                    ${_deskHtml(4, stMap)} ${_deskHtml(5, stMap)} ${_deskHtml(6, stMap)} ${_deskHtml(7, stMap)}
+                </div>
+                
             </div>
             
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
-                <i class="fas fa-users text-[10rem] text-indigo-500"></i>
+            <!-- BOTTOM BAR -->
+            <div class="w-full flex flex-col items-center gap-8 mt-12 pb-8">
+                <!-- INNER U BOTTOM (4 desks) -->
+                <div class="flex justify-center gap-8 w-full px-32">
+                    <div class="w-72">${_deskHtml(20, stMap)}</div>
+                    <div class="w-72">${_deskHtml(21, stMap)}</div>
+                    <div class="w-72">${_deskHtml(22, stMap)}</div>
+                    <div class="w-72">${_deskHtml(23, stMap)}</div>
+                </div>
+                
+                <!-- OUTER U BOTTOM (6 desks) -->
+                <div class="flex justify-between gap-4 w-full px-8">
+                    <div class="w-72">${_deskHtml(8, stMap)}</div>
+                    <div class="w-72">${_deskHtml(9, stMap)}</div>
+                    <div class="w-72">${_deskHtml(10, stMap)}</div>
+                    <div class="w-72">${_deskHtml(11, stMap)}</div>
+                    <div class="w-72">${_deskHtml(12, stMap)}</div>
+                    <div class="w-72">${_deskHtml(13, stMap)}</div>
+                </div>
+            </div>
+            
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
+                <i class="fas fa-users text-[15rem] text-indigo-500"></i>
             </div>
         </div>`;
     }
@@ -275,12 +290,3 @@ function _renderActiveSeatingChart() {
 }
 
 // Hàm bổ trợ trộn mảng
-function _shuffle(array) {
-    let currentIndex = array.length,  randomIndex;
-    while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-    }
-    return array;
-}
