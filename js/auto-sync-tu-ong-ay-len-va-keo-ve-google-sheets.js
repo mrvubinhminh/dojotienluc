@@ -63,10 +63,19 @@ function _hideAutoSyncBadge() {
 
 function _applyPulledData(d) {
     if (d.classes)      classes       = d.classes;
-    if (d.students)     students      = d.students.map(s => ({
-        ...s,
-        avatar: s.avatar || (avatarBaseUrl + (s.name||'student').normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,""))
-    }));
+    if (d.students) {
+        students = d.students.map(s => {
+            const localS = students.find(ls => ls.id === s.id);
+            let finalAvatar = s.avatar;
+            if ((!finalAvatar || finalAvatar.includes('api.dicebear.com')) && localS && localS.avatar && localS.avatar.startsWith('data:image')) {
+                finalAvatar = localS.avatar;
+            }
+            if (!finalAvatar) {
+                finalAvatar = avatarBaseUrl + (s.name||'student').normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,"");
+            }
+            return { ...s, avatar: finalAvatar };
+        });
+    }
     if (d.history)      history       = d.history;
     if (d.periods)      periods       = d.periods;
     if (d.gradeRecords) gradeRecords  = d.gradeRecords;
