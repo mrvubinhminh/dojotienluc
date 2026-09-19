@@ -131,6 +131,25 @@ function closeActiveSeatingResult() {
     document.getElementById('alSeatingResultOverlay').classList.add('hidden');
 }
 
+
+function awardActiveSeatingGroup(groupLabel, ...deskIndexes) {
+    let ids = [];
+    deskIndexes.forEach(dIdx => {
+        const s1 = _alSeatingMap[dIdx * 2];
+        const s2 = _alSeatingMap[dIdx * 2 + 1];
+        if (s1) ids.push(s1);
+        if (s2) ids.push(s2);
+    });
+    if (ids.length === 0) {
+        showToast('Nhóm không có học sinh nào!', false);
+        return;
+    }
+    closeActiveSeatingResult();
+    setTimeout(() => {
+        openGroupModal(ids, groupLabel);
+    }, 300);
+}
+
 function _seatHtml(seatIndex, stMap, showNumber = false) {
     const sid = _alSeatingMap[seatIndex];
     const st = sid ? stMap[sid] : null;
@@ -147,12 +166,13 @@ function _seatHtml(seatIndex, stMap, showNumber = false) {
     </div>`;
 }
 
-function _deskHtml(deskIndex, stMap) {
+function _deskHtml(deskIndex, stMap, showPointBtn = false) {
     // A desk has 2 seats (left and right)
     const s1 = deskIndex * 2;
     const s2 = deskIndex * 2 + 1;
     return `
-    <div class="flex gap-1 bg-gray-100 p-2 sm:p-3 rounded-xl border border-gray-300 shadow-sm w-full h-full min-h-[90px]">
+    <div class="relative flex gap-1 bg-gray-100 p-2 sm:p-3 rounded-xl border border-gray-300 shadow-sm w-full h-full min-h-[90px]">
+        ${showPointBtn ? `<button onclick="awardActiveSeatingGroup('Bàn ${deskIndex + 1}', ${deskIndex})" class="absolute -top-2 -right-2 bg-indigo-500 hover:bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow z-10 transition">Cộng</button>` : ''}
         ${_seatHtml(s1, stMap)}
         ${_seatHtml(s2, stMap)}
     </div>`;
@@ -174,7 +194,12 @@ function _renderActiveSeatingChart() {
             const desk2 = group * 2 + 1;
             html += `
             <div class="flex flex-col items-center gap-1 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-                <div class="text-xs font-bold text-gray-400 mb-1">Nhóm ${group + 1}</div>
+                
+                <div class="w-full flex justify-between items-center px-1 mb-1">
+                    <div class="text-xs font-bold text-gray-400">Nhóm ${group + 1}</div>
+                    <button onclick="awardActiveSeatingGroup('Nhóm ${group + 1}', ${desk1}, ${desk2})" class="text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2 py-0.5 rounded-full transition">Cộng điểm</button>
+                </div>
+
                 <div class="w-full">${_deskHtml(desk1, stMap)}</div>
                 <div class="w-full rotate-180">${_deskHtml(desk2, stMap)}</div>
             </div>`;
@@ -190,7 +215,12 @@ function _renderActiveSeatingChart() {
             const d1 = station*4, d2 = station*4+1, d3 = station*4+2, d4 = station*4+3;
             html += `
             <div class="bg-indigo-50 bg-opacity-30 p-4 rounded-3xl border border-indigo-100 relative shadow-sm">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full">Trạm ${station + 1}</div>
+                
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                    <div class="bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">Trạm ${station + 1}</div>
+                    <button onclick="awardActiveSeatingGroup('Trạm ${station + 1}', ${d1}, ${d2}, ${d3}, ${d4})" class="bg-amber-400 hover:bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm transition">Cộng điểm</button>
+                </div>
+
                 <div class="grid grid-cols-2 gap-2 mt-2">
                     ${_deskHtml(d1, stMap)}
                     ${_deskHtml(d2, stMap)}
@@ -210,7 +240,7 @@ function _renderActiveSeatingChart() {
         // Cột trái (2 dãy, 6 hàng)
         html += `<div class="grid grid-cols-2 gap-x-12 gap-y-4 w-[500px]">`;
         for (let i = 0; i < 12; i++) {
-            html += `<div style="transform: rotate(20deg); transform-origin: right center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
+            html += `<div style="transform: rotate(20deg); transform-origin: right center;" class="hover:scale-105 transition">${_deskHtml(i, stMap, true)}</div>`;
         }
         html += `</div>`;
         
@@ -220,7 +250,7 @@ function _renderActiveSeatingChart() {
         // Cột phải (2 dãy, 6 hàng)
         html += `<div class="grid grid-cols-2 gap-x-12 gap-y-4 w-[500px]">`;
         for (let i = 12; i < 24; i++) {
-            html += `<div style="transform: rotate(-20deg); transform-origin: left center;" class="hover:scale-105 transition">${_deskHtml(i, stMap)}</div>`;
+            html += `<div style="transform: rotate(-20deg); transform-origin: left center;" class="hover:scale-105 transition">${_deskHtml(i, stMap, true)}</div>`;
         }
         html += `</div>`;
         
@@ -239,22 +269,22 @@ function _renderActiveSeatingChart() {
                 
                 <!-- OUTER U LEFT (4 desks) -->
                 <div class="flex flex-col justify-between gap-4 w-72 h-[60vh]">
-                    ${_deskHtml(0, stMap)} ${_deskHtml(1, stMap)} ${_deskHtml(2, stMap)} ${_deskHtml(3, stMap)}
+                    ${_deskHtml(0, stMap, true)} ${_deskHtml(1, stMap, true)} ${_deskHtml(2, stMap, true)} ${_deskHtml(3, stMap, true)}
                 </div>
                 
                 <!-- INNER U LEFT (3 desks) -->
                 <div class="flex flex-col justify-center gap-6 w-72 h-[60vh] absolute left-[22%]">
-                    ${_deskHtml(14, stMap)} ${_deskHtml(15, stMap)} ${_deskHtml(16, stMap)}
+                    ${_deskHtml(14, stMap, true)} ${_deskHtml(15, stMap, true)} ${_deskHtml(16, stMap, true)}
                 </div>
                 
                 <!-- INNER U RIGHT (3 desks) -->
                 <div class="flex flex-col justify-center gap-6 w-72 h-[60vh] absolute right-[22%]">
-                    ${_deskHtml(17, stMap)} ${_deskHtml(18, stMap)} ${_deskHtml(19, stMap)}
+                    ${_deskHtml(17, stMap, true)} ${_deskHtml(18, stMap, true)} ${_deskHtml(19, stMap, true)}
                 </div>
                 
                 <!-- OUTER U RIGHT (4 desks) -->
                 <div class="flex flex-col justify-between gap-4 w-72 h-[60vh]">
-                    ${_deskHtml(4, stMap)} ${_deskHtml(5, stMap)} ${_deskHtml(6, stMap)} ${_deskHtml(7, stMap)}
+                    ${_deskHtml(4, stMap, true)} ${_deskHtml(5, stMap, true)} ${_deskHtml(6, stMap, true)} ${_deskHtml(7, stMap, true)}
                 </div>
                 
             </div>
@@ -263,20 +293,20 @@ function _renderActiveSeatingChart() {
             <div class="w-full flex flex-col items-center gap-8 mt-12 pb-8">
                 <!-- INNER U BOTTOM (4 desks) -->
                 <div class="flex justify-center gap-8 w-full px-32">
-                    <div class="w-72">${_deskHtml(20, stMap)}</div>
-                    <div class="w-72">${_deskHtml(21, stMap)}</div>
-                    <div class="w-72">${_deskHtml(22, stMap)}</div>
-                    <div class="w-72">${_deskHtml(23, stMap)}</div>
+                    <div class="w-72">${_deskHtml(20, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(21, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(22, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(23, stMap, true)}</div>
                 </div>
                 
                 <!-- OUTER U BOTTOM (6 desks) -->
                 <div class="flex justify-between gap-4 w-full px-8">
-                    <div class="w-72">${_deskHtml(8, stMap)}</div>
-                    <div class="w-72">${_deskHtml(9, stMap)}</div>
-                    <div class="w-72">${_deskHtml(10, stMap)}</div>
-                    <div class="w-72">${_deskHtml(11, stMap)}</div>
-                    <div class="w-72">${_deskHtml(12, stMap)}</div>
-                    <div class="w-72">${_deskHtml(13, stMap)}</div>
+                    <div class="w-72">${_deskHtml(8, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(9, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(10, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(11, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(12, stMap, true)}</div>
+                    <div class="w-72">${_deskHtml(13, stMap, true)}</div>
                 </div>
             </div>
             
