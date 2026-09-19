@@ -207,3 +207,62 @@ function handleExcelUpload(e) {
     e.target.value='';
 }
 
+
+
+// ============================================================
+// JSON BACKUP / RESTORE
+// ============================================================
+function exportJsonData() {
+    const data = {
+        classes: classes,
+        students: students,
+        groups: groups,
+        seatingMaps: seatingMaps,
+        records: records,
+        classSettings: classSettings,
+        syncSettings: syncSettings
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href",     dataStr);
+    downloadAnchorNode.setAttribute("download", "LopHocTichCuc_Backup_" + new Date().getTime() + ".json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
+function importJsonData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!confirm("CẢNH BÁO: Việc phục hồi sẽ XÓA TOÀN BỘ dữ liệu hiện tại trên máy này và thay bằng dữ liệu từ file. Bạn có chắc chắn muốn tiếp tục?")) {
+        event.target.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.classes && Array.isArray(data.classes)) {
+                localStorage.setItem('dojo_classes', JSON.stringify(data.classes || []));
+                localStorage.setItem('dojo_students', JSON.stringify(data.students || []));
+                localStorage.setItem('dojo_groups', JSON.stringify(data.groups || []));
+                localStorage.setItem('dojo_seating', JSON.stringify(data.seatingMaps || []));
+                localStorage.setItem('dojo_records', JSON.stringify(data.records || []));
+                localStorage.setItem('dojo_classSettings', JSON.stringify(data.classSettings || {}));
+                localStorage.setItem('dojo_syncSettings', JSON.stringify(data.syncSettings || {}));
+                
+                showToast("Phục hồi dữ liệu thành công! Đang tải lại...");
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                alert("File không hợp lệ hoặc bị lỗi định dạng!");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Lỗi khi đọc file JSON!");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
