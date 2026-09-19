@@ -175,7 +175,7 @@ function addStudent() {
     saveData(); renderStudents(); closeAddStudentModal(); showToast(`Đã thêm ${n}!`);
 }
 
-function handleExcelUpload(e) {
+function handleExcelUpload(e, isSyncUpdate = false) {
     if(!currentClassId){alert('Chọn lớp trước!');e.target.value='';return;}
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader();
@@ -183,24 +183,62 @@ function handleExcelUpload(e) {
         try{
             const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
             const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-            let c=0;
+            let c=0, updated=0;
+            
+            // Lấy danh sách học sinh hiện tại của lớp
+            let currentStudents = students.filter(s => s.classId === currentClassId);
+            let keepIds = new Set();
+            
             for(let i=1;i<rows.length;i++){
                 const row=rows[i]; if(!row||!row.length) continue;
                 let stt,name,dob;
-                if(row.length===1||(row[0]&&!row[1]&&typeof row[0]==='string')){name=row[0];stt=students.filter(s=>s.classId===currentClassId).length+1;dob='';}
-                else{stt=row[0];name=row[1];dob=row[2]?row[2].toString():'';}
+                if(row.length===1||(row[0]&&!row[1]&&typeof row[0]==='string')){name=row[0];stt=currentStudents.length+1;dob='';}
+                else{stt=parseInt(row[0]);name=row[1];dob=row[2]?row[2].toString():'';}
+                
                 if(name&&typeof name==='string'&&name.trim()){
+                    name = name.trim();
+                    if(isSyncUpdate && stt) {
+                        // Tìm học sinh có cùng STT
+                        let existing = currentStudents.find(s => parseInt(s.stt) === parseInt(stt));
+                        if (existing) {
+                            const oldName = existing.name;
+                            existing.name = name;
+                            existing.realName = name;
+                            if (dob) existing.dob = dob.trim();
+                            
+                            // Nếu tên đổi mà ảnh cũ là ảnh Dicebear mặc định thì đổi seed
+                            if (oldName !== name && existing.avatar && !existing.avatar.startsWith('data:image')) {
+                                const seed = name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,"");
+                                existing.avatar = avatarBaseUrl + seed;
+                            }
+                            keepIds.add(existing.id);
+                            updated++;
+                            c++;
+                            continue;
+                        }
+                    }
+                    
+                    // Nếu không phải sync đè, hoặc không tìm thấy STT, thêm mới
                     const id=students.length?Math.max(...students.map(s=>s.id))+1:1;
-                    const seed=name.trim().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,"");
-                    students.push({id,classId:currentClassId,stt:parseInt(stt)||(students.filter(s=>s.classId===currentClassId).length+1),name:name.trim(),dob:dob.trim(),points:0,positivePoints:0,negativePoints:0,avatar:avatarBaseUrl+seed});
+                    const seed=name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,"");
+                    const newStudent = {id,classId:currentClassId,stt:stt||(currentStudents.length+1),name:name,realName:name,dob:dob?dob.trim():'',points:0,positivePoints:0,negativePoints:0,avatar:avatarBaseUrl+seed};
+                    students.push(newStudent);
+                    currentStudents.push(newStudent); // Cập nhật local ref
+                    if(isSyncUpdate) keepIds.add(id);
                     c++;
                 }
             }
+            
+            if (isSyncUpdate) {
+                // Xoá những em không có trong danh sách đè
+                students = students.filter(s => s.classId !== currentClassId || keepIds.has(s.id));
+            }
+            
             const sb=document.getElementById('sidebar');
             if(sb.classList.contains('sidebar-open'))toggleSidebar();
             saveData();
             if(currentView==='classroom')renderStudents(); else renderReport();
-            showToast(`Đã nhập ${c} học sinh!`);
+            showToast(isSyncUpdate ? `Đã đồng bộ đè: Cập nhật ${updated} và thêm mới ${c - updated} học sinh!` : `Đã nhập thêm ${c} học sinh!`);
         }catch(err){console.error(err);alert("Lỗi file Excel. Form: Cột A(STT), Cột B(Họ Tên), Cột C(Ngày sinh)");}
     };
     r.readAsArrayBuffer(f);
