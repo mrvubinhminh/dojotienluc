@@ -188,14 +188,21 @@ function renderTypingWord() {
     const wordObj = currentTypingData[typingWordIndex];
     
     // Render Vietnamese text with manual speaker button
-    document.getElementById('typingVnText').innerHTML = `
-        <span class="relative inline-block group">
-            ${wordObj.vn}
-            <button onclick="speakVietnameseSlowly('${wordObj.vn.replace(/'/g, "\'")}')" class="absolute -right-10 top-1/2 -translate-y-1/2 text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
-                <i class="fas fa-volume-up text-lg"></i>
-            </button>
-        </span>
-    `;
+    let topTextHTML = wordObj.vn;
+    if (typingListeningMode && !typingTopTextRevealed) {
+        topTextHTML = `<button onclick="revealTopText()" class="text-gray-400 hover:text-purple-500 transition border border-dashed border-gray-300 rounded-xl px-6 py-2 text-xl font-medium"><i class="fas fa-eye mr-2"></i>Click để xem nội dung hội thoại</button>`;
+    } else {
+        topTextHTML = `
+            <span class="relative inline-block group cursor-pointer" onclick="if(typingListeningMode) { typingTopTextRevealed = false; renderTypingWord(); }">
+                ${wordObj.vn}
+                <button onclick="event.stopPropagation(); speakVietnameseSlowly('${wordObj.vn.replace(/'/g, "\'")}')" class="absolute -right-10 top-1/2 -translate-y-1/2 text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                    <i class="fas fa-volume-up text-lg"></i>
+                </button>
+            </span>
+        `;
+    }
+    document.getElementById('typingVnText').innerHTML = topTextHTML;
+
 
     
     const enText = wordObj.en;
@@ -422,6 +429,42 @@ function handleTypingExcelUpload(e) {
 
 
 let typingReadLang = 'en';
+
+let typingListeningMode = false;
+let typingTopTextRevealed = false;
+
+function toggleListeningMode() {
+    typingListeningMode = !typingListeningMode;
+    const btn = document.getElementById('btnToggleListeningMode');
+    if (btn) {
+        if (typingListeningMode) {
+            btn.innerHTML = '<i class="fas fa-headphones mr-1"></i>Chế độ Nghe';
+            btn.className = "text-purple-600 hover:text-purple-700 font-bold text-sm bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200 transition-colors";
+            
+            // Auto switch to reading top line and hide word
+            typingReadLang = 'vi';
+            typingWordHidden = true;
+            typingTopTextRevealed = false;
+            
+            const btnLang = document.getElementById('btnToggleReadLang');
+            if(btnLang) {
+                btnLang.innerHTML = '<i class="fas fa-comments mr-1"></i>Đọc Câu Hỏi';
+                btnLang.className = "text-indigo-600 hover:text-indigo-700 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors";
+            }
+        } else {
+            btn.innerHTML = '<i class="fas fa-headphones mr-1"></i>Luyện Nghe';
+            btn.className = "text-gray-500 hover:text-purple-500 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg transition-colors";
+            typingTopTextRevealed = true; // reveal top text
+        }
+    }
+    renderTypingWord();
+}
+
+function revealTopText() {
+    typingTopTextRevealed = true;
+    renderTypingWord();
+}
+
 
 function toggleReadLang() {
     typingReadLang = typingReadLang === 'en' ? 'vi' : 'en';
