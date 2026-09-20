@@ -199,6 +199,11 @@ function renderTypingWord() {
     
     updateWPM();
     updateTypingKeyboard(enText[typingCharIndex]);
+    
+    // Auto pronounce when starting a new word
+    if (typingCharIndex === 0) {
+        speakEnglishSlowly(enText);
+    }
 }
 
 function handleTypingInput(e) {
@@ -303,20 +308,6 @@ function getKbdId(char) {
     return keyId;
 }
 
-function updateTypingKeyboard(expectedChar) {
-    document.querySelectorAll('.kbd-key').forEach(el => {
-        el.classList.remove('bg-blue-500', 'text-white', 'scale-110', 'shadow-lg', 'shadow-blue-500/50');
-        el.classList.add('bg-white', 'text-gray-700');
-    });
-    
-    if(!expectedChar) return;
-    
-    const keyId = getKbdId(expectedChar);
-    const kbd = document.getElementById('kbd_' + keyId);
-    if(kbd) {
-        kbd.classList.remove('bg-white', 'text-gray-700');
-        kbd.classList.add('bg-blue-500', 'text-white', 'scale-110', 'shadow-lg', 'shadow-blue-500/50', 'z-10');
-    }
 }
 
 
@@ -375,13 +366,75 @@ function handleTypingExcelUpload(e) {
 }
 
 
-function speakEnglishSlowly(text) {
+
+function speakEnglishSlowly(text, rate = 0.8) {
     if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
-        utterance.rate = 0.5; // slow
+        utterance.rate = rate; // slightly slow for learning, but natural
+        
+        // Try to find a good Google voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
+        if (googleVoice) {
+            utterance.voice = googleVoice;
+        }
+        
         window.speechSynthesis.speak(utterance);
-    } else {
-        alert('Trình duyệt của bạn không hỗ trợ tính năng đọc.');
+    }
+}
+
+
+
+function getKeyColorClass(char) {
+    const key = char.toLowerCase();
+    
+    // Left Pinky (Purple)
+    if (['q', 'a', 'z', '1', '~', '`'].includes(key)) return 'bg-purple-500 shadow-purple-500/50';
+    // Left Ring (Blue)
+    if (['w', 's', 'x', '2'].includes(key)) return 'bg-blue-500 shadow-blue-500/50';
+    // Left Middle (Green)
+    if (['e', 'd', 'c', '3'].includes(key)) return 'bg-green-500 shadow-green-500/50';
+    // Left Index (Yellow)
+    if (['r', 'f', 'v', '4', 't', 'g', 'b', '5'].includes(key)) return 'bg-yellow-500 shadow-yellow-500/50';
+    
+    // Thumbs (Gray)
+    if (key === ' ' || key === 'space') return 'bg-gray-500 shadow-gray-500/50';
+    
+    // Right Index (Red)
+    if (['y', 'h', 'n', '6', 'u', 'j', 'm', '7'].includes(key)) return 'bg-red-500 shadow-red-500/50';
+    // Right Middle (Orange)
+    if (['i', 'k', ',', '8'].includes(key)) return 'bg-orange-500 shadow-orange-500/50';
+    // Right Ring (Teal)
+    if (['o', 'l', '.', '9'].includes(key)) return 'bg-teal-500 shadow-teal-500/50';
+    // Right Pinky (Pink)
+    if (['p', ';', '/', '0', '-', '=', '[', ']', "'", '\\', '?', '!'].includes(key)) return 'bg-pink-500 shadow-pink-500/50';
+    
+    // Default fallback
+    return 'bg-blue-500 shadow-blue-500/50';
+}
+
+function updateTypingKeyboard(expectedChar) {
+    // We need to clear all possible color classes
+    const colorClasses = ['bg-purple-500', 'shadow-purple-500/50', 'bg-blue-500', 'shadow-blue-500/50', 
+                          'bg-green-500', 'shadow-green-500/50', 'bg-yellow-500', 'shadow-yellow-500/50',
+                          'bg-gray-500', 'shadow-gray-500/50', 'bg-red-500', 'shadow-red-500/50',
+                          'bg-orange-500', 'shadow-orange-500/50', 'bg-teal-500', 'shadow-teal-500/50',
+                          'bg-pink-500', 'shadow-pink-500/50', 'text-white', 'scale-110', 'shadow-lg', 'z-10'];
+                          
+    document.querySelectorAll('.kbd-key').forEach(el => {
+        el.classList.remove(...colorClasses);
+        el.classList.add('bg-white', 'text-gray-700');
+    });
+    
+    if(!expectedChar) return;
+    
+    const keyId = getKbdId(expectedChar);
+    const kbd = document.getElementById('kbd_' + keyId);
+    if(kbd) {
+        kbd.classList.remove('bg-white', 'text-gray-700');
+        const colorClass = getKeyColorClass(expectedChar);
+        kbd.classList.add(...colorClass.split(' '), 'text-white', 'scale-110', 'shadow-lg', 'z-10');
     }
 }
