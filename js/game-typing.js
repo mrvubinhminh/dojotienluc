@@ -658,7 +658,28 @@ function speakVietnameseSlowly(text, rate = 0.9) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     
-    // Check if it's an English conversation
+    // Yêu cầu: Luôn ưu tiên đọc bằng giọng Tiếng Việt nếu đoạn text có chứa ký tự Tiếng Việt
+    const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
+    
+    if (hasVietnamese) {
+        // Dọn dẹp các tiền tố hội thoại (nếu vô tình có) để đọc cho mượt
+        let cleanText = text.replace(/(Woman:|Boy:|Girl:|Man:)/gi, '').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'vi-VN';
+        utterance.rate = rate;
+        utterance.volume = 1.0;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => (v.name.includes('Google') || v.name.includes('Vietnam')) && v.lang.includes('vi')) || voices.find(v => v.lang.includes('vi'));
+        if (viVoice) {
+            utterance.voice = viVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+        return;
+    }
+    
+    // Nếu không có tiếng Việt, thì xử lý như đoạn hội thoại Tiếng Anh bình thường (dành cho Listening IELTS)
     const conversationRegex = /(Woman:|Boy:|Girl:|Man:)\s*(.*?)(?=(Woman:|Boy:|Girl:|Man:|$))/gi;
     const isConversation = /(Woman:|Boy:|Girl:|Man:)/i.test(text);
     
@@ -707,10 +728,10 @@ function speakVietnameseSlowly(text, rate = 0.9) {
             };
             
             const getPitch = (role) => {
-                if (role === 'woman') return 1.0; // Natural adult female
-                if (role === 'man') return 1.0; // Natural adult male
-                if (role === 'girl') return 1.3; // Slightly higher for child
-                if (role === 'boy') return 1.2; // Slightly higher for child
+                if (role === 'woman') return 1.0;
+                if (role === 'man') return 1.0;
+                if (role === 'girl') return 1.3;
+                if (role === 'boy') return 1.2;
                 return 1.0;
             };
             
@@ -721,8 +742,8 @@ function speakVietnameseSlowly(text, rate = 0.9) {
                 const part = parts[currentPart];
                 const utterance = new SpeechSynthesisUtterance(part.text);
                 utterance.lang = 'en-US';
-                utterance.rate = 1.0; // Natural exam rate
-                utterance.volume = 1.0; // Max volume
+                utterance.rate = 1.0;
+                utterance.volume = 1.0;
                 
                 const voice = getVoice(part.role);
                 if (voice) utterance.voice = voice;
@@ -741,25 +762,7 @@ function speakVietnameseSlowly(text, rate = 0.9) {
         }
     }
     
-    // If not a conversation, determine if it's mostly Vietnamese or English
-    // A quick hack: if it has no Vietnamese diacritics, maybe it's English, but for now we fallback to Vietnamese voice or Google English
-    const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
-    
-    if (hasVietnamese) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'vi-VN';
-        utterance.rate = rate;
-        
-        const voices = window.speechSynthesis.getVoices();
-        const googleVoice = voices.find(v => (v.name.includes('Google') || v.name.includes('Vietnam')) && v.lang.includes('vi'));
-        if (googleVoice) {
-            utterance.voice = googleVoice;
-        }
-        
-        window.speechSynthesis.speak(utterance);
-    } else {
-        speakEnglishSlowly(text, 0.9);
-    }
+    speakEnglishSlowly(text, 0.9);
 }
 
 function speakEnglishSlowly(text, rate = 1.0) {
