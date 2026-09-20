@@ -546,6 +546,28 @@ let typingListeningMode = false;
 let typingShowKeyboardHint = true;
 let typingTopTextRevealed = false;
 
+
+let typingEyeCareMode = false;
+function toggleEyeCareMode() {
+    typingEyeCareMode = !typingEyeCareMode;
+    const modal = document.getElementById('typingPlayModal');
+    const btn = document.getElementById('btnEyeCare');
+    if (typingEyeCareMode) {
+        // Áp dụng bộ lọc chống mỏi mắt: ám vàng + giảm độ sáng nhẹ
+        modal.style.filter = 'sepia(40%) brightness(90%) contrast(90%)';
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-sun mr-1"></i>Mặc định';
+            btn.className = "text-gray-500 hover:text-gray-600 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors";
+        }
+    } else {
+        modal.style.filter = 'none';
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-leaf mr-1"></i>Bảo vệ mắt';
+            btn.className = "text-green-600 hover:text-green-700 font-bold text-sm bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 transition-colors";
+        }
+    }
+}
+
 function toggleKeyboardHint() {
     typingShowKeyboardHint = !typingShowKeyboardHint;
     const btn = document.getElementById('btnToggleKeyboardHint');
