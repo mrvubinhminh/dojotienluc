@@ -486,6 +486,7 @@ function toggleReadLang() {
     }
 }
 
+let typingSpeechSessionId = 0;
 function speakVietnameseSlowly(text, rate = 0.9) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -493,6 +494,9 @@ function speakVietnameseSlowly(text, rate = 0.9) {
     // Check if it's an English conversation
     const conversationRegex = /(Woman:|Boy:|Girl:|Man:)\s*(.*?)(?=(Woman:|Boy:|Girl:|Man:|$))/gi;
     const isConversation = /(Woman:|Boy:|Girl:|Man:)/i.test(text);
+    
+    typingSpeechSessionId++;
+    const currentSessionId = typingSpeechSessionId;
     
     if (isConversation) {
         let match;
@@ -529,6 +533,7 @@ function speakVietnameseSlowly(text, rate = 0.9) {
             
             let currentPart = 0;
             function speakNext() {
+                if (typingSpeechSessionId !== currentSessionId) return;
                 if (currentPart >= parts.length) return;
                 const part = parts[currentPart];
                 const textWithPauses = part.text.replace(/ /g, ', ');
