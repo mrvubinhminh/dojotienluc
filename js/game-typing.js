@@ -140,6 +140,51 @@ function deleteCustomTypingLesson(idx) {
 // ---------------------------------
 // GAME PLAY LOGIC
 // ---------------------------------
+let isVirtualKeyboardInitialized = false;
+
+function initVirtualKeyboard() {
+    if (isVirtualKeyboardInitialized) return;
+    isVirtualKeyboardInitialized = true;
+    
+    document.querySelectorAll('.kbd-key').forEach(keyEl => {
+        if (!keyEl.id || !keyEl.id.startsWith('kbd_')) return;
+        let char = keyEl.id.replace('kbd_', '');
+        
+        // Handle special cases based on ID mapping
+        if (char === 'space') char = ' ';
+        else if (char === 'comma') char = ',';
+        else if (char === 'dot') char = '.';
+        else if (char === 'slash') char = '/';
+        else if (char === 'quote') char = "'";
+        
+        // Add hover styles and pointer
+        keyEl.classList.add('cursor-pointer', 'hover:bg-gray-100', 'active:bg-gray-200');
+        
+        // Touch/Click handler
+        const handleVirtualClick = (e) => {
+            e.preventDefault(); // Prevent double firing on touch devices
+            
+            // Allow clicking ONLY if the game is active (word index valid)
+            if (typingWordIndex >= currentTypingData.length) return;
+            
+            // Give visual feedback on the key itself when pressed manually
+            keyEl.classList.add('scale-95', 'brightness-90');
+            setTimeout(() => keyEl.classList.remove('scale-95', 'brightness-90'), 100);
+            
+            handleTypingInput({
+                key: char,
+                preventDefault: () => {},
+                ctrlKey: false,
+                altKey: false,
+                metaKey: false
+            });
+        };
+        
+        keyEl.addEventListener('mousedown', handleVirtualClick);
+        keyEl.addEventListener('touchstart', handleVirtualClick, {passive: false});
+    });
+}
+
 function startTypingGame(type, idx) {
     let selectedStudent = null;
     const currentStudents = students.filter(s => s.classId === currentClassId);
@@ -170,6 +215,7 @@ function startTypingGame(type, idx) {
     
     closeTypingGameMenu();
     document.getElementById('typingPlayModal').classList.remove('hidden');
+    initVirtualKeyboard();
     
     document.addEventListener('keydown', handleTypingInput);
     renderTypingWord();
