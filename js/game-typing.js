@@ -338,8 +338,8 @@ function startTypingGame(type, idx) {
     if(type === 'default') currentTypingData = [...typingLessons[idx].data];
     else currentTypingData = [...typingCustomLessons[idx].data];
     
-    // Randomize and take 15 words per round
-    currentTypingData = currentTypingData.sort(() => 0.5 - Math.random()).slice(0, 15);
+    // Load toàn bộ câu hỏi theo đúng thứ tự (không random, không giới hạn 15 câu)
+    // currentTypingData giữ nguyên thứ tự gốc
     
     typingWordIndex = 0;
     typingCharIndex = 0;
