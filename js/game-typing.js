@@ -1,3 +1,47 @@
+
+// ---------------------------------
+// AUDIO FX
+// ---------------------------------
+const typingAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playTypingClick() {
+    try {
+        if(typingAudioCtx.state === 'suspended') typingAudioCtx.resume();
+        const osc = typingAudioCtx.createOscillator();
+        const gainNode = typingAudioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, typingAudioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, typingAudioCtx.currentTime + 0.03);
+        
+        gainNode.gain.setValueAtTime(0.1, typingAudioCtx.currentTime); // very subtle
+        gainNode.gain.exponentialRampToValueAtTime(0.001, typingAudioCtx.currentTime + 0.03);
+        
+        osc.connect(gainNode);
+        gainNode.connect(typingAudioCtx.destination);
+        
+        osc.start();
+        osc.stop(typingAudioCtx.currentTime + 0.03);
+    } catch(e) {}
+}
+
+let typingAutoSpeak = true;
+
+function toggleAutoSpeak() {
+    typingAutoSpeak = !typingAutoSpeak;
+    const btn = document.getElementById('btnToggleAutoSpeak');
+    if (btn) {
+        if (typingAutoSpeak) {
+            btn.innerHTML = '<i class="fas fa-volume-up mr-1"></i>Tự động đọc';
+            btn.classList.remove('text-gray-400');
+            btn.classList.add('text-green-500');
+        } else {
+            btn.innerHTML = '<i class="fas fa-volume-mute mr-1"></i>Đã tắt tự động';
+            btn.classList.remove('text-green-500');
+            btn.classList.add('text-gray-400');
+        }
+    }
+}
+
 // ==========================================
 // TYPING GAME LOGIC
 // ==========================================
@@ -201,7 +245,7 @@ function renderTypingWord() {
     updateTypingKeyboard(enText[typingCharIndex]);
     
     // Auto pronounce when starting a new word
-    if (typingCharIndex === 0) {
+    if (typingCharIndex === 0 && typingAutoSpeak) {
         speakEnglishSlowly(enText);
     }
 }

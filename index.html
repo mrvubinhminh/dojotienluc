@@ -2662,7 +2662,10 @@
 <div id="typingPlayModal" class="hidden fixed inset-0 bg-[#f4f7f6] z-[60] flex flex-col">
     <!-- Header/HUD -->
     <div class="h-16 bg-white shadow-sm flex items-center justify-between px-6 shrink-0">
-        <button onclick="closeTypingPlay()" class="text-gray-400 hover:text-gray-600 font-bold"><i class="fas fa-arrow-left mr-2"></i>Thoát</button>
+        <div class="flex items-center gap-4">
+            <button onclick="closeTypingPlay()" class="text-gray-400 hover:text-gray-600 font-bold"><i class="fas fa-arrow-left mr-2"></i>Thoát</button>
+            <button onclick="toggleAutoSpeak()" id="btnToggleAutoSpeak" class="text-green-500 hover:text-green-600 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg"><i class="fas fa-volume-up mr-1"></i>Tự động đọc</button>
+        </div>
         <div class="flex gap-6">
             <div class="text-center">
                 <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Tốc độ</div>
