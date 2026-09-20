@@ -104,64 +104,7 @@ function renderTypingLessons() {
         `;
     });
 
-    // Native Mobile Keyboard Integration (iPad/Mobile)
-    
-    // Visible Input for Mobile
-    const visibleInput = document.getElementById('typingVisibleInput');
-    if (visibleInput) {
-        visibleInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (val.length > 0) {
-                const char = val[val.length - 1];
-                handleTypingInput({
-                    key: char,
-                    preventDefault: () => {},
-                    ctrlKey: false,
-                    altKey: false,
-                    metaKey: false
-                });
-                e.target.value = '';
-            }
-        });
     }
-
-    const hiddenInput = document.getElementById('typingHiddenInput');
-    if (hiddenInput) {
-        hiddenInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (val.length > 0) {
-                // Get the last typed character
-                const char = val[val.length - 1];
-                handleTypingInput({
-                    key: char,
-                    preventDefault: () => {},
-                    ctrlKey: false,
-                    altKey: false,
-                    metaKey: false
-                });
-                // Clear immediately to prevent text accumulation
-                e.target.value = '';
-            }
-        });
-        
-        // Auto-focus when touching anywhere in the modal so the native keyboard pops up
-        const playModal = document.getElementById('typingPlayModal');
-        playModal.addEventListener('click', (e) => {
-            // Don't steal focus if clicking buttons
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-                hiddenInput.focus();
-            }
-        });
-        playModal.addEventListener('touchstart', (e) => {
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-                hiddenInput.focus();
-            }
-        }, {passive: true});
-        
-        // Initial focus when game starts
-        setTimeout(() => hiddenInput.focus(), 300);
-    }
-}
 
 function showAddCustomTyping() {
     const text = prompt("Nhập danh sách từ vựng theo định dạng: Tiếng Anh - Tiếng Việt\nMỗi từ một dòng.\nVí dụ:\nApple - Quả táo\nHello - Xin chào");
@@ -242,64 +185,7 @@ function initVirtualKeyboard() {
         keyEl.addEventListener('touchstart', handleVirtualClick, {passive: false});
     });
 
-    // Native Mobile Keyboard Integration (iPad/Mobile)
-    
-    // Visible Input for Mobile
-    const visibleInput = document.getElementById('typingVisibleInput');
-    if (visibleInput) {
-        visibleInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (val.length > 0) {
-                const char = val[val.length - 1];
-                handleTypingInput({
-                    key: char,
-                    preventDefault: () => {},
-                    ctrlKey: false,
-                    altKey: false,
-                    metaKey: false
-                });
-                e.target.value = '';
-            }
-        });
     }
-
-    const hiddenInput = document.getElementById('typingHiddenInput');
-    if (hiddenInput) {
-        hiddenInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (val.length > 0) {
-                // Get the last typed character
-                const char = val[val.length - 1];
-                handleTypingInput({
-                    key: char,
-                    preventDefault: () => {},
-                    ctrlKey: false,
-                    altKey: false,
-                    metaKey: false
-                });
-                // Clear immediately to prevent text accumulation
-                e.target.value = '';
-            }
-        });
-        
-        // Auto-focus when touching anywhere in the modal so the native keyboard pops up
-        const playModal = document.getElementById('typingPlayModal');
-        playModal.addEventListener('click', (e) => {
-            // Don't steal focus if clicking buttons
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-                hiddenInput.focus();
-            }
-        });
-        playModal.addEventListener('touchstart', (e) => {
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-                hiddenInput.focus();
-            }
-        }, {passive: true});
-        
-        // Initial focus when game starts
-        setTimeout(() => hiddenInput.focus(), 300);
-    }
-}
 
 
 function skipTypingWord() {
