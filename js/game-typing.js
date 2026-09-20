@@ -428,11 +428,11 @@ function toggleReadLang() {
     const btn = document.getElementById('btnToggleReadLang');
     if (btn) {
         if (typingReadLang === 'en') {
-            btn.innerHTML = '<i class="fas fa-flag-usa mr-1"></i>Đọc Tiếng Anh';
-            btn.className = "text-blue-500 hover:text-blue-600 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg transition-colors";
+            btn.innerHTML = '<i class="fas fa-keyboard mr-1"></i>Đọc Đáp Án';
+            btn.className = "text-blue-500 hover:text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors";
         } else {
-            btn.innerHTML = '<i class="fas fa-star text-yellow-400 mr-1"></i>Đọc Tiếng Việt';
-            btn.className = "text-red-600 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors";
+            btn.innerHTML = '<i class="fas fa-comments mr-1"></i>Đọc Câu Hỏi';
+            btn.className = "text-indigo-600 hover:text-indigo-700 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors";
         }
     }
     // Read the current word in the new language
@@ -444,8 +444,77 @@ function toggleReadLang() {
 }
 
 function speakVietnameseSlowly(text, rate = 0.9) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    // Check if it's an English conversation
+    const conversationRegex = /(Woman:|Boy:|Girl:|Man:)\s*(.*?)(?=(Woman:|Boy:|Girl:|Man:|$))/gi;
+    const isConversation = /(Woman:|Boy:|Girl:|Man:)/i.test(text);
+    
+    if (isConversation) {
+        let match;
+        const parts = [];
+        
+        while ((match = conversationRegex.exec(text)) !== null) {
+            parts.push({
+                role: match[1].replace(':', '').trim().toLowerCase(),
+                text: match[2].trim()
+            });
+        }
+        
+        if (parts.length > 0) {
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Victoria') || v.name.includes('Zira') || v.name.includes('Google US English')));
+            const maleVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('Male') || v.name.includes('Alex') || v.name.includes('David') || v.name.includes('Google UK English Male')));
+            
+            const getVoice = (role) => {
+                let voice = voices.find(v => v.lang === 'en-US'); // default
+                if (role === 'woman') voice = femaleVoices.length > 0 ? femaleVoices[0] : voice;
+                else if (role === 'girl') voice = femaleVoices.length > 1 ? femaleVoices[1] : (femaleVoices.length > 0 ? femaleVoices[0] : voice);
+                else if (role === 'man') voice = maleVoices.length > 0 ? maleVoices[0] : voice;
+                else if (role === 'boy') voice = maleVoices.length > 1 ? maleVoices[1] : (maleVoices.length > 0 ? maleVoices[0] : voice);
+                return voice;
+            };
+            
+            const getPitch = (role) => {
+                if (role === 'woman') return 1.2;
+                if (role === 'girl') return 1.6;
+                if (role === 'man') return 0.8;
+                if (role === 'boy') return 1.3;
+                return 1.0;
+            };
+            
+            let currentPart = 0;
+            function speakNext() {
+                if (currentPart >= parts.length) return;
+                const part = parts[currentPart];
+                const textWithPauses = part.text.replace(/ /g, ', ');
+                const utterance = new SpeechSynthesisUtterance(textWithPauses);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85; // Slightly slower
+                
+                const voice = getVoice(part.role);
+                if (voice) utterance.voice = voice;
+                utterance.pitch = getPitch(part.role);
+                
+                utterance.onend = () => {
+                    currentPart++;
+                    speakNext();
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            }
+            
+            speakNext();
+            return;
+        }
+    }
+    
+    // If not a conversation, determine if it's mostly Vietnamese or English
+    // A quick hack: if it has no Vietnamese diacritics, maybe it's English, but for now we fallback to Vietnamese voice or Google English
+    const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
+    
+    if (hasVietnamese) {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'vi-VN';
         utterance.rate = rate;
@@ -457,6 +526,8 @@ function speakVietnameseSlowly(text, rate = 0.9) {
         }
         
         window.speechSynthesis.speak(utterance);
+    } else {
+        speakEnglishSlowly(text, 0.9);
     }
 }
 
