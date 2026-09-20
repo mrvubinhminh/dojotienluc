@@ -103,6 +103,44 @@ function renderTypingLessons() {
             </div>
         `;
     });
+
+    // Native Mobile Keyboard Integration (iPad/Mobile)
+    const hiddenInput = document.getElementById('typingHiddenInput');
+    if (hiddenInput) {
+        hiddenInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length > 0) {
+                // Get the last typed character
+                const char = val[val.length - 1];
+                handleTypingInput({
+                    key: char,
+                    preventDefault: () => {},
+                    ctrlKey: false,
+                    altKey: false,
+                    metaKey: false
+                });
+                // Clear immediately to prevent text accumulation
+                e.target.value = '';
+            }
+        });
+        
+        // Auto-focus when touching anywhere in the modal so the native keyboard pops up
+        const playModal = document.getElementById('typingPlayModal');
+        playModal.addEventListener('click', (e) => {
+            // Don't steal focus if clicking buttons
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                hiddenInput.focus();
+            }
+        });
+        playModal.addEventListener('touchstart', (e) => {
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                hiddenInput.focus();
+            }
+        }, {passive: true});
+        
+        // Initial focus when game starts
+        setTimeout(() => hiddenInput.focus(), 300);
+    }
 }
 
 function showAddCustomTyping() {
@@ -183,6 +221,44 @@ function initVirtualKeyboard() {
         keyEl.addEventListener('mousedown', handleVirtualClick);
         keyEl.addEventListener('touchstart', handleVirtualClick, {passive: false});
     });
+
+    // Native Mobile Keyboard Integration (iPad/Mobile)
+    const hiddenInput = document.getElementById('typingHiddenInput');
+    if (hiddenInput) {
+        hiddenInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length > 0) {
+                // Get the last typed character
+                const char = val[val.length - 1];
+                handleTypingInput({
+                    key: char,
+                    preventDefault: () => {},
+                    ctrlKey: false,
+                    altKey: false,
+                    metaKey: false
+                });
+                // Clear immediately to prevent text accumulation
+                e.target.value = '';
+            }
+        });
+        
+        // Auto-focus when touching anywhere in the modal so the native keyboard pops up
+        const playModal = document.getElementById('typingPlayModal');
+        playModal.addEventListener('click', (e) => {
+            // Don't steal focus if clicking buttons
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                hiddenInput.focus();
+            }
+        });
+        playModal.addEventListener('touchstart', (e) => {
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                hiddenInput.focus();
+            }
+        }, {passive: true});
+        
+        // Initial focus when game starts
+        setTimeout(() => hiddenInput.focus(), 300);
+    }
 }
 
 function startTypingGame(type, idx) {
