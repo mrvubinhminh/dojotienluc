@@ -301,6 +301,24 @@ function initVirtualKeyboard() {
     }
 }
 
+
+function skipTypingWord() {
+    if(typingWordIndex >= currentTypingData.length) return;
+    
+    // Play skip sound if desired, or just move on
+    typingWordIndex++;
+    typingCharIndex = 0;
+    
+    if (typingWordIndex >= currentTypingData.length) {
+        // End game
+        const accuracy = Math.round(((typingTotalCharsTyped - typingMistakes) / Math.max(1, typingTotalCharsTyped)) * 100);
+        showTypingResult(typingWPM, accuracy);
+        return;
+    }
+    
+    renderTypingWord();
+}
+
 function startTypingGame(type, idx) {
     let selectedStudent = null;
     const currentStudents = students.filter(s => s.classId === currentClassId);
