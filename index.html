@@ -1946,6 +1946,18 @@
         <!-- Status badge -->
         <div id="syncStatusBadge" class="hidden flex items-center gap-2 p-3 rounded-xl text-sm font-bold"></div>
 
+        
+        <!-- Local Backup Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2 mb-3"><i class="fas fa-save text-blue-500"></i> Sao lưu Dữ liệu (.json)</h3>
+            <p class="text-xs text-gray-500 mb-3">Tải toàn bộ dữ liệu (lớp, học sinh, điểm, ảnh đại diện) về máy để sao lưu hoặc chuyển sang máy khác.</p>
+            <div class="flex gap-2">
+                <button onclick="exportJsonData()" class="flex-1 py-3 bg-blue-100 text-blue-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-blue-200"><i class="fas fa-download"></i> Tải xuống</button>
+                <button onclick="document.getElementById('jsonImportInput').click()" class="flex-1 py-3 bg-rose-100 text-rose-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-rose-200"><i class="fas fa-upload"></i> Phục hồi</button>
+                <input type="file" id="jsonImportInput" class="hidden" accept=".json" onchange="importJsonData(event)">
+            </div>
+        </div>
+
         <!-- Bước hướng dẫn (khóa mật khẩu) -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <button onclick="toggleSyncGuide()" class="w-full p-4 flex justify-between items-center text-left">
