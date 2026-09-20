@@ -546,23 +546,39 @@ function speakVietnameseSlowly(text, rate = 0.9) {
         
         if (parts.length > 0) {
             const voices = window.speechSynthesis.getVoices();
-            const femaleVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Victoria') || v.name.includes('Zira') || v.name.includes('Google US English')));
-            const maleVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('Male') || v.name.includes('Alex') || v.name.includes('David') || v.name.includes('Google UK English Male')));
+            const getBestVoice = (gender) => {
+                const enVoices = voices.filter(v => v.lang.includes('en'));
+                if (gender === 'female') {
+                    return enVoices.find(v => v.name.includes('Google US English')) ||
+                           enVoices.find(v => v.name.includes('Google UK English Female')) ||
+                           enVoices.find(v => v.name.includes('Zira')) ||
+                           enVoices.find(v => v.name.includes('Samantha')) ||
+                           enVoices.find(v => v.name.includes('Female')) ||
+                           enVoices[0];
+                } else {
+                    return enVoices.find(v => v.name.includes('Google UK English Male')) ||
+                           enVoices.find(v => v.name.includes('David')) ||
+                           enVoices.find(v => v.name.includes('Alex')) ||
+                           enVoices.find(v => v.name.includes('Daniel')) ||
+                           enVoices.find(v => v.name.includes('Male')) ||
+                           enVoices[0];
+                }
+            };
+            
+            const bestFemale = getBestVoice('female');
+            const bestMale = getBestVoice('male');
             
             const getVoice = (role) => {
-                let voice = voices.find(v => v.lang === 'en-US'); // default
-                if (role === 'woman') voice = femaleVoices.length > 0 ? femaleVoices[0] : voice;
-                else if (role === 'girl') voice = femaleVoices.length > 1 ? femaleVoices[1] : (femaleVoices.length > 0 ? femaleVoices[0] : voice);
-                else if (role === 'man') voice = maleVoices.length > 0 ? maleVoices[0] : voice;
-                else if (role === 'boy') voice = maleVoices.length > 1 ? maleVoices[1] : (maleVoices.length > 0 ? maleVoices[0] : voice);
-                return voice;
+                if (role === 'woman' || role === 'girl') return bestFemale;
+                if (role === 'man' || role === 'boy') return bestMale;
+                return voices.find(v => v.lang === 'en-US'); // default
             };
             
             const getPitch = (role) => {
-                if (role === 'woman') return 1.2;
-                if (role === 'girl') return 1.6;
-                if (role === 'man') return 0.8;
-                if (role === 'boy') return 1.3;
+                if (role === 'woman') return 1.0; // Natural adult female
+                if (role === 'man') return 1.0; // Natural adult male
+                if (role === 'girl') return 1.3; // Slightly higher for child
+                if (role === 'boy') return 1.2; // Slightly higher for child
                 return 1.0;
             };
             
