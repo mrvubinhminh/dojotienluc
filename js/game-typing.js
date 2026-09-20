@@ -218,7 +218,15 @@ function renderTypingWord() {
     speakBtn.innerHTML = '<i class="fas fa-volume-up text-xl"></i>';
     speakBtn.className = 'text-gray-400 hover:text-green-500 transition';
     speakBtn.onclick = () => {
-        speakEnglishSlowly(enText);
+        if (typingListeningMode) {
+            const vnText = typingCurrentGameWords[typingWordIndex].vn;
+            speakVietnameseSlowly(vnText);
+        } else if (typingReadLang === 'en') {
+            speakEnglishSlowly(enText);
+        } else {
+            const vnText = typingCurrentGameWords[typingWordIndex].vn;
+            speakVietnameseSlowly(vnText);
+        }
         document.activeElement.blur();
     };
     
