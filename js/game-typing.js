@@ -458,7 +458,32 @@ function handleTypingExcelUpload(e) {
 let typingReadLang = 'en';
 
 let typingListeningMode = false;
+let typingShowKeyboardHint = true;
 let typingTopTextRevealed = false;
+
+function toggleKeyboardHint() {
+    typingShowKeyboardHint = !typingShowKeyboardHint;
+    const btn = document.getElementById('btnToggleKeyboardHint');
+    if (btn) {
+        if (typingShowKeyboardHint) {
+            btn.innerHTML = '<i class="fas fa-eye mr-1"></i>Hiện gợi ý phím';
+            btn.className = "text-pink-500 hover:text-pink-600 font-bold text-sm bg-pink-50 px-3 py-1.5 rounded-lg border border-pink-200 transition-colors";
+        } else {
+            btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>Ẩn gợi ý phím';
+            btn.className = "text-gray-500 hover:text-pink-500 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg transition-colors";
+        }
+    }
+    
+    if (currentTypingData && currentTypingData.length > 0) {
+        const wordObj = currentTypingData[typingWordIndex];
+        const enText = wordObj.en;
+        if(enText && typingCharIndex < enText.length) {
+            updateTypingKeyboard(enText[typingCharIndex]);
+        } else {
+            updateTypingKeyboard(null);
+        }
+    }
+}
 
 function toggleListeningMode() {
     typingListeningMode = !typingListeningMode;
@@ -693,7 +718,7 @@ function updateTypingKeyboard(expectedChar) {
         el.classList.add('bg-white', 'text-gray-700');
     });
     
-    if(!expectedChar) return;
+    if(!expectedChar || !typingShowKeyboardHint) return;
     
     const keyId = getKbdId(expectedChar);
     const kbd = document.getElementById('kbd_' + keyId);
