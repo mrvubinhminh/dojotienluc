@@ -84,33 +84,36 @@
         <div class="flex gap-1.5 flex-wrap justify-end">
             <button class="text-orange-500 text-xs font-bold bg-orange-50 px-2.5 py-1.5 rounded-full hover:bg-orange-100 transition border border-orange-100 shadow-sm flex items-center" onclick="startRandomSelection()"><i class="fas fa-random mr-1"></i>Gọi</button>
             <button class="text-red-500 text-xs font-bold bg-red-50 px-2.5 py-1.5 rounded-full hover:bg-red-100 transition border border-red-100 shadow-sm flex items-center" onclick="openGameMenu()"><i class="fas fa-gamepad mr-1"></i>Minigames</button>
-            <button class="text-teal-600 text-xs font-bold bg-teal-50 px-2.5 py-1.5 rounded-full hover:bg-teal-100 transition border border-teal-100 shadow-sm flex items-center" onclick="openTeacherHandbook()"><i class="fas fa-book-open-reader mr-1"></i>Sổ tay</button>
-            <button class="text-blue-600 text-xs font-bold bg-blue-50 px-2.5 py-1.5 rounded-full hover:bg-blue-100 transition border border-blue-100 shadow-sm flex items-center" onclick="openSgkLookup()"><i class="fas fa-search mr-1"></i>Tra SGK</button>
             <button class="text-violet-600 text-xs font-bold bg-violet-50 px-2.5 py-1.5 rounded-full hover:bg-violet-100 transition border border-violet-100 shadow-sm flex items-center" onclick="openGroupDivider()"><i class="fas fa-object-group mr-1"></i>Nhóm</button>
             <button id="btnSttPanel" class="text-purple-600 text-xs font-bold bg-purple-50 px-2.5 py-1.5 rounded-full hover:bg-purple-100 transition border border-purple-100 shadow-sm flex items-center" onclick="toggleSttPanel()"><i class="fas fa-hashtag mr-1"></i>STT</button>
             <button class="text-pink-600 text-xs font-bold bg-pink-50 px-2.5 py-1.5 rounded-full hover:bg-pink-100 transition border border-pink-100 shadow-sm flex items-center" onclick="openBatchCropModal()"><i class="fas fa-crop-alt mr-1"></i>Cắt Avatar</button>
             <button class="text-dojo-blue text-xs font-bold bg-blue-50 px-2.5 py-1.5 rounded-full hover:bg-blue-100 transition shadow-sm flex items-center" onclick="awardAll()"><i class="fas fa-users mr-1"></i>Cả lớp</button>
-            <button class="text-emerald-600 text-xs font-bold bg-emerald-50 px-2.5 py-1.5 rounded-full hover:bg-emerald-100 transition border border-emerald-100 shadow-sm flex items-center" onclick="openCommunicationLog()"><i class="fas fa-book mr-1"></i>Sổ liên lạc</button>
-            <button class="text-rose-600 text-xs font-bold bg-rose-50 px-2.5 py-1.5 rounded-full hover:bg-rose-100 transition border border-rose-100 shadow-sm flex items-center" onclick="openGoalsOverview()"><i class="fas fa-bullseye mr-1"></i>Mục tiêu</button>
-            <div class="relative">
-                <button class="text-indigo-600 text-xs font-bold bg-indigo-50 px-2.5 py-1.5 rounded-full hover:bg-indigo-100 transition border border-indigo-100 shadow-sm flex items-center gap-1" onclick="toggleSeatingTypeMenu()">
-                    <i class="fas fa-th"></i>Sơ đồ <i class="fas fa-chevron-down text-[10px]"></i>
-                </button>
-                <div id="seatingTypeMenu" class="hidden absolute top-full mt-1 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-2 w-48 z-50 flex flex-col gap-1">
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openSeatingConfig(); toggleSeatingTypeMenu()">Phòng thi (Từng cá nhân)</button>
-                    <div class="h-px bg-gray-100 my-1"></div>
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('cluster')">Nhóm 4 (Cluster)</button>
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('ushape')">Chữ U kép (Double U)</button>
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('station')">Mô hình Trạm (Stations)</button>
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('herringbone')">Xương cá (Herringbone)</button>
-                <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('fishbowl')">Bể cá (Fishbowl)</button>
-                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('conveyor')">Lẩu băng chuyền</button>
-                </div>
-            </div>
             <button id="btnProjectorMode" onclick="toggleProjectorMode()" class="text-cyan-600 text-xs font-bold bg-cyan-50 px-2.5 py-1.5 rounded-full hover:bg-cyan-100 transition border border-cyan-100 shadow-sm flex items-center"><i class="fas fa-broadcast-tower mr-1"></i>Chiếu</button>
             <button id="btnClassNotes" onclick="openClassNotes()" class="text-teal-600 text-xs font-bold bg-teal-50 px-2.5 py-1.5 rounded-full hover:bg-teal-100 transition border border-teal-100 shadow-sm flex items-center"><i class="fas fa-clipboard-list mr-1"></i>Dặn dò</button>
-            <button onclick="openSubjectGrades()" class="text-violet-600 text-xs font-bold bg-violet-50 px-2.5 py-1.5 rounded-full hover:bg-violet-100 transition border border-violet-100 shadow-sm flex items-center"><i class="fas fa-table mr-1"></i>Sổ điểm</button>
-        </div>
+
+            <!-- CÔNG CỤ DROPDOWN -->
+            <div class="relative">
+                <button class="text-indigo-600 text-xs font-bold bg-indigo-50 px-2.5 py-1.5 rounded-full hover:bg-indigo-100 transition border border-indigo-100 shadow-sm flex items-center gap-1" onclick="document.getElementById('toolsMenu').classList.toggle('hidden')">
+                    <i class="fas fa-toolbox"></i>Công cụ <i class="fas fa-chevron-down text-[10px]"></i>
+                </button>
+                <div id="toolsMenu" class="hidden absolute top-full mt-1 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-2 w-56 z-50 flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openSubjectGrades(); document.getElementById('toolsMenu').classList.add('hidden')"><i class="fas fa-table mr-2 w-4 text-center"></i>Sổ điểm</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openCommunicationLog(); document.getElementById('toolsMenu').classList.add('hidden')"><i class="fas fa-book mr-2 w-4 text-center"></i>Sổ liên lạc</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openGoalsOverview(); document.getElementById('toolsMenu').classList.add('hidden')"><i class="fas fa-bullseye mr-2 w-4 text-center"></i>Mục tiêu</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openTeacherHandbook(); document.getElementById('toolsMenu').classList.add('hidden')"><i class="fas fa-book-open-reader mr-2 w-4 text-center"></i>Sổ tay</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openSgkLookup(); document.getElementById('toolsMenu').classList.add('hidden')"><i class="fas fa-search mr-2 w-4 text-center"></i>Tra SGK</button>
+                    
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <div class="px-3 py-1 text-[10px] uppercase font-bold text-gray-400">Sơ đồ chỗ ngồi</div>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openSeatingConfig(); document.getElementById('toolsMenu').classList.add('hidden')">Phòng thi (Từng cá nhân)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('cluster'); document.getElementById('toolsMenu').classList.add('hidden')">Nhóm 4 (Cluster)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('ushape'); document.getElementById('toolsMenu').classList.add('hidden')">Chữ U kép (Double U)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('station'); document.getElementById('toolsMenu').classList.add('hidden')">Mô hình Trạm (Stations)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('herringbone'); document.getElementById('toolsMenu').classList.add('hidden')">Xương cá (Herringbone)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('fishbowl'); document.getElementById('toolsMenu').classList.add('hidden')">Bể cá (Fishbowl)</button>
+                    <button class="text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition" onclick="openActiveSeatingConfig('conveyor'); document.getElementById('toolsMenu').classList.add('hidden')">Lẩu băng chuyền</button>
+                </div>
+            </div></div>
     </div>
     <div class="mb-3 relative">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
