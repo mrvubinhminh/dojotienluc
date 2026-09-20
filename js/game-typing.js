@@ -369,7 +369,9 @@ function handleTypingExcelUpload(e) {
 function speakEnglishSlowly(text, rate = 0.8) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); // Stop any ongoing speech
-        const utterance = new SpeechSynthesisUtterance(text);
+        // Inject pauses for clearer dictation
+        const textWithPauses = text.replace(/ /g, ', ');
+        const utterance = new SpeechSynthesisUtterance(textWithPauses);
         utterance.lang = 'en-US';
         utterance.rate = rate; // slightly slow for learning, but natural
         
