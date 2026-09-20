@@ -105,6 +105,26 @@ function renderTypingLessons() {
     });
 
     // Native Mobile Keyboard Integration (iPad/Mobile)
+    
+    // Visible Input for Mobile
+    const visibleInput = document.getElementById('typingVisibleInput');
+    if (visibleInput) {
+        visibleInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length > 0) {
+                const char = val[val.length - 1];
+                handleTypingInput({
+                    key: char,
+                    preventDefault: () => {},
+                    ctrlKey: false,
+                    altKey: false,
+                    metaKey: false
+                });
+                e.target.value = '';
+            }
+        });
+    }
+
     const hiddenInput = document.getElementById('typingHiddenInput');
     if (hiddenInput) {
         hiddenInput.addEventListener('input', (e) => {
@@ -223,6 +243,26 @@ function initVirtualKeyboard() {
     });
 
     // Native Mobile Keyboard Integration (iPad/Mobile)
+    
+    // Visible Input for Mobile
+    const visibleInput = document.getElementById('typingVisibleInput');
+    if (visibleInput) {
+        visibleInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length > 0) {
+                const char = val[val.length - 1];
+                handleTypingInput({
+                    key: char,
+                    preventDefault: () => {},
+                    ctrlKey: false,
+                    altKey: false,
+                    metaKey: false
+                });
+                e.target.value = '';
+            }
+        });
+    }
+
     const hiddenInput = document.getElementById('typingHiddenInput');
     if (hiddenInput) {
         hiddenInput.addEventListener('input', (e) => {
