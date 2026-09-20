@@ -148,17 +148,32 @@ function renderTypingWord() {
     const displayEl = document.getElementById('typingEnDisplay');
     displayEl.innerHTML = '';
     
-    // Toggle button for hiding word
+    // Action buttons container (Eye + Speaker)
+    const actionBtns = document.createElement('div');
+    actionBtns.className = 'absolute -right-20 top-1/2 -translate-y-1/2 flex flex-col gap-3';
+    
+    // Speaker button
+    const speakBtn = document.createElement('button');
+    speakBtn.innerHTML = '<i class="fas fa-volume-up text-xl"></i>';
+    speakBtn.className = 'text-gray-400 hover:text-green-500 transition';
+    speakBtn.onclick = () => {
+        speakEnglishSlowly(enText);
+        document.activeElement.blur();
+    };
+    
+    // Toggle hidden button
     const toggleBtn = document.createElement('button');
     toggleBtn.innerHTML = typingWordHidden ? '<i class="fas fa-eye-slash text-xl"></i>' : '<i class="fas fa-eye text-xl"></i>';
-    toggleBtn.className = 'absolute -right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition';
+    toggleBtn.className = 'text-gray-400 hover:text-blue-500 transition';
     toggleBtn.onclick = () => {
         typingWordHidden = !typingWordHidden;
         renderTypingWord();
-        // Return focus to body so typing works
         document.activeElement.blur();
     };
-    displayEl.appendChild(toggleBtn);
+    
+    actionBtns.appendChild(speakBtn);
+    actionBtns.appendChild(toggleBtn);
+    displayEl.appendChild(actionBtns);
 
     
     for(let i=0; i<enText.length; i++) {
@@ -357,4 +372,16 @@ function handleTypingExcelUpload(e) {
         e.target.value = '';
     };
     reader.readAsBinaryString(file);
+}
+
+
+function speakEnglishSlowly(text) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.5; // slow
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Trình duyệt của bạn không hỗ trợ tính năng đọc.');
+    }
 }

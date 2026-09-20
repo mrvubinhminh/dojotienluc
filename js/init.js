@@ -14,6 +14,10 @@ document.addEventListener('keydown', (e) => {
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
 
+    // Ignore if typing game is active
+    const typingModal = document.getElementById('typingPlayModal');
+    if (typingModal && !typingModal.classList.contains('hidden')) return;
+
     const key = e.key.toUpperCase();
 
     // G → Gọi ngẫu nhiên toàn cục
