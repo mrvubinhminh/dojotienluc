@@ -384,6 +384,19 @@ function getKbdId(char) {
 // ---------------------------------
 // EXCEL IMPORT / EXPORT
 // ---------------------------------
+function downloadListeningTemplate() {
+    const ws_data = [
+        ["Hội thoại (Cột A)", "Đáp án (Cột B)"],
+        ["Woman: Which sport does Anna like? Boy: She played badminton before, and she sometimes plays tennis, but her favourite sport is basketball.", "Basketball"],
+        ["Girl: Did you go to the zoo yesterday? Boy: No. I wanted to go, but it rained, so I went to the museum instead.", "Museum"],
+        ["Woman: What colour is Tom's new bike? Boy: He liked the blue one, and his dad wanted the black one, but they bought the red bike.", "Red"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "LuyenNghe");
+    XLSX.writeFile(wb, "Dojo_Mau_Luyen_Nghe.xlsx");
+}
+
 function downloadTypingTemplate() {
     const ws_data = [
         ["Tiếng Anh", "Tiếng Việt"],
