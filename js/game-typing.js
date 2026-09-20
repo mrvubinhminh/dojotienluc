@@ -166,6 +166,7 @@ function startTypingGame(type, idx) {
     typingCharIndex = 0;
     typingErrors = 0;
     typingStartTime = Date.now();
+    if (typingListeningMode) typingTopTextRevealed = false;
     
     closeTypingGameMenu();
     document.getElementById('typingPlayModal').classList.remove('hidden');
@@ -296,6 +297,7 @@ function handleTypingInput(e) {
         if (typingCharIndex >= enText.length) {
             typingWordIndex++;
             typingCharIndex = 0;
+            if (typingListeningMode) typingTopTextRevealed = false;
             const displayEl = document.getElementById('typingEnDisplay');
             displayEl.classList.add('scale-105', 'text-green-500');
             setTimeout(() => {
