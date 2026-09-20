@@ -2645,7 +2645,11 @@
         <div class="p-6 overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h4 class="font-bold text-gray-700">Danh sách bài học</h4>
-                <button onclick="showAddCustomTyping()" class="px-3 py-1.5 bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200 transition"><i class="fas fa-plus mr-1"></i>Thêm bài tự tạo</button>
+                <div class="flex gap-2">
+                    <button onclick="downloadTypingTemplate()" class="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg hover:bg-green-200 transition"><i class="fas fa-file-excel mr-1"></i>Tải Mẫu Excel</button>
+                    <label class="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-200 transition cursor-pointer"><i class="fas fa-upload mr-1"></i>Nhập Excel<input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleTypingExcelUpload(event)"></label>
+                    <button onclick="showAddCustomTyping()" class="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-200 transition"><i class="fas fa-plus mr-1"></i>Nhập Thủ Công</button>
+                </div>
             </div>
             <div id="typingLessonList" class="flex flex-col gap-2">
                 <!-- Rendered by JS -->
@@ -2682,7 +2686,31 @@
         <div id="typingVnText" class="text-3xl md:text-4xl font-black text-gray-800 mb-8 text-center px-4"></div>
         <div id="typingEnDisplay" class="flex flex-wrap justify-center gap-y-4 mb-16 text-center select-none relative" style="font-family: 'Courier New', Courier, monospace;"></div>
         
+        
+        <!-- Bàn tay chỉ dẫn -->
+        <div class="flex justify-center gap-16 mb-2">
+            <!-- Tay trái -->
+            <div class="flex items-end gap-1 opacity-70">
+                <div class="w-4 h-8 bg-purple-400 rounded-t-full border border-purple-600 shadow-sm"></div> <!-- Út -->
+                <div class="w-4 h-10 bg-blue-400 rounded-t-full border border-blue-600 shadow-sm"></div> <!-- Áp út -->
+                <div class="w-4 h-12 bg-green-400 rounded-t-full border border-green-600 shadow-sm"></div> <!-- Giữa -->
+                <div class="w-4 h-10 bg-yellow-400 rounded-t-full border border-yellow-600 shadow-sm"></div> <!-- Trỏ -->
+                <div class="w-4 h-8 bg-gray-400 rounded-t-full rotate-45 transform origin-bottom-right border border-gray-600 shadow-sm relative right-1"></div> <!-- Cái -->
+                <span class="text-xs font-bold text-gray-500 ml-2">Tay Trái</span>
+            </div>
+            <!-- Tay phải -->
+            <div class="flex items-end gap-1 opacity-70 flex-row-reverse">
+                <div class="w-4 h-8 bg-pink-400 rounded-t-full border border-pink-600 shadow-sm"></div> <!-- Út -->
+                <div class="w-4 h-10 bg-teal-400 rounded-t-full border border-teal-600 shadow-sm"></div> <!-- Áp út -->
+                <div class="w-4 h-12 bg-orange-400 rounded-t-full border border-orange-600 shadow-sm"></div> <!-- Giữa -->
+                <div class="w-4 h-10 bg-red-400 rounded-t-full border border-red-600 shadow-sm"></div> <!-- Trỏ -->
+                <div class="w-4 h-8 bg-gray-400 rounded-t-full -rotate-45 transform origin-bottom-left border border-gray-600 shadow-sm relative left-1"></div> <!-- Cái -->
+                <span class="text-xs font-bold text-gray-500 mr-2">Tay Phải</span>
+            </div>
+        </div>
+        
         <!-- Virtual Keyboard -->
+
         <div id="virtualKeyboard" class="w-full max-w-4xl p-4 bg-gray-200/50 rounded-3xl border border-gray-300 shadow-inner flex flex-col gap-2">
             <!-- Row 1 -->
             <div class="flex justify-center gap-2">

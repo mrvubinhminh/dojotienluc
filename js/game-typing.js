@@ -217,8 +217,16 @@ function handleTypingInput(e) {
             renderTypingWord();
         }
     } else {
+
         typingErrors++;
+        const errAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='); // A quick low beep
+        // Actually, let's use a real URL for error beep
+        const realErrAudio = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+        realErrAudio.volume = 0.3;
+        realErrAudio.play().catch(()=>{});
+        
         const displayEl = document.getElementById('typingEnDisplay');
+
         displayEl.classList.add('animate-shake', 'text-red-500');
         
         const keyId = getKbdId(expectedChar);
@@ -294,4 +302,59 @@ function updateTypingKeyboard(expectedChar) {
         kbd.classList.remove('bg-white', 'text-gray-700');
         kbd.classList.add('bg-blue-500', 'text-white', 'scale-110', 'shadow-lg', 'shadow-blue-500/50', 'z-10');
     }
+}
+
+
+// ---------------------------------
+// EXCEL IMPORT / EXPORT
+// ---------------------------------
+function downloadTypingTemplate() {
+    const ws_data = [
+        ["Tiếng Anh", "Tiếng Việt"],
+        ["Apple", "Quả táo"],
+        ["School", "Trường học"],
+        ["Teacher", "Giáo viên"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "TuVung");
+    XLSX.writeFile(wb, "Dojo_Mau_Tu_Vung.xlsx");
+}
+
+function handleTypingExcelUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, {type: 'binary'});
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        
+        const parsedData = [];
+        json.forEach(row => {
+            const en = row['Tiếng Anh'] || row['Tieng Anh'] || row['English'];
+            const vn = row['Tiếng Việt'] || row['Tieng Viet'] || row['Vietnamese'];
+            if(en && vn) {
+                parsedData.push({ en: String(en).trim(), vn: String(vn).trim() });
+            }
+        });
+        
+        if (parsedData.length === 0) {
+            alert("Không tìm thấy dữ liệu hợp lệ! Đảm bảo cột tên là 'Tiếng Anh' và 'Tiếng Việt'");
+            return;
+        }
+        
+        const name = prompt("Nhập tên bài học cho file này:", file.name.split('.')[0]) || "Bài học Excel";
+        typingCustomLessons.push({ name, data: parsedData });
+        localStorage.setItem('dojo_custom_typing', JSON.stringify(typingCustomLessons));
+        renderTypingLessons();
+        alert("Đã thêm thành công " + parsedData.length + " từ vựng!");
+        
+        // Reset input
+        e.target.value = '';
+    };
+    reader.readAsBinaryString(file);
 }
