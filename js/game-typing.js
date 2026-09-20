@@ -186,7 +186,17 @@ function renderTypingWord() {
     }
     
     const wordObj = currentTypingData[typingWordIndex];
-    document.getElementById('typingVnText').innerText = wordObj.vn;
+    
+    // Render Vietnamese text with manual speaker button
+    document.getElementById('typingVnText').innerHTML = `
+        <span class="relative inline-block group">
+            ${wordObj.vn}
+            <button onclick="speakVietnameseSlowly('${wordObj.vn.replace(/'/g, "\'")}')" class="absolute -right-10 top-1/2 -translate-y-1/2 text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                <i class="fas fa-volume-up text-lg"></i>
+            </button>
+        </span>
+    `;
+
     
     const enText = wordObj.en;
     const displayEl = document.getElementById('typingEnDisplay');
@@ -409,6 +419,46 @@ function handleTypingExcelUpload(e) {
 }
 
 
+
+
+let typingReadLang = 'en';
+
+function toggleReadLang() {
+    typingReadLang = typingReadLang === 'en' ? 'vi' : 'en';
+    const btn = document.getElementById('btnToggleReadLang');
+    if (btn) {
+        if (typingReadLang === 'en') {
+            btn.innerHTML = '<i class="fas fa-flag-usa mr-1"></i>Đọc Tiếng Anh';
+            btn.className = "text-blue-500 hover:text-blue-600 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg transition-colors";
+        } else {
+            btn.innerHTML = '<i class="fas fa-star text-yellow-400 mr-1"></i>Đọc Tiếng Việt';
+            btn.className = "text-red-600 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors";
+        }
+    }
+    // Read the current word in the new language
+    if(typingCurrentGameWords && typingCurrentGameWords.length > 0) {
+        const wordObj = typingCurrentGameWords[typingWordIndex];
+        if (typingReadLang === 'en') speakEnglishSlowly(wordObj.en);
+        else speakVietnameseSlowly(wordObj.vn);
+    }
+}
+
+function speakVietnameseSlowly(text, rate = 0.9) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+        utterance.rate = rate;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const googleVoice = voices.find(v => (v.name.includes('Google') || v.name.includes('Vietnam')) && v.lang.includes('vi'));
+        if (googleVoice) {
+            utterance.voice = googleVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    }
+}
 
 function speakEnglishSlowly(text, rate = 0.8) {
     if ('speechSynthesis' in window) {
