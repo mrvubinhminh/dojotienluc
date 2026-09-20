@@ -15,6 +15,7 @@ let typingCharIndex = 0;
 let typingStartTime = null;
 let typingErrors = 0;
 let typingTargetStudentId = null;
+let typingWordHidden = false;
 
 function openTypingGameMenu() {
     document.getElementById('gameMenuModal').classList.add('hidden');
@@ -147,10 +148,24 @@ function renderTypingWord() {
     const displayEl = document.getElementById('typingEnDisplay');
     displayEl.innerHTML = '';
     
+    // Toggle button for hiding word
+    const toggleBtn = document.createElement('button');
+    toggleBtn.innerHTML = typingWordHidden ? '<i class="fas fa-eye-slash text-xl"></i>' : '<i class="fas fa-eye text-xl"></i>';
+    toggleBtn.className = 'absolute -right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition';
+    toggleBtn.onclick = () => {
+        typingWordHidden = !typingWordHidden;
+        renderTypingWord();
+        // Return focus to body so typing works
+        document.activeElement.blur();
+    };
+    displayEl.appendChild(toggleBtn);
+
+    
     for(let i=0; i<enText.length; i++) {
         const span = document.createElement('span');
         span.innerText = enText[i] === ' ' ? '␣' : enText[i];
-        span.className = 'inline-block px-1 mx-[1px] transition-all duration-100 text-gray-300 font-mono text-5xl font-black border-b-4 border-transparent';
+        span.className = 'inline-block px-1 mx-[1px] transition-all duration-100 font-mono text-5xl font-black border-b-4 border-transparent ' + 
+        ((typingWordHidden && i >= typingCharIndex && enText[i] !== ' ') ? 'text-transparent bg-gray-200 rounded-lg select-none' : 'text-gray-300 select-none');
         if (i < typingCharIndex) {
             span.classList.remove('text-gray-300');
             span.classList.add('text-green-500');

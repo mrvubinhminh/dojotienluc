@@ -2128,6 +2128,13 @@
                 <h3 class="font-bold text-gray-800 text-center mb-1">Chinh Phục Cực Địa</h3>
                 <p class="text-[11px] text-gray-500 text-center leading-tight">Cả lớp hợp lực đánh trùm. Trả lời đúng để gây sát thương!</p>
             </button>
+            <!-- Luyện gõ Tiếng Anh -->
+            <button onclick="closeGameMenu(); openTypingGameMenu();" class="flex flex-col items-center p-4 bg-sky-50 border-2 border-sky-100 rounded-2xl hover:border-sky-400 hover:bg-sky-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-keyboard text-4xl text-sky-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Luyện Gõ Tiếng Anh</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Luyện 10 ngón & học từ vựng</p>
+            </button>
+
 
             <!-- Đấu Trường Thẻ Bài -->
             <button onclick="closeGameMenu(); openCardFlip();" class="flex flex-col items-center p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-100 transition active:scale-95 group text-left relative overflow-hidden">
@@ -2673,7 +2680,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col items-center justify-center p-8">
         <div id="typingVnText" class="text-3xl md:text-4xl font-black text-gray-800 mb-8 text-center px-4"></div>
-        <div id="typingEnDisplay" class="flex flex-wrap justify-center gap-y-4 mb-16 text-center select-none" style="font-family: 'Courier New', Courier, monospace;"></div>
+        <div id="typingEnDisplay" class="flex flex-wrap justify-center gap-y-4 mb-16 text-center select-none relative" style="font-family: 'Courier New', Courier, monospace;"></div>
         
         <!-- Virtual Keyboard -->
         <div id="virtualKeyboard" class="w-full max-w-4xl p-4 bg-gray-200/50 rounded-3xl border border-gray-300 shadow-inner flex flex-col gap-2">
