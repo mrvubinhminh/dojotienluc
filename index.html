@@ -2623,5 +2623,138 @@
     </div>
 </div>
 
+    <script src="js/game-typing.js"></script>
+
+<!-- MODAL: TYPING GAME MENU -->
+<div id="typingGameMenuModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div>
+                <h3 class="text-xl font-black text-blue-800 flex items-center gap-2"><i class="fas fa-keyboard"></i> Chọn bài luyện gõ</h3>
+                <p class="text-sm text-blue-600">Luyện gõ 10 ngón & học từ vựng</p>
+            </div>
+            <button onclick="closeTypingGameMenu()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-gray-500 hover:bg-gray-100 shadow-sm transition"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-gray-700">Danh sách bài học</h4>
+                <button onclick="showAddCustomTyping()" class="px-3 py-1.5 bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200 transition"><i class="fas fa-plus mr-1"></i>Thêm bài tự tạo</button>
+            </div>
+            <div id="typingLessonList" class="flex flex-col gap-2">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: TYPING GAME PLAY -->
+<div id="typingPlayModal" class="hidden fixed inset-0 bg-[#f4f7f6] z-[60] flex flex-col">
+    <!-- Header/HUD -->
+    <div class="h-16 bg-white shadow-sm flex items-center justify-between px-6 shrink-0">
+        <button onclick="closeTypingPlay()" class="text-gray-400 hover:text-gray-600 font-bold"><i class="fas fa-arrow-left mr-2"></i>Thoát</button>
+        <div class="flex gap-6">
+            <div class="text-center">
+                <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Tốc độ</div>
+                <div class="text-xl font-black text-blue-600"><span id="typingWpm">0</span> <span class="text-sm">WPM</span></div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Chính xác</div>
+                <div class="text-xl font-black text-green-600" id="typingAcc">100%</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="h-1.5 bg-gray-200 w-full relative">
+        <div id="typingProgress" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 w-0"></div>
+    </div>
+    <div class="text-center text-xs font-bold text-gray-400 mt-2" id="typingProgressText">0/0</div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center justify-center p-8">
+        <div id="typingVnText" class="text-3xl md:text-4xl font-black text-gray-800 mb-8 text-center px-4"></div>
+        <div id="typingEnDisplay" class="flex flex-wrap justify-center gap-y-4 mb-16 text-center select-none" style="font-family: 'Courier New', Courier, monospace;"></div>
+        
+        <!-- Virtual Keyboard -->
+        <div id="virtualKeyboard" class="w-full max-w-4xl p-4 bg-gray-200/50 rounded-3xl border border-gray-300 shadow-inner flex flex-col gap-2">
+            <!-- Row 1 -->
+            <div class="flex justify-center gap-2">
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700">~</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_1">1</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_2">2</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_3">3</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_4">4</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_5">5</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_6">6</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_7">7</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_8">8</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_9">9</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_0">0</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_-">-</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700" id="kbd_=">=</div>
+                <div class="kbd-key w-20 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Backspace</div>
+            </div>
+            <!-- Row 2 -->
+            <div class="flex justify-center gap-2 pl-6">
+                <div class="kbd-key w-14 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Tab</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_q">Q</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_w">W</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_e">E</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_r">R</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_t">T</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_y">Y</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_u">U</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_i">I</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_o">O</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_p">P</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_[">[</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_]">]</div>
+                <div class="kbd-key w-14 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">\</div>
+            </div>
+            <!-- Row 3 -->
+            <div class="flex justify-center gap-2 pl-10">
+                <div class="kbd-key w-16 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Caps</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all relative" id="kbd_a">A <span class="absolute bottom-1 w-3 h-0.5 bg-gray-400 rounded"></span></div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_s">S</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_d">D</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_f">F <span class="absolute bottom-1 w-3 h-0.5 bg-gray-400 rounded"></span></div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_g">G</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_h">H</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_j">J <span class="absolute bottom-1 w-3 h-0.5 bg-gray-400 rounded"></span></div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_k">K</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_l">L</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_;">;</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_quote">'</div>
+                <div class="kbd-key w-20 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Enter</div>
+            </div>
+            <!-- Row 4 -->
+            <div class="flex justify-center gap-2 pl-14">
+                <div class="kbd-key w-20 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Shift</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_z">Z</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_x">X</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_c">C</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_v">V</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_b">B</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_n">N</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_m">M</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_comma">,</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_dot">.</div>
+                <div class="kbd-key w-10 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center font-bold text-gray-700 transition-all" id="kbd_slash">/</div>
+                <div class="kbd-key w-24 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400 flex justify-center items-center text-xs text-gray-600">Shift</div>
+            </div>
+            <!-- Row 5 -->
+            <div class="flex justify-center gap-2">
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+                <div class="kbd-key w-64 h-12 bg-white rounded-lg shadow-sm border border-gray-300 flex justify-center items-center text-gray-400 transition-all" id="kbd_space">SPACE</div>
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+                <div class="kbd-key w-12 h-12 bg-gray-300 rounded-lg shadow-sm border border-gray-400"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
