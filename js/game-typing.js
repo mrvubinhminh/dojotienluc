@@ -424,15 +424,15 @@ function handleTypingExcelUpload(e) {
         
         const parsedData = [];
         json.forEach(row => {
-            const en = row['Tiếng Anh'] || row['Tieng Anh'] || row['English'];
-            const vn = row['Tiếng Việt'] || row['Tieng Viet'] || row['Vietnamese'];
+            const en = row['Tiếng Anh'] || row['Tieng Anh'] || row['English'] || row['Đáp án (Cột B)'];
+            const vn = row['Tiếng Việt'] || row['Tieng Viet'] || row['Vietnamese'] || row['Hội thoại (Cột A)'];
             if(en && vn) {
                 parsedData.push({ en: String(en).trim(), vn: String(vn).trim() });
             }
         });
         
         if (parsedData.length === 0) {
-            alert("Không tìm thấy dữ liệu hợp lệ! Đảm bảo cột tên là 'Tiếng Anh' và 'Tiếng Việt'");
+            alert("Không tìm thấy dữ liệu hợp lệ! Đảm bảo cột tên là 'Tiếng Anh' và 'Tiếng Việt' (hoặc 'Hội thoại (Cột A)' và 'Đáp án (Cột B)')");
             return;
         }
         
