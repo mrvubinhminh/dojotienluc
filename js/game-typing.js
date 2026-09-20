@@ -467,6 +467,10 @@ function revealTopText() {
 
 
 function toggleReadLang() {
+    if (typingListeningMode) {
+        alert("Trong Chế độ Nghe, hệ thống chỉ đọc câu hỏi để học sinh tự điền đáp án. Hãy tắt Chế độ Nghe nếu muốn thay đổi.");
+        return;
+    }
     typingReadLang = typingReadLang === 'en' ? 'vi' : 'en';
     const btn = document.getElementById('btnToggleReadLang');
     if (btn) {
