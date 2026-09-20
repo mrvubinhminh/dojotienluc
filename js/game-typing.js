@@ -220,12 +220,12 @@ function renderTypingWord() {
     speakBtn.className = 'text-gray-400 hover:text-green-500 transition';
     speakBtn.onclick = () => {
         if (typingListeningMode) {
-            const vnText = typingCurrentGameWords[typingWordIndex].vn;
+            const vnText = currentTypingData[typingWordIndex].vn;
             speakVietnameseSlowly(vnText);
         } else if (typingReadLang === 'en') {
             speakEnglishSlowly(enText);
         } else {
-            const vnText = typingCurrentGameWords[typingWordIndex].vn;
+            const vnText = currentTypingData[typingWordIndex].vn;
             speakVietnameseSlowly(vnText);
         }
         document.activeElement.blur();
@@ -272,7 +272,11 @@ function renderTypingWord() {
     
     // Auto pronounce when starting a new word
     if (typingCharIndex === 0 && typingAutoSpeak) {
-        speakEnglishSlowly(enText);
+        if (typingListeningMode || typingReadLang === 'vi') {
+            speakVietnameseSlowly(wordObj.vn);
+        } else {
+            speakEnglishSlowly(enText);
+        }
     }
 }
 
@@ -492,8 +496,8 @@ function revealTopText() {
 function toggleReadLang() {
     if (typingListeningMode) {
         // Just replay the question in listening mode
-        if(typingCurrentGameWords && typingCurrentGameWords.length > 0) {
-            const wordObj = typingCurrentGameWords[typingWordIndex];
+        if(currentTypingData && currentTypingData.length > 0) {
+            const wordObj = currentTypingData[typingWordIndex];
             speakVietnameseSlowly(wordObj.vn);
         }
         return;
@@ -510,8 +514,8 @@ function toggleReadLang() {
         }
     }
     // Read the current word in the new language
-    if(typingCurrentGameWords && typingCurrentGameWords.length > 0) {
-        const wordObj = typingCurrentGameWords[typingWordIndex];
+    if(currentTypingData && currentTypingData.length > 0) {
+        const wordObj = currentTypingData[typingWordIndex];
         if (typingReadLang === 'en') speakEnglishSlowly(wordObj.en);
         else speakVietnameseSlowly(wordObj.vn);
     }
