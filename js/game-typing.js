@@ -347,6 +347,25 @@ function startTypingGame(type, idx) {
     typingStartTime = Date.now();
     if (typingListeningMode) typingTopTextRevealed = false;
     
+    // Yêu cầu: Khi ở chế độ Luyện Nghe, mặc định ẩn gợi ý phím
+    if (typingListeningMode) {
+        typingShowKeyboardHint = false;
+        const btn = document.getElementById('btnToggleKeyboardHint');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>Ẩn gợi ý phím';
+            btn.className = "text-gray-500 hover:text-pink-500 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg transition-colors";
+        }
+    } else {
+        // Chế độ thường mặc định bật
+        typingShowKeyboardHint = true;
+        const btn = document.getElementById('btnToggleKeyboardHint');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-eye mr-1"></i>Hiện gợi ý phím';
+            btn.className = "text-pink-500 hover:text-pink-600 font-bold text-sm bg-pink-50 px-3 py-1.5 rounded-lg border border-pink-200 transition-colors";
+        }
+    }
+
+    
     closeTypingGameMenu();
     document.getElementById('typingPlayModal').classList.remove('hidden');
     initVirtualKeyboard();
