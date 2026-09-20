@@ -571,10 +571,10 @@ function speakVietnameseSlowly(text, rate = 0.9) {
                 if (typingSpeechSessionId !== currentSessionId) return;
                 if (currentPart >= parts.length) return;
                 const part = parts[currentPart];
-                const textWithPauses = part.text.replace(/ /g, ', ');
-                const utterance = new SpeechSynthesisUtterance(textWithPauses);
+                const utterance = new SpeechSynthesisUtterance(part.text);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.85; // Slightly slower
+                utterance.rate = 1.0; // Natural exam rate
+                utterance.volume = 1.0; // Max volume
                 
                 const voice = getVoice(part.role);
                 if (voice) utterance.voice = voice;
@@ -614,14 +614,14 @@ function speakVietnameseSlowly(text, rate = 0.9) {
     }
 }
 
-function speakEnglishSlowly(text, rate = 0.8) {
+function speakEnglishSlowly(text, rate = 1.0) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); // Stop any ongoing speech
-        // Inject pauses for clearer dictation
-        const textWithPauses = text.replace(/ /g, ', ');
-        const utterance = new SpeechSynthesisUtterance(textWithPauses);
+        
+        const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
-        utterance.rate = rate; // slightly slow for learning, but natural
+        utterance.rate = rate; // Natural exam rate
+        utterance.volume = 1.0; // Max volume
         
         // Try to find a good Google voice if available
         const voices = window.speechSynthesis.getVoices();
