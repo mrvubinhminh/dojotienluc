@@ -20,6 +20,66 @@ document.addEventListener('keydown', (e) => {
 
     const key = e.key.toUpperCase();
 
+
+    // Xử lý gõ số (STT) để mở nhanh thông tin học sinh
+    if (/^[0-9]$/.test(e.key)) {
+        window._sttBuffer = (window._sttBuffer || '') + e.key;
+        
+        // Tạo một Toast nhỏ để người dùng thấy mình đang gõ số nào
+        const bLabel = document.getElementById('sttTypingIndicator');
+        if (!bLabel) {
+            const div = document.createElement('div');
+            div.id = 'sttTypingIndicator';
+            div.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white font-black text-6xl px-10 py-6 rounded-3xl shadow-2xl z-[9999] pointer-events-none transition-all';
+            div.innerText = window._sttBuffer;
+            document.body.appendChild(div);
+        } else {
+            bLabel.innerText = window._sttBuffer;
+            bLabel.style.opacity = '1';
+        }
+
+        clearTimeout(window._sttBufferTimeout);
+        window._sttBufferTimeout = setTimeout(() => {
+            const stt = parseInt(window._sttBuffer);
+            window._sttBuffer = '';
+            const indicator = document.getElementById('sttTypingIndicator');
+            if (indicator) {
+                indicator.style.opacity = '0';
+                setTimeout(() => indicator.remove(), 300);
+            }
+            if (stt) {
+                const s = students.find(st => st.classId === currentClassId && st.stt === stt);
+                if (s) {
+                    if (typeof openPointsModal === 'function') openPointsModal(s.id);
+                } else {
+                    if (typeof showToast === 'function') showToast('Không tìm thấy học sinh có STT ' + stt, false);
+                }
+            }
+        }, 700);
+        return;
+    }
+
+    if (e.key === 'Enter' && window._sttBuffer) {
+        e.preventDefault();
+        clearTimeout(window._sttBufferTimeout);
+        const stt = parseInt(window._sttBuffer);
+        window._sttBuffer = '';
+        const indicator = document.getElementById('sttTypingIndicator');
+        if (indicator) {
+            indicator.style.opacity = '0';
+            setTimeout(() => indicator.remove(), 300);
+        }
+        if (stt) {
+            const s = students.find(st => st.classId === currentClassId && st.stt === stt);
+            if (s) {
+                if (typeof openPointsModal === 'function') openPointsModal(s.id);
+            } else {
+                if (typeof showToast === 'function') showToast('Không tìm thấy học sinh có STT ' + stt, false);
+            }
+        }
+        return;
+    }
+
     // G → Gọi ngẫu nhiên toàn cục
     if (key === 'G') {
         e.preventDefault();
