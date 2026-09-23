@@ -44,23 +44,10 @@ function renderSttChips() {
 }
 
 function toggleSttChip(id) {
-    if (sttSelected.has(id)) sttSelected.delete(id);
-    else sttSelected.add(id);
-    // Update chip appearance
-    const s = students.find(st=>st.id===id);
-    const chip = document.getElementById(`stt-chip-${id}`);
-    if (chip) {
-        const sel = sttSelected.has(id);
-        chip.className = `w-10 h-10 rounded-full text-sm font-black flex items-center justify-center transition-all shadow-sm ${
-            sel ? 'bg-purple-600 text-white scale-110 shadow-purple-200' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-purple-400'
-        }`;
-    }
-    updateSttAwardBtn();
-    // Highlight card
-    const card = document.getElementById(`student-card-${id}`);
-    if (card) {
-        if (sttSelected.has(id)) card.classList.add('ring-2','ring-purple-500');
-        else card.classList.remove('ring-2','ring-purple-500');
+    // Thay vì chọn nhiều, click vào là mở bảng cho điểm luôn
+    if (typeof openPointsModal === 'function') {
+        openPointsModal(id);
+        toggleSttPanel(); // Đóng panel STT
     }
 }
 

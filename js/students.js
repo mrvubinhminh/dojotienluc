@@ -45,8 +45,10 @@ let groupSelected   = new Set();
 let _isGroupAward   = false;
 let _groupTargetIds = [];
 
-function filterStudents() {
-    const raw   = document.getElementById('searchInput').value.trim();
+function filterStudents(e) {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    const raw = searchInput.value.trim();
     const terms = raw.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t.length>0);
 
     const visibleIds = [];
@@ -57,13 +59,24 @@ function filterStudents() {
     });
 
     const bar = document.getElementById('multiSelectBar');
-    // Hiện thanh multi-select khi có ≥2 từ khóa VÀ tìm được ≥2 học sinh
-    if (terms.length >= 2 && visibleIds.length >= 2) {
-        bar.classList.remove('hidden');
-        document.getElementById('multiSelectInfo').innerText = `${visibleIds.length} học sinh được chọn`;
-    } else {
-        bar.classList.add('hidden');
-        exitGroupSelectMode();
+    if (bar) {
+        if (terms.length >= 2 && visibleIds.length >= 2) {
+            bar.classList.remove('hidden');
+            document.getElementById('multiSelectInfo').innerText = `${visibleIds.length} học sinh được chọn`;
+        } else {
+            bar.classList.add('hidden');
+            exitGroupSelectMode();
+        }
+    }
+    
+    // Nếu ấn Enter và chỉ có 1 học sinh thỏa mãn thì mở bảng điểm luôn
+    if (e && e.key === 'Enter' && visibleIds.length === 1) {
+        if (typeof openPointsModal === 'function') {
+            openPointsModal(visibleIds[0]);
+            searchInput.value = '';
+            filterStudents(); // reset
+            searchInput.blur();
+        }
     }
 }
 
