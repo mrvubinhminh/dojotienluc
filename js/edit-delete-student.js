@@ -60,6 +60,8 @@ function openEditStudentModal(id) {
         document.getElementById('editStudentRealName').value=s.realName||'';
         document.getElementById('editStudentDob').value=s.dob||'';
         document.getElementById('editStudentStt').value=s.stt||'';
+        document.getElementById('editStudentPositivePoints').value=s.positivePoints||0;
+        document.getElementById('editStudentNegativePoints').value=s.negativePoints||0;
         document.getElementById('editStudentBackdrop').classList.remove('hidden');
         document.getElementById('editStudentModal').classList.remove('hidden');
         document.getElementById('editStudentName').focus();
@@ -72,11 +74,16 @@ function saveEditStudent() {
     const newRealName=document.getElementById('editStudentRealName').value.trim();
     const newDob=document.getElementById('editStudentDob').value.trim();
     const newStt=parseInt(document.getElementById('editStudentStt').value)||0;
+    const newPos=parseInt(document.getElementById('editStudentPositivePoints').value)||0;
+    const newNeg=parseInt(document.getElementById('editStudentNegativePoints').value)||0;
     if(!newName) return;
     const s=students.find(st=>st.id===id);
     if(s){
         const old=s.name;
         s.name=newName; s.realName=newRealName||newName; s.dob=newDob; if(newStt>0) s.stt=newStt;
+        s.positivePoints = newPos;
+        s.negativePoints = Math.abs(newNeg);
+        s.points = s.positivePoints - s.negativePoints;
         if(pendingAvatarBase64) {
             s.avatar = pendingAvatarBase64;
         } else if(old!==newName && !s.avatar.startsWith('data:image')) {
