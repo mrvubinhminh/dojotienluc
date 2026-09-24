@@ -170,7 +170,7 @@ function renderCards(isCorrect) {
         }
 
         return `
-            <div id="card-${index}" class="flip-card perspective-1000 w-full h-full cursor-pointer card-entry" style="animation-delay: ${index * 0.05}s" onclick="handleCardClick(${index})">
+            <div id="card-${index}" class="flip-card perspective-1000 w-full h-full cursor-pointer card-entry" style="animation-delay: ${index * 0.05}s" onclick="handleFlipCardClick(${index})">
                 <div class="flip-card-inner relative w-full h-full transform-style-3d">
                     <!-- MẶT TRƯỚC (ÚP) -->
                     <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-${cardColor}-500 to-${cardColor}-700 rounded-2xl border-[6px] border-${cardColor}-300 shadow-xl flex items-center justify-center relative overflow-hidden">
@@ -187,7 +187,7 @@ function renderCards(isCorrect) {
     }).join('');
 }
 
-function handleCardClick(index) {
+function handleFlipCardClick(index) {
     if(!currentCardStudent || cardsFlipped >= 1) return; // Only 1 flip per turn
     
     const cardEl = document.getElementById(`card-${index}`);
