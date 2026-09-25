@@ -198,6 +198,12 @@ function spinLearningWheel() {
             document.getElementById('lwLiveName').classList.add('hidden');
             document.getElementById('lwResultStudent').textContent = lwSelectedS.name;
             document.getElementById('lwResultQuestion').textContent = lwSelectedQ;
+            
+            // Render MathJax if available
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('lwResultQuestion')]).catch(err => console.log(err));
+            }
+            
             document.getElementById('lwResultView').classList.remove('hidden');
             document.getElementById('lwResultView').classList.add('flex');
             
@@ -221,8 +227,38 @@ function spinLearningWheel() {
     requestAnimationFrame(animate);
 }
 
+function lwScoreStudent(isCorrect) {
+    if(!lwSelectedS) return;
+    
+    const points = isCorrect ? 1 : -1;
+    const skillName = isCorrect ? 'Trả lời đúng (Vòng quay)' : 'Trả lời sai (Vòng quay)';
+    
+    const s = students.find(st => st.id === lwSelectedS.id);
+    if(s) {
+        const old = s.points;
+        s.points += points;
+        if(points > 0) s.positivePoints += points;
+        else s.negativePoints += Math.abs(points);
+        
+        const now = new Date().toISOString();
+        history.push({id:Date.now()+Math.random(),classId:currentClassId,studentId:s.id,studentName:s.name,skillName,points,timestamp:now});
+        
+        if (typeof checkMilestone === 'function') checkMilestone(s, old);
+        if (typeof checkGoalAchievements === 'function') setTimeout(()=>checkGoalAchievements(s.id), 100);
+        if (typeof saveState === 'function') saveState();
+        if (typeof renderStudents === 'function') renderStudents();
+        
+        const audioId = isCorrect ? 'soundPositive' : 'soundNegative';
+        const snd = document.getElementById(audioId);
+        if(snd) snd.play().catch(()=>{});
+        
+        showToast(`${s.name} ${points>0?'+':''}${points} (${skillName})`, points>0);
+    }
+    
+    closeLwResult();
+}
+
 function closeLwResult() {
-    // We don't have a separate modal anymore, so this is unused or we can just reset right panel
     resetLwRightPanel();
 }
 
