@@ -69,7 +69,7 @@ function closeLearningWheelGame() {
 function resetLwRightPanel() {
     document.getElementById('lwLiveName').classList.remove('hidden');
     document.getElementById('lwLiveName').textContent = "SẴN SÀNG";
-    document.getElementById('lwLiveName').className = "text-5xl md:text-8xl font-black text-gray-200 uppercase tracking-tight break-words w-full px-4 transition-colors duration-200";
+    document.getElementById('lwLiveName').className = "text-5xl md:text-8xl font-black text-white/80 uppercase tracking-tight break-words w-full px-4 transition-colors duration-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] relative z-10";
     document.getElementById('lwResultView').classList.add('hidden');
     document.getElementById('lwResultView').classList.remove('flex');
 }
@@ -133,8 +133,8 @@ function spinLearningWheel() {
     }
     
     resetLwRightPanel();
-    document.getElementById('lwLiveName').classList.add('text-teal-500');
-    document.getElementById('lwLiveName').classList.remove('text-gray-200');
+    document.getElementById('lwLiveName').classList.add('text-yellow-400');
+    document.getElementById('lwLiveName').classList.remove('text-white/80');
 
     lwSpinning = true;
     document.getElementById('lwSpinBtn').disabled = true;
