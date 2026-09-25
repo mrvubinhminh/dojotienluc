@@ -30,7 +30,7 @@ function startLearningWheel() {
         return;
     }
     
-    lwStudents = [...(window.students ? window.students.filter(s => s.classId === currentClassId) : [])];
+    lwStudents = [...(students.filter(s => s.classId === currentClassId))];
     if (lwStudents.length === 0) {
         showToast('Lớp chưa có học sinh nào!');
         return;
