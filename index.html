@@ -735,6 +735,227 @@ Câu 2: 1 + 1 = ?"></textarea>
 </div>
 
 
+
+<!-- Add class -->
+<div id="addClassBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeAddClassModal()"></div>
+<div id="addClassModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Tạo Lớp Mới</h3>
+    <input type="text" id="newClassName" placeholder="Nhập tên lớp..." class="w-full border-2 border-gray-200 p-3 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')addClass()">
+    <!-- Chọn vai trò / bộ kỹ năng -->
+    <p class="text-xs font-bold text-gray-500 mb-2">Bộ kỹ năng áp dụng</p>
+    <div class="flex flex-col gap-2 mb-4" id="addClassPresetGrid">
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-blue-400 bg-blue-50 cursor-pointer">
+            <input type="radio" name="newClassPreset" value="homeroom" class="accent-blue-500" checked>
+            <i class="fas fa-chalkboard-teacher text-blue-600 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-blue-800">Lớp chủ nhiệm</p><p class="text-[10px] text-blue-500">20 tiêu chí nề nếp, tác phong</p></div>
+        </label>
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-transparent bg-purple-50 cursor-pointer hover:border-purple-300">
+            <input type="radio" name="newClassPreset" value="subject" class="accent-purple-500">
+            <i class="fas fa-graduation-cap text-purple-600 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-purple-800">Giáo viên bộ môn</p><p class="text-[10px] text-purple-500">Tiêu chí học tập theo môn học</p></div>
+        </label>
+        <label class="flex items-center gap-3 p-2.5 rounded-xl border-2 border-transparent bg-gray-50 cursor-pointer hover:border-gray-300">
+            <input type="radio" name="newClassPreset" value="custom" class="accent-gray-500">
+            <i class="fas fa-sliders-h text-gray-500 w-5 text-center"></i>
+            <div><p class="font-bold text-sm text-gray-700">Tùy chỉnh</p><p class="text-[10px] text-gray-400">Bộ kỹ năng mặc định</p></div>
+        </label>
+    </div>
+    <input type="text" id="newTeacherName" placeholder="Tên giáo viên (VD: Vũ Tiến Lực)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-2 focus:outline-none focus:border-dojo-blue text-sm">
+    <input type="text" id="newSubjectName" placeholder="Môn học (VD: Toán — chỉ dùng cho bộ môn)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-sm">
+    <div class="flex gap-3"><button onclick="closeAddClassModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="addClass()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Google Classroom Import Modal -->
+<div id="classroomImportBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="closeClassroomImport()"></div>
+<div id="classroomImportModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-white rounded-2xl z-50 hidden shadow-2xl flex flex-col" style="max-height:85vh">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <i class="fab fa-google text-indigo-600 text-sm"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-800 text-base leading-tight">Nhập từ Google Classroom</h3>
+                <p id="classroomImportSubtitle" class="text-xs text-gray-400">Chọn lớp để nhập học sinh</p>
+            </div>
+        </div>
+        <button onclick="closeClassroomImport()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><i class="fas fa-times text-sm"></i></button>
+    </div>
+    <!-- Body -->
+    <div id="classroomImportBody" class="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+        <!-- Loading state -->
+        <div id="classroomLoading" class="flex flex-col items-center justify-center py-8 gap-3">
+            <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-500">Đang tải danh sách lớp...</p>
+        </div>
+        <!-- Error state -->
+        <div id="classroomError" class="hidden py-4">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600" id="classroomErrorMsg"></div>
+            <div id="classroomErrorHint" class="hidden mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700"></div>
+        </div>
+        <!-- Course list -->
+        <div id="classroomCourseList" class="hidden flex flex-col gap-2"></div>
+        <!-- Student preview -->
+        <div id="classroomStudentPreview" class="hidden">
+            <div class="flex items-center gap-2 mb-3">
+                <button onclick="_classroomBackToCourses()" class="text-xs text-indigo-600 font-bold flex items-center gap-1"><i class="fas fa-arrow-left text-[10px]"></i> Chọn lại lớp</button>
+            </div>
+            <div class="mb-3 bg-indigo-50 rounded-xl p-3">
+                <p class="text-xs text-indigo-500 font-bold">Tên lớp trong ứng dụng</p>
+                <input type="text" id="classroomClassName" class="w-full border-0 bg-transparent text-sm font-bold text-indigo-800 focus:outline-none mt-0.5" placeholder="Tên lớp...">
+            </div>
+            <p class="text-xs font-bold text-gray-500 mb-2">Danh sách học sinh (<span id="classroomStudentCount">0</span> em)</p>
+            <div id="classroomStudentList" class="flex flex-col gap-1 max-h-52 overflow-y-auto rounded-xl border border-gray-100 p-2 bg-gray-50"></div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div id="classroomImportFooter" class="hidden px-5 pb-5 pt-3 border-t border-gray-100 flex-shrink-0">
+        <button onclick="confirmClassroomImport()" id="btnConfirmClassroomImport"
+            class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition active:scale-95 shadow-lg">
+            <i class="fas fa-file-import"></i> Nhập vào ứng dụng
+        </button>
+    </div>
+</div>
+
+<!-- Edit class -->
+<div id="editClassBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeEditClassModal()"></div>
+<div id="editClassModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Sửa Tên Lớp</h3>
+    <input type="hidden" id="editClassId">
+    <input type="text" id="editClassName" class="w-full border-2 border-gray-200 p-3 rounded-xl mb-3 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')saveEditClass()">
+    <input type="text" id="editTeacherName" placeholder="Tên giáo viên (VD: Vũ Tiến Lực)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-2 focus:outline-none focus:border-dojo-blue text-sm">
+    <input type="text" id="editSubjectName" placeholder="Môn học (VD: Toán — chỉ dùng cho bộ môn)" class="w-full border-2 border-gray-200 p-2.5 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-sm">
+    <div class="flex gap-3"><button onclick="closeEditClassModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="saveEditClass()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Add student -->
+<div id="addStudentBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden" onclick="closeAddStudentModal()"></div>
+<div id="addStudentModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-50 hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Thêm học sinh mới</h3>
+    <input type="text" id="newStudentName" placeholder="Tên học sinh..." class="w-full border-2 border-gray-200 p-3 rounded-xl mb-4 focus:outline-none focus:border-dojo-blue text-lg" onkeypress="if(event.key==='Enter')addStudent()">
+    <div class="flex gap-3"><button onclick="closeAddStudentModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="addStudent()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+</div>
+
+<!-- Edit student -->
+<div id="editStudentBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-[70] hidden" onclick="closeEditStudentModal()"></div>
+<div id="editStudentModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl z-[70] hidden shadow-2xl p-5">
+    <h3 class="font-bold text-xl text-center mb-4 text-gray-800">Sửa thông tin học sinh</h3>
+    <input type="hidden" id="editStudentId">
+    <div class="mb-4 text-center">
+        <label class="text-xs font-bold text-gray-500 mb-2 block">Ảnh đại diện</label>
+        <div class="relative w-20 h-20 mx-auto mb-2 group cursor-pointer" onclick="document.getElementById('editStudentAvatar').click()">
+            <img id="editStudentAvatarPreview" src="" class="w-full h-full rounded-full object-cover border-4 border-gray-100 shadow-sm" alt="Avatar">
+            <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <i class="fas fa-camera text-white"></i>
+            </div>
+        </div>
+        <input type="file" id="editStudentAvatar" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+        <p class="text-[10px] text-gray-400">Click vào ảnh để thay đổi (Ảnh sẽ được nén tự động)</p>
+    </div>
+
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Tên hiển thị (Nickname)</label><input type="text" id="editStudentName" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base" onkeypress="if(event.key==='Enter')saveEditStudent()"></div>
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Họ và tên thật</label><input type="text" id="editStudentRealName" placeholder="VD: Nguyễn Văn An" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-3"><label class="text-xs font-bold text-gray-500 mb-1 block">Ngày sinh</label><input type="text" id="editStudentDob" placeholder="VD: 15/05/2013" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="mb-4"><label class="text-xs font-bold text-gray-500 mb-1 block">STT</label><input type="number" id="editStudentStt" min="1" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-dojo-blue text-base"></div>
+    <div class="flex gap-3 mb-4">
+        <div class="flex-1"><label class="text-xs font-bold text-gray-500 mb-1 block">Điểm cộng</label><input type="number" id="editStudentPositivePoints" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-green-400 text-base font-bold text-green-600"></div>
+        <div class="flex-1"><label class="text-xs font-bold text-gray-500 mb-1 block">Điểm trừ</label><input type="number" id="editStudentNegativePoints" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:border-red-400 text-base font-bold text-red-600"></div>
+    </div>
+
+    <div class="flex gap-3 mb-3"><button onclick="closeEditStudentModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">Hủy</button><button onclick="saveEditStudent()" class="flex-1 py-3 bg-dojo-blue text-white font-bold rounded-xl shadow-lg">Lưu lại</button></div>
+    <button onclick="deleteStudentConfirm()" class="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl border border-red-100 hover:bg-red-100 transition flex items-center justify-center gap-2"><i class="fas fa-trash"></i> Xóa học sinh này</button>
+</div>
+
+<!-- Auto-sync floating badge -->
+<div id="autoSyncBadge" class="hidden fixed top-3 right-3 z-[200] bg-white rounded-full shadow-lg border border-gray-100 px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-600 transition-all duration-300">
+    <span id="autoSyncIcon"></span>
+    <span id="autoSyncText"></span>
+</div>
+
+<!-- Exclude modal: chọn / bỏ học sinh trước khi cho điểm cả lớp -->
+<div id="excludeBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden" onclick="closeExcludeModal()"></div>
+<div id="excludeModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[101] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[88vh] flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between">
+        <div>
+            <h2 class="text-base font-bold text-gray-800"><i class="fas fa-users mr-1.5 text-dojo-blue"></i>Chọn học sinh được điểm</h2>
+            <p class="text-xs text-gray-500 mt-0.5" id="excludeCountLabel">Đang chọn 0 học sinh</p>
+        </div>
+        <button onclick="closeExcludeModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-lg font-bold">✕</button>
+    </div>
+    <div class="px-4 pt-3 pb-1 flex gap-2">
+        <input id="excludeSearch" type="text" placeholder="🔍 Tìm theo tên hoặc STT..."
+            class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-dojo-blue"
+            oninput="filterExcludeList()">
+    </div>
+    <div class="px-4 pb-2 flex gap-2 items-center">
+        <div class="relative flex-1">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400 text-xs font-bold">#</span>
+            <input id="excludeSttInput" type="text" placeholder="Bỏ STT: 3,5,7 ..."
+                class="w-full border-2 border-orange-200 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-orange-50"
+                oninput="applyExcludeStt()">
+        </div>
+        <button onclick="excludeSelectAll(true)" class="text-xs bg-dojo-blue text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm">Chọn tất cả</button>
+        <button onclick="excludeSelectAll(false)" class="text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-xl font-bold whitespace-nowrap">Bỏ tất cả</button>
+    </div>
+    <div id="excludeList" class="flex-1 overflow-y-auto px-4 pb-4 space-y-0.5"></div>
+    <div class="p-4 border-t bg-gray-50 safe-bottom">
+        <button onclick="confirmExcludeAndAward()" class="w-full py-3.5 bg-dojo-blue text-white font-bold rounded-2xl text-base shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            <i class="fas fa-bolt"></i> Tiếp tục cho điểm
+        </button>
+    </div>
+</div>
+
+<!-- Points modal -->
+<div id="backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-[98] hidden" onclick="closePointsModal()"></div>
+<div id="pointsModal" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl z-[99] transform translate-y-full transition-transform duration-300 ease-out shadow-2xl max-h-[85vh] flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img id="modalAvatar" src="" class="w-12 h-12 rounded-full bg-gray-100 object-cover">
+            <div>
+                <h3 id="modalStudentName" class="font-bold text-lg text-gray-800">Tên</h3>
+                <p class="text-xs text-gray-500 mb-0.5" id="modalStudentInfo">STT: - | NS: -</p>
+                <p class="text-sm text-gray-500">Đang có <span id="modalStudentPoints" class="font-bold text-dojo-blue">0</span> điểm</p>
+                <p id="modalComment" class="text-[11px] text-blue-400 italic mt-0.5 hidden"></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btnShareStudent" onclick="shareStudentView(selectedStudentId)" class="w-8 h-8 bg-teal-50 rounded-full text-teal-600 flex items-center justify-center hover:bg-teal-100 transition" title="Chia sẻ xem điểm"><i class="fas fa-share-alt text-sm"></i></button>
+            <button id="btnStudentProfile" onclick="openStudentProfile(selectedStudentId)" class="w-8 h-8 bg-green-50 rounded-full text-green-600 flex items-center justify-center hover:bg-green-100 transition" title="Thống kê học sinh"><i class="fas fa-chart-bar text-sm"></i></button>
+            <button id="btnCertStudent" onclick="openCertificateModal(selectedStudentId)" class="w-8 h-8 bg-amber-50 rounded-full text-amber-600 flex items-center justify-center hover:bg-amber-100 transition" title="Xuất chứng nhận PDF"><i class="fas fa-award text-sm"></i></button>
+            <button id="btnEditStudent" onclick="openEditStudentModal(selectedStudentId)" class="px-3 h-9 bg-blue-500 rounded-full text-white font-bold flex items-center justify-center hover:bg-blue-600 transition shadow-md gap-1.5" title="Sửa học sinh"><i class="fas fa-edit"></i> <span class="text-xs">Sửa</span></button>
+            <button id="btnDeleteStudent" onclick="deleteStudentFromModal()" class="w-8 h-8 bg-red-50 rounded-full text-red-500 flex items-center justify-center hover:bg-red-100 transition" title="Xóa học sinh"><i class="fas fa-trash text-sm"></i></button>
+            <button onclick="closePointsModal()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div class="p-2 flex gap-2 border-b">
+        <button id="tabPositive" class="flex-1 py-2 font-bold text-dojo-green border-b-2 border-dojo-green" onclick="switchTab('positive')">Tích cực</button>
+        <button id="tabNegative" class="flex-1 py-2 font-bold text-gray-400 border-b-2 border-transparent" onclick="switchTab('negative')">Cần cố gắng</button>
+    </div>
+    <div class="p-4 overflow-y-auto no-scrollbar" style="max-height:40vh">
+        <div id="positiveSkills" class="grid grid-cols-3 gap-2"></div>
+        <div id="negativeSkills" class="grid grid-cols-3 gap-2 hidden"></div>
+    </div>
+    <!-- Nhập điểm thủ công nhanh -->
+    <div class="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">⚡ Nhập điểm thủ công</p>
+        <div class="flex gap-1.5 mb-2">
+            <button onclick="addManualPoints(1)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+1</button>
+            <button onclick="addManualPoints(2)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+2</button>
+            <button onclick="addManualPoints(3)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+3</button>
+            <button onclick="addManualPoints(5)" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-lg border border-green-200 hover:bg-green-100 active:scale-95 transition text-sm">+5</button>
+            <button onclick="addManualPoints(-1)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-1</button>
+            <button onclick="addManualPoints(-2)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-2</button>
+            <button onclick="addManualPoints(-3)" class="flex-1 py-2 bg-red-50 text-red-500 font-bold rounded-lg border border-red-200 hover:bg-red-100 active:scale-95 transition text-sm">-3</button>
+        </div>
+        <div class="flex gap-2">
+            <input type="number" id="manualPointsInput" placeholder="Điểm tuỳ chỉnh (VD: 4 hoặc -2)" class="flex-1 border-2 border-gray-200 px-3 py-2 rounded-xl focus:outline-none focus:border-dojo-blue text-sm bg-white" onkeypress="if(event.key==='Enter')applyManualPoints()">
+            <button onclick="applyManualPoints()" class="px-4 py-2 bg-dojo-blue text-white font-bold rounded-xl hover:bg-blue-600 active:scale-95 transition text-sm">OK</button>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Modal chọn đợt xuất Excel -->
 <div id="exportPeriodBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden flex items-center justify-center" onclick="closeExportPeriodModal()">
     <div class="bg-white rounded-2xl w-[90%] max-w-sm shadow-2xl p-5" onclick="event.stopPropagation()">
