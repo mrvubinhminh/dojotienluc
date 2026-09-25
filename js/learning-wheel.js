@@ -8,6 +8,10 @@ let lwSpinning = false;
 let lwSelectedQ = '';
 let lwSelectedS = null;
 
+// The requested audio file
+const lwAudio = new Audio('https://files.catbox.moe/jp6q4j.mp3');
+lwAudio.preload = 'auto';
+
 const lwColors = ["#f87171", "#fb923c", "#fbbf24", "#34d399", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6"];
 
 function openLearningWheel() {
@@ -30,7 +34,7 @@ function startLearningWheel() {
         return;
     }
     
-    lwStudents = [...(students.filter(s => s.classId === currentClassId))];
+    lwStudents = students.filter(s => s.classId === currentClassId);
     if (lwStudents.length === 0) {
         showToast('Lớp chưa có học sinh nào!');
         return;
@@ -47,14 +51,27 @@ function startLearningWheel() {
     
     document.getElementById('lwGameModal').classList.remove('hidden');
     document.getElementById('lwGameModal').classList.add('flex');
+    document.getElementById('lwGameModal').classList.add('md:flex-row'); // For split layout
     
+    resetLwRightPanel();
     drawLwWheel();
     updateLwUI();
 }
 
 function closeLearningWheelGame() {
+    lwAudio.pause();
+    lwAudio.currentTime = 0;
     document.getElementById('lwGameModal').classList.add('hidden');
     document.getElementById('lwGameModal').classList.remove('flex');
+    document.getElementById('lwGameModal').classList.remove('md:flex-row');
+}
+
+function resetLwRightPanel() {
+    document.getElementById('lwLiveName').classList.remove('hidden');
+    document.getElementById('lwLiveName').textContent = "SẴN SÀNG";
+    document.getElementById('lwLiveName').className = "text-5xl md:text-8xl font-black text-gray-200 uppercase tracking-tight break-words w-full px-4 transition-colors duration-200";
+    document.getElementById('lwResultView').classList.add('hidden');
+    document.getElementById('lwResultView').classList.remove('flex');
 }
 
 function drawLwWheel(highlightIndex = -1) {
@@ -85,7 +102,7 @@ function drawLwWheel(highlightIndex = -1) {
             ctx.fillStyle = "#ffffff";
         }
         ctx.fill();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4;
         ctx.strokeStyle = "#ffffff";
         ctx.stroke();
         
@@ -94,11 +111,11 @@ function drawLwWheel(highlightIndex = -1) {
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         ctx.fillStyle = highlightIndex === i ? "#000" : "#fff";
-        ctx.font = "bold 16px sans-serif";
+        ctx.font = "bold 24px sans-serif";
         // prevent text overflowing out of radius
         let name = lwStudents[i].name;
-        if(name.length > 15) name = name.substring(0, 15) + '...';
-        ctx.fillText(name, radius - 15, 0);
+        if(name.length > 20) name = name.substring(0, 20) + '...';
+        ctx.fillText(name, radius - 20, 0);
         ctx.restore();
     }
     ctx.restore();
@@ -115,9 +132,23 @@ function spinLearningWheel() {
         return;
     }
     
+    resetLwRightPanel();
+    document.getElementById('lwLiveName').classList.add('text-teal-500');
+    document.getElementById('lwLiveName').classList.remove('text-gray-200');
+
     lwSpinning = true;
     document.getElementById('lwSpinBtn').disabled = true;
     
+    // Play Audio
+    lwAudio.currentTime = 0;
+    lwAudio.play().catch(e => console.log("Audio play blocked by browser:", e));
+    
+    // Fallback duration 6s, or actual audio duration if loaded
+    let duration = 6000;
+    if (!isNaN(lwAudio.duration) && lwAudio.duration > 0 && lwAudio.duration !== Infinity) {
+        duration = lwAudio.duration * 1000;
+    }
+
     const sIdx = Math.floor(Math.random() * lwStudents.length);
     const qIdx = Math.floor(Math.random() * lwQuestions.length);
     
@@ -125,50 +156,65 @@ function spinLearningWheel() {
     lwSelectedQ = lwQuestions[qIdx];
     
     const sliceAngle = (2 * Math.PI) / lwStudents.length;
-    // Top is at -PI/2
+    // Top pointer is at -PI/2 relative to standard unit circle
     const targetAngle = (3 * Math.PI / 2) - (sIdx * sliceAngle + sliceAngle / 2);
     
-    // Add multiple spins
-    const totalSpin = targetAngle + (Math.PI * 2 * 5); // 5 extra rotations
+    // Extra rotations based on duration (approx 1.5 spins per second)
+    const extraSpins = Math.floor(duration / 1000) * 1.5;
+    const totalSpin = targetAngle + (Math.PI * 2 * extraSpins);
     
-    let currentSpin = 0;
-    const duration = 4000; // 4 seconds spin
     const start = performance.now();
     
-    function easeOutCubic(x) {
-        return 1 - Math.pow(1 - x, 3);
+    // Extremely smooth ease out to stop perfectly at the end of the song
+    function easeOutQuart(x) {
+        return 1 - Math.pow(1 - x, 4);
     }
     
     function animate(time) {
         let fraction = (time - start) / duration;
         if (fraction > 1) fraction = 1;
         
-        lwWheelAngle = totalSpin * easeOutCubic(fraction);
+        lwWheelAngle = totalSpin * easeOutQuart(fraction);
         drawLwWheel();
+        
+        // Update Live Name Display based on what is currently under the pointer
+        // The pointer is at -PI/2.
+        let normalizedTopAngle = (-Math.PI / 2 - lwWheelAngle) % (2 * Math.PI);
+        if (normalizedTopAngle < 0) normalizedTopAngle += 2 * Math.PI;
+        
+        let currentHoverIdx = Math.floor(normalizedTopAngle / sliceAngle) % lwStudents.length;
+        if (lwStudents[currentHoverIdx]) {
+            document.getElementById('lwLiveName').textContent = lwStudents[currentHoverIdx].name;
+        }
         
         if (fraction < 1) {
             requestAnimationFrame(animate);
         } else {
             // Done
-            lwWheelAngle = targetAngle; // normalize
+            lwWheelAngle = targetAngle; // normalize exactly
             drawLwWheel(sIdx);
             
-            setTimeout(() => {
-                document.getElementById('lwResultStudent').textContent = lwSelectedS.name;
-                document.getElementById('lwResultQuestion').textContent = lwSelectedQ;
-                document.getElementById('lwResultModal').classList.remove('hidden');
-                document.getElementById('lwResultModal').classList.add('flex');
-                
-                // Remove from pool
-                lwStudents.splice(sIdx, 1);
-                lwQuestions.splice(qIdx, 1);
-                lwCurrentSpin++;
-                
-                lwSpinning = false;
-                document.getElementById('lwSpinBtn').disabled = false;
-                updateLwUI();
-                drawLwWheel(); // redraw without the selected student
-            }, 800);
+            // Show result
+            document.getElementById('lwLiveName').classList.add('hidden');
+            document.getElementById('lwResultStudent').textContent = lwSelectedS.name;
+            document.getElementById('lwResultQuestion').textContent = lwSelectedQ;
+            document.getElementById('lwResultView').classList.remove('hidden');
+            document.getElementById('lwResultView').classList.add('flex');
+            
+            // Remove from pool for next spins
+            lwStudents.splice(sIdx, 1);
+            lwQuestions.splice(qIdx, 1);
+            lwCurrentSpin++;
+            
+            lwSpinning = false;
+            document.getElementById('lwSpinBtn').disabled = false;
+            updateLwUI();
+            
+            if (lwCurrentSpin >= lwN || lwStudents.length === 0 || lwQuestions.length === 0) {
+                setTimeout(() => {
+                    showToast('Đã hoàn thành tất cả các lượt quay!');
+                }, 1000);
+            }
         }
     }
     
@@ -176,14 +222,8 @@ function spinLearningWheel() {
 }
 
 function closeLwResult() {
-    document.getElementById('lwResultModal').classList.add('hidden');
-    document.getElementById('lwResultModal').classList.remove('flex');
-    if (lwCurrentSpin >= lwN || lwStudents.length === 0 || lwQuestions.length === 0) {
-        setTimeout(() => {
-            showToast('Đã hoàn thành tất cả các lượt quay!');
-            closeLearningWheelGame();
-        }, 500);
-    }
+    // We don't have a separate modal anymore, so this is unused or we can just reset right panel
+    resetLwRightPanel();
 }
 
 function updateLwUI() {
