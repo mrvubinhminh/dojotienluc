@@ -93,6 +93,8 @@ function _bnDungKhung() {
             <span class="w-px h-7 bg-white bg-opacity-20 mx-0.5"></span>
             <button onclick="bnBatLup()" id="bnBtnLup" title="Kính lúp — rê chuột để soi rõ chỗ bất kỳ" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-magnifying-glass-plus"></i></button>
             <button onclick="bnXoay()" title="Xoay ảnh" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-rotate"></i></button>
+            <button onclick="bnTaiAnhDaChua()" title="Tải ảnh đã chữa của bài này về máy" class="w-9 h-9 rounded-lg bg-emerald-500 bg-opacity-80 text-white"><i class="fas fa-download"></i></button>
+            <button onclick="bnTaiTatCa()" title="Tải tất cả ảnh đang xem về máy" class="w-9 h-9 rounded-lg bg-emerald-500 bg-opacity-50 text-white"><i class="fas fa-file-zipper"></i></button>
             <button onclick="bnXoaAnh()" title="Bỏ ảnh này" class="w-9 h-9 rounded-lg bg-red-500 bg-opacity-70 text-white"><i class="fas fa-trash"></i></button>
             <button onclick="bnAnThanh()" title="Ẩn thanh công cụ cho sạch màn hình" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-eye-slash"></i></button>
             <button onclick="bnDoiFull()" id="bnBtnFull" title="Toàn màn hình" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-expand-arrows-alt"></i></button>
@@ -595,4 +597,135 @@ function _bnLanChuot(e) {
     _bnLupZoom = Math.round(Math.min(8, Math.max(1.5, _bnLupZoom + (e.deltaY < 0 ? 0.5 : -0.5))) * 10) / 10;
     const r = document.getElementById('bnCanvas').getBoundingClientRect();
     _bnVeLup(e.clientX - r.left, e.clientY - r.top);
+}
+
+// ============================================================
+// TẢI ẢNH ĐÃ CHỮA VỀ MÁY
+// ------------------------------------------------------------
+// Gộp ảnh gốc với nét bút thành một file PNG để lưu làm minh chứng.
+// Ảnh xuất ra ở ĐỘ PHÂN GIẢI GỐC của file chụp, đã xoay đúng chiều, và
+// chỉ lấy đúng vùng bài làm (bỏ hai dải đen của khung 16:9).
+//
+// Nét tẩy được vẽ trên một lớp riêng rồi mới chồng lên ảnh, nên tẩy chỉ
+// xoá nét bút chứ không khoét thủng bài làm của học sinh.
+// ============================================================
+
+// Đổi một điểm của khung thành toạ độ trên ảnh đã xoay
+function _bnDiemXuat(p, h) {
+    const t = _bnKhungSangAnh(p.x * h.W, p.y * h.H, h);
+    switch (((h.goc % 360) + 360) % 360) {
+        case 90:  return { x: h.nh - t.y, y: t.x };
+        case 180: return { x: h.nw - t.x, y: h.nh - t.y };
+        case 270: return { x: t.y, y: h.nw - t.x };
+        default:  return { x: t.x, y: t.y };
+    }
+}
+
+function _bnVeNetLen(g, nets, h, heSo) {
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const n of nets) {
+        if (!n.diem || !n.diem.length) continue;
+        const ds = n.diem.map(p => _bnDiemXuat(p, h));
+        g.beginPath();
+        ds.forEach((p, i) => { if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y); });
+        if (ds.length === 1) g.lineTo(ds[0].x + 0.1, ds[0].y + 0.1);
+        if (n.kieu === 'tay') {
+            g.globalCompositeOperation = 'destination-out';
+            g.lineWidth = n.co * 4 * heSo; g.globalAlpha = 1; g.strokeStyle = '#000';
+        } else if (n.kieu === 'daquang') {
+            g.globalCompositeOperation = 'source-over';
+            g.lineWidth = n.co * 3.2 * heSo; g.globalAlpha = 0.38; g.strokeStyle = n.mau;
+        } else {
+            g.globalCompositeOperation = 'source-over';
+            g.lineWidth = n.co * heSo; g.globalAlpha = 1; g.strokeStyle = n.mau;
+        }
+        g.stroke();
+    }
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+}
+
+// Dựng ảnh đã chữa của MỘT ảnh, trả về canvas
+function _bnDungAnhDaChua(a) {
+    const img = document.getElementById('bnImg');
+    const h = _bnHinhHoc();
+    if (!h || !img) return null;
+
+    const xoay = ((a.xoay % 360) + 360) % 360;
+    const W = (xoay % 180 === 0) ? h.nw : h.nh;
+    const H = (xoay % 180 === 0) ? h.nh : h.nw;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+    g.save();
+    g.translate(W / 2, H / 2);
+    g.rotate(xoay * Math.PI / 180);
+    g.drawImage(img, -h.nw / 2, -h.nh / 2, h.nw, h.nh);
+    g.restore();
+
+    // Nét bút vẽ ra lớp riêng để nét tẩy không khoét vào ảnh gốc
+    const nets = _bnNet[a.id] || [];
+    if (nets.length) {
+        const lop = document.createElement('canvas');
+        lop.width = W; lop.height = H;
+        // Một px trên khung bằng bấy nhiêu px trên ảnh gốc
+        _bnVeNetLen(lop.getContext('2d'), nets, h, 1 / (h.k * h.s));
+        g.drawImage(lop, 0, 0);
+    }
+    return cv;
+}
+
+function _bnTenFile(a) {
+    const bo = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const d = new Date();
+    const goc = bo((a.ten || 'bailam').replace(/\.[a-z0-9]+$/i, '')).slice(0, 40) || 'bailam';
+    return `${a.nhom ? 'Nhom' + a.nhom + '_' : ''}${goc}_${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}.png`;
+}
+
+function _bnTaiCanvas(cv, ten) {
+    return new Promise(res => {
+        cv.toBlob(blob => {
+            if (!blob) { res(false); return; }
+            const url = URL.createObjectURL(blob);
+            const el = document.createElement('a');
+            el.href = url; el.download = ten;
+            document.body.appendChild(el); el.click(); el.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 3000);
+            res(true);
+        }, 'image/png');
+    });
+}
+
+// Tải ảnh đang chiếu
+async function bnTaiAnhDaChua() {
+    const a = _bnAnhHienTai();
+    if (!a) { if (typeof showToast === 'function') showToast('Chưa có ảnh nào để tải!', false); return; }
+    const cv = _bnDungAnhDaChua(a);
+    if (!cv) { if (typeof showToast === 'function') showToast('Ảnh chưa tải xong, thử lại nhé!', false); return; }
+    const ok = await _bnTaiCanvas(cv, _bnTenFile(a));
+    if (typeof showToast === 'function') {
+        showToast(ok ? `Đã lưu ${cv.width}×${cv.height} về máy` : 'Chưa tạo được ảnh, thử lại nhé!', ok);
+    }
+}
+
+// Tải tất cả ảnh đang xem (theo tab nhóm đang chọn)
+async function bnTaiTatCa() {
+    const ds = _bnDanhSach();
+    if (!ds.length) { if (typeof showToast === 'function') showToast('Chưa có ảnh nào để tải!', false); return; }
+    const nho = _bnHienTai;
+    let xong = 0;
+    for (const a of ds) {
+        _bnHienTai = _bnAnh.indexOf(a);
+        _bnChieu();
+        // Chờ ảnh vào đúng khung rồi mới dựng, nếu không số đo hình học còn của ảnh cũ
+        await new Promise(r => setTimeout(r, 160));
+        const cv = _bnDungAnhDaChua(a);
+        if (cv && await _bnTaiCanvas(cv, _bnTenFile(a))) xong++;
+        await new Promise(r => setTimeout(r, 320));   // trình duyệt cần nhịp giữa các lần tải
+    }
+    _bnHienTai = nho; _bnChieu(); _bnVeThumbs();
+    if (typeof showToast === 'function') showToast(`Đã lưu ${xong}/${ds.length} ảnh đã chữa về máy`, xong > 0);
 }
