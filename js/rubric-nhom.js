@@ -227,6 +227,10 @@ function _rubricDungKhung() {
           <div class="flex gap-2 flex-shrink-0">
             <button onclick="_rubricCoChu(-1)" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white font-black">A-</button>
             <button onclick="_rubricCoChu(1)" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white font-black">A+</button>
+            <button onclick="taiAnhRubric()" title="Tải ảnh đen trắng khổ ngang để in phát cho các nhóm"
+              class="bg-white bg-opacity-15 hover:bg-opacity-25 text-white font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+              <i class="fas fa-download mr-1"></i> Tải ảnh in
+            </button>
             <button onclick="openRubricScore()" class="bg-teal-500 hover:bg-teal-400 text-white font-black px-4 py-2 rounded-xl whitespace-nowrap">
               <i class="fas fa-star mr-1"></i> Bắt đầu chấm
             </button>
@@ -276,13 +280,16 @@ function openRubricMenu() {
             </div>
           </div>
         </button>`).join('');
-    const m = document.getElementById('rubricMenu');
-    m.classList.remove('hidden'); m.classList.add('flex');
+    _rubricHien('rubricMenu', true);
 }
-function closeRubricMenu() {
-    const m = document.getElementById('rubricMenu');
-    m.classList.add('hidden'); m.classList.remove('flex');
+// Bật/tắt một lớp phủ. Dùng chung để không vỡ nếu khung chưa kịp dựng.
+function _rubricHien(id, hien) {
+    const e = document.getElementById(id);
+    if (!e) return;
+    if (hien) { e.classList.remove('hidden'); e.classList.add('flex'); }
+    else      { e.classList.add('hidden');    e.classList.remove('flex'); }
 }
+function closeRubricMenu() { _rubricHien('rubricMenu', false); }
 
 // ── Chiếu rubric chữ to cho cả lớp ───────────────────────────────────────────
 let _rubricScale = 1;
@@ -298,14 +305,15 @@ function chonRubric(id) {
     _rubricDangDung = r;
     _rubricDiem = {};
     _rubricNhomXem = 0;
+    _rubricDungKhung();
     closeRubricMenu();
     _rubricVeBangChieu();
-    const s = document.getElementById('rubricShow');
-    s.classList.remove('hidden'); s.classList.add('flex');
+    _rubricHien('rubricShow', true);
 }
 
 function _rubricVeBangChieu() {
     const r = _rubricDangDung;
+    if (!r || !document.getElementById('rubricShowTitle')) return;
     document.getElementById('rubricShowTitle').innerText = `${r.emoji} ${r.ten}`;
     const head = RUBRIC_MUC.map(m =>
         `<th class="p-3 text-white font-black rounded-t-xl" style="background:${m.mau}">
@@ -346,17 +354,14 @@ function _rubricVeBangChieu() {
 }
 
 function closeRubricShow() {
-    const s = document.getElementById('rubricShow');
-    s.classList.add('hidden'); s.classList.remove('flex');
+    _rubricHien('rubricShow', false);
     openRubricMenu();
 }
 
 // ── Chấm điểm từng nhóm ──────────────────────────────────────────────────────
 function openRubricScore() {
-    document.getElementById('rubricShow').classList.add('hidden');
-    document.getElementById('rubricShow').classList.remove('flex');
-    const s = document.getElementById('rubricScore');
-    s.classList.remove('hidden'); s.classList.add('flex');
+    _rubricHien('rubricShow', false);
+    _rubricHien('rubricScore', true);
     document.getElementById('rubricScoreTitle').innerText = `${_rubricDangDung.emoji} ${_rubricDangDung.ten}`;
     _rubricVeManCham();
 }
@@ -501,14 +506,181 @@ function chotDiemRubric(gi) {
 let _rubricDaChot = {};
 
 function closeRubricScore() {
-    document.getElementById('rubricScore').classList.add('hidden');
-    document.getElementById('rubricScore').classList.remove('flex');
-    const s = document.getElementById('rubricShow');
-    s.classList.remove('hidden'); s.classList.add('flex');
+    _rubricHien('rubricScore', false);
+    _rubricHien('rubricShow', true);
 }
 function closeRubricAll() {
-    ['rubricMenu', 'rubricShow', 'rubricScore'].forEach(id => {
-        const e = document.getElementById(id);
-        if (e) { e.classList.add('hidden'); e.classList.remove('flex'); }
+    ['rubricMenu', 'rubricShow', 'rubricScore'].forEach(id => _rubricHien(id, false));
+}
+
+// ============================================================
+// TẢI RUBRIC RA ẢNH ĐEN TRẮNG, KHỔ NGANG
+// ------------------------------------------------------------
+// In ra phát cho từng nhóm để học sinh đọc kỹ nhiệm vụ trước khi làm.
+// Vẽ bằng canvas nên không cần thư viện ngoài; chỉ dùng đen - trắng - xám
+// để in máy in thường vẫn rõ và không tốn mực màu.
+// ============================================================
+
+// Khổ A4 nằm ngang ở 200 DPI
+const RUBRIC_ANH_W = 2339;
+const RUBRIC_ANH_H = 1654;
+
+// Cắt một đoạn văn thành nhiều dòng vừa bề rộng cho trước
+function _rubricNgatDong(doRong, chu, maxW) {
+    const tu = String(chu).split(/\s+/).filter(Boolean);
+    const dong = [];
+    let hienTai = '';
+    for (const t of tu) {
+        const thu = hienTai ? hienTai + ' ' + t : t;
+        if (doRong(thu) <= maxW || !hienTai) hienTai = thu;
+        else { dong.push(hienTai); hienTai = t; }
+    }
+    if (hienTai) dong.push(hienTai);
+    return dong;
+}
+
+/**
+ * Tính bố cục bảng rubric cho một cỡ chữ.
+ * Tách riêng khỏi phần vẽ để tự co chữ cho vừa trang và để kiểm thử được.
+ * doRong(chu, cỡ, đậm) -> bề rộng chữ tính bằng pixel
+ */
+function _rubricTinhBoCuc(doRong, r, ty, caoChoBang, rongBang) {
+    const cCot   = Math.round(rongBang * 0.22);          // cột tiêu chí
+    const cMuc   = Math.round((rongBang - cCot) / 4);    // 4 cột mức
+    const coChu  = Math.round(27 * ty);
+    const caoDong = Math.round(coChu * 1.38);
+    const dem    = Math.round(18 * ty);
+
+    const hang = r.tieuChi.map((tc, i) => {
+        const tenDong = _rubricNgatDong(c => doRong(c, Math.round(30 * ty), true), `${i + 1}. ${tc.ten}`, cCot - dem * 2);
+        const oDong   = tc.muc.map(t => _rubricNgatDong(c => doRong(c, coChu, false), t, cMuc - dem * 2));
+        const soDong  = Math.max(tenDong.length, ...oDong.map(d => d.length));
+        return { tenDong, oDong, cao: soDong * caoDong + dem * 2 };
     });
+
+    const caoDau = Math.round(96 * ty);
+    const tong = caoDau + hang.reduce((s, h) => s + h.cao, 0);
+    return { cCot, cMuc, coChu, caoDong, dem, hang, caoDau, tong, vua: tong <= caoChoBang };
+}
+
+function taiAnhRubric() {
+    const r = _rubricDangDung;
+    if (!r) { showToast('Hãy chọn một rubric trước đã nhé!', false); return; }
+
+    const cv = document.createElement('canvas');
+    cv.width = RUBRIC_ANH_W; cv.height = RUBRIC_ANH_H;
+    const g = cv.getContext('2d');
+    const font = (co, dam) => `${dam ? '700' : '400'} ${co}px "Be Vietnam Pro", "Segoe UI", Arial, sans-serif`;
+    const doRong = (chu, co, dam) => { g.font = font(co, dam); return g.measureText(chu).width; };
+
+    const le = 70;
+    const rongBang = RUBRIC_ANH_W - le * 2;
+
+    // Nền trắng
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, cv.width, cv.height);
+
+    // ── Tiêu đề ──
+    let y = le + 56;
+    g.fillStyle = '#000000'; g.textBaseline = 'alphabetic';
+    g.font = font(54, true);
+    g.fillText(r.ten.toUpperCase(), le, y);
+    y += 44;
+    g.font = font(28, false); g.fillStyle = '#333333';
+    for (const d of _rubricNgatDong(c => doRong(c, 28, false), r.mota, rongBang)) { g.fillText(d, le, y); y += 36; }
+    y += 10;
+    g.strokeStyle = '#000000'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(le, y); g.lineTo(le + rongBang, y); g.stroke();
+    y += 28;
+
+    const caoChanTrang = 210;
+    const caoChoBang = RUBRIC_ANH_H - y - caoChanTrang;
+
+    // Tìm cỡ chữ LỚN NHẤT mà vẫn vừa đúng một trang, để lấp đầy giấy
+    // thay vì bỏ trống nửa dưới. Dò từ to xuống nhỏ, gặp cỡ vừa là lấy.
+    let ty = 0.45;
+    let bc = _rubricTinhBoCuc(doRong, r, ty, caoChoBang, rongBang);
+    for (let t = 2.6; t >= 0.45; t = +(t - 0.04).toFixed(2)) {
+        const thu = _rubricTinhBoCuc(doRong, r, t, caoChoBang, rongBang);
+        if (thu.vua) { ty = t; bc = thu; break; }
+    }
+
+    const { cCot, cMuc, coChu, caoDong, dem, hang, caoDau } = bc;
+    const xMuc = i => le + cCot + cMuc * i;
+
+    // ── Hàng tiêu đề: nền đen chữ trắng, in ra vẫn rõ ──
+    g.fillStyle = '#000000'; g.fillRect(le, y, rongBang, caoDau);
+    g.fillStyle = '#ffffff'; g.textAlign = 'left';
+    g.font = font(Math.round(30 * ty), true);
+    g.fillText('TIÊU CHÍ', le + dem, y + caoDau / 2 + 10 * ty);
+    g.textAlign = 'center';
+    RUBRIC_MUC.forEach((m, i) => {
+        const cx = xMuc(i) + cMuc / 2;
+        g.font = font(Math.round(40 * ty), true);
+        g.fillText(`MỨC ${m.muc}`, cx, y + caoDau * 0.44);
+        g.font = font(Math.round(26 * ty), false);
+        g.fillText(m.ten, cx, y + caoDau * 0.82);
+    });
+    g.textAlign = 'left';
+    y += caoDau;
+
+    // ── Các hàng tiêu chí ──
+    hang.forEach((h, i) => {
+        // Hàng chẵn tô xám rất nhạt cho dễ dò mắt, in ra không bị tối
+        if (i % 2 === 1) { g.fillStyle = '#f2f2f2'; g.fillRect(le, y, rongBang, h.cao); }
+
+        g.fillStyle = '#000000';
+        g.font = font(Math.round(30 * ty), true);
+        h.tenDong.forEach((d, k) => g.fillText(d, le + dem, y + dem + caoDong * (k + 0.75)));
+
+        g.font = font(coChu, false);
+        h.oDong.forEach((dong, j) => {
+            dong.forEach((d, k) => g.fillText(d, xMuc(j) + dem, y + dem + caoDong * (k + 0.75)));
+        });
+
+        // Kẻ ngang dưới mỗi hàng
+        g.strokeStyle = '#000000'; g.lineWidth = 1.5;
+        g.beginPath(); g.moveTo(le, y + h.cao); g.lineTo(le + rongBang, y + h.cao); g.stroke();
+        y += h.cao;
+    });
+
+    // Kẻ dọc chia cột
+    g.strokeStyle = '#000000'; g.lineWidth = 1.5;
+    const yDauBang = y - hang.reduce((s, h) => s + h.cao, 0) - caoDau;
+    for (let i = 0; i <= 4; i++) {
+        const x = le + cCot + cMuc * i;
+        g.beginPath(); g.moveTo(x, yDauBang); g.lineTo(x, y); g.stroke();
+    }
+    g.lineWidth = 3; g.strokeRect(le, yDauBang, rongBang, y - yDauBang);
+
+    // ── Chân trang: thang quy đổi + chỗ trống để ghi tay ──
+    y += 34;
+    g.fillStyle = '#000000'; g.font = font(28, true);
+    g.fillText('Mức trung bình của 4 tiêu chí, làm tròn, chính là số điểm cộng cả nhóm nhận được:', le, y);
+    y += 20;
+    const rongO = Math.round(rongBang / 4) - 14;
+    RUBRIC_MUC.forEach((m, i) => {
+        const x = le + (rongO + 14) * i;
+        g.lineWidth = 2; g.strokeStyle = '#000000'; g.strokeRect(x, y, rongO, 74);
+        g.textAlign = 'center'; g.font = font(34, true);
+        g.fillText(`Mức ${m.muc}  →  +${m.muc} điểm cộng`, x + rongO / 2, y + 48);
+        g.textAlign = 'left';
+    });
+    y += 74 + 34;
+    g.font = font(26, false); g.fillStyle = '#000000';
+    g.fillText('Nhóm: ..............................     Thành viên: ....................................................................................     Mức đạt: ..........     Điểm cộng: ..........', le, y);
+
+    // ── Tải về ──
+    const bo = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const d = new Date();
+    const ten = `Rubric_${bo(r.ten)}_${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}.png`;
+
+    cv.toBlob(blob => {
+        if (!blob) { showToast('Chưa tạo được ảnh, thử lại nhé!', false); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = ten;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        showToast('Đã tải ảnh rubric về máy — in ra phát cho các nhóm', true);
+    }, 'image/png');
 }
