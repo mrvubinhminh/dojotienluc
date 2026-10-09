@@ -61,8 +61,8 @@ function _bnCapNhatNutFull() {
     const n = document.getElementById('btnFullNhom');
     if (!n) return;
     n.innerHTML = _bnLaFull()
-        ? '<i class="fas fa-compress"></i> Thoát full'
-        : '<i class="fas fa-expand-arrows-alt"></i> Toàn màn hình';
+        ? '<i class="fas fa-compress"></i> Thoát full (F)'
+        : '<i class="fas fa-expand-arrows-alt"></i> Toàn màn hình (F)';
 }
 
 // ── Dựng khung ───────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ function _bnDungKhung() {
             <button onclick="bnTaiTatCa()" title="Tải tất cả ảnh đang xem về máy" class="w-9 h-9 rounded-lg bg-emerald-500 bg-opacity-50 text-white"><i class="fas fa-file-zipper"></i></button>
             <button onclick="bnXoaAnh()" title="Bỏ ảnh này" class="w-9 h-9 rounded-lg bg-red-500 bg-opacity-70 text-white"><i class="fas fa-trash"></i></button>
             <button onclick="bnAnThanh()" title="Ẩn thanh công cụ cho sạch màn hình" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-eye-slash"></i></button>
-            <button onclick="bnDoiFull()" id="bnBtnFull" title="Toàn màn hình" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-expand-arrows-alt"></i></button>
+            <button onclick="bnDoiFull()" id="bnBtnFull" title="Toàn màn hình (phím F)" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-expand-arrows-alt"></i></button>
           </div>
         </div>
 
@@ -731,3 +731,36 @@ async function bnTaiTatCa() {
     _bnHienTai = nho; _bnChieu(); _bnVeThumbs();
     if (typeof showToast === 'function') showToast(`Đã lưu ${xong}/${ds.length} ảnh đã chữa về máy`, xong > 0);
 }
+
+// ============================================================
+// PHÍM TẮT F — bật / tắt toàn màn hình
+// ------------------------------------------------------------
+// Dùng được ở mọi màn đang chiếu cho cả lớp: chia nhóm, kịch bản dạy học,
+// rubric, và chiếu bài làm. Bấm F lần nữa là thoát.
+// ============================================================
+
+// Các lớp phủ có thể chiếu, xếp theo thứ tự đè lên nhau (trên cùng trước)
+const BN_MAN_CHIEU = ['bnShow', 'kbStep', 'kbShow', 'rubricShow', 'groupResultOverlay'];
+
+function _bnManDangChieu() {
+    for (const id of BN_MAN_CHIEU) {
+        const e = document.getElementById(id);
+        if (e && !e.classList.contains('hidden')) return e;
+    }
+    return null;
+}
+
+function bnPhimF(e) {
+    if (e.key !== 'f' && e.key !== 'F') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;           // nhường Ctrl+F cho tìm kiếm
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+
+    const man = _bnManDangChieu();
+    if (!man) return;                                          // không có gì đang chiếu thì thôi
+    e.preventDefault();
+    if (_bnLaFull()) bnTatFull(); else bnBatFull(man);
+    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); }, 200);
+}
+
+document.addEventListener('keydown', bnPhimF);
