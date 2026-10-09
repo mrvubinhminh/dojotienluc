@@ -137,11 +137,13 @@ function _bnDungKhung() {
     cv.addEventListener('pointerdown', _bnBatDau);
     cv.addEventListener('pointermove', _bnDiChuyen);
     cv.addEventListener('wheel', _bnLanChuot, { passive: false });
+    cv.addEventListener('pointerleave', () => { _bnViTri = null; _bnVeConTro(); });
     window.addEventListener('pointerup', _bnKetThuc);
     window.addEventListener('resize', _bnDatKhung);
-    document.addEventListener('fullscreenchange', () => { _bnCapNhatNutFull(); _bnDatKhung(); });
+    document.addEventListener('fullscreenchange', () => { _bnCapNhatNutFull(); _bnDatKhung(); _bnCapNhatDock(); });
     document.addEventListener('keydown', _bnPhim);
     _bnVeHopMau();
+    _bnDungConTro();
 }
 
 function _bnPhim(e) {
@@ -156,6 +158,10 @@ function _bnPhim(e) {
         else closeBaiNhom();
     }
     else if (e.key === 'z' || e.key === 'Z') bnHoanTac();
+    // Dùng chữ cái chứ không dùng số: số đã dành cho việc gõ STT mở nhanh học sinh
+    else if (e.key === 'l' || e.key === 'L') bnDoiConTro('laser');   // Laser
+    else if (e.key === 'd' || e.key === 'D') bnDoiConTro('den');     // Đèn rọi
+    else if (e.key === 't' || e.key === 'T') bnDoiConTro('thanh');   // Thanh đọc
 }
 
 function _bnVeHopMau() {
@@ -188,21 +194,21 @@ function bnChonAnh() { document.getElementById('bnFile')?.click(); }
 function bnDoiFull() {
     const el = document.getElementById('bnShow');
     if (_bnLaFull()) bnTatFull(); else bnBatFull(el);
-    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); }, 200);
+    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); _bnCapNhatDock(); }, 200);
 }
 function bnAnThanh() {
     _bnAnThanh = true;
     document.getElementById('bnThanh').style.display = 'none';
     document.getElementById('bnDuoi').style.display = 'none';
     document.getElementById('bnBtnHien').classList.remove('hidden');
-    setTimeout(_bnDatKhung, 50);
+    setTimeout(() => { _bnDatKhung(); _bnCapNhatDock(); }, 50);
 }
 function bnHienThanh() {
     _bnAnThanh = false;
     document.getElementById('bnThanh').style.display = '';
     document.getElementById('bnDuoi').style.display = '';
     document.getElementById('bnBtnHien').classList.add('hidden');
-    setTimeout(_bnDatKhung, 50);
+    setTimeout(() => { _bnDatKhung(); _bnCapNhatDock(); }, 50);
 }
 
 // ── Nhận ảnh ─────────────────────────────────────────────────────────────────
@@ -230,7 +236,7 @@ function _bnNhanFile(files) {
     _bnVeTabs(); _bnVeThumbs(); _bnChieu();
     // Tải ảnh lên là vào thẳng toàn màn hình, không phải bấm thêm nút nào
     bnBatFull(document.getElementById('bnShow'));
-    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); }, 250);
+    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); _bnCapNhatDock(); }, 250);
     if (typeof showToast === 'function') showToast(`Đã thêm ${ds.length} ảnh bài làm`, true);
 }
 
@@ -327,6 +333,7 @@ function _bnDatKhung() {
         _bnVeLaiNet();
     }
     _bnApDungSoi();
+    _bnVeConTro();
 }
 
 // ── Bút đánh dấu ─────────────────────────────────────────────────────────────
@@ -364,6 +371,11 @@ function _bnBatDau(e) {
     _bnNetTam = { kieu: _bnKieu, mau: _bnMau, co: _bnCo, diem: [_bnToaDo(e)] };
 }
 function _bnDiChuyen(e) {
+    if (_bnConTro !== 'off') {
+        const r = e.currentTarget.getBoundingClientRect();
+        _bnViTri = { x: e.clientX - r.left, y: e.clientY - r.top };
+        _bnVeConTro();
+    }
     if (_bnLup) return;          // đang chọn chỗ soi thì không vẽ
     if (!_bnVe || !_bnNetTam) return;
     _bnNetTam.diem.push(_bnToaDo(e));
@@ -760,7 +772,127 @@ function bnPhimF(e) {
     if (!man) return;                                          // không có gì đang chiếu thì thôi
     e.preventDefault();
     if (_bnLaFull()) bnTatFull(); else bnBatFull(man);
-    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); }, 200);
+    setTimeout(() => { _bnCapNhatNutFull(); _bnDatKhung(); _bnCapNhatDock(); }, 200);
 }
 
 document.addEventListener('keydown', bnPhimF);
+
+// ============================================================
+// CON TRỎ CHỈ NỘI DUNG  +  CỤM NÚT NHỎ GỌN KHI CHIẾU TOÀN MÀN HÌNH
+// ------------------------------------------------------------
+// Toàn màn hình thì thanh công cụ bị ẩn đi cho sạch, nên có một cụm nút
+// nhỏ nổi ở cạnh dưới: đổi kiểu con trỏ, đổi bút, gọi Soi, hoàn tác.
+//
+// Ba kiểu con trỏ, chọn đúng ba kiểu dùng được nhất trên máy chiếu:
+//   🔴 Chấm laser  — chấm đỏ phát sáng, thay cho que chỉ, nhìn rõ từ cuối lớp
+//   💡 Đèn rọi     — tối hết xung quanh, chỉ sáng vòng tròn nơi đang chỉ
+//   ▭ Thanh đọc   — che trên che dưới, chừa một dải ngang để dò từng dòng
+// ============================================================
+
+const BN_CON_TRO = [
+    { id: 'laser', ten: 'Chấm laser (L)', icon: 'fa-circle-dot' },
+    { id: 'den',   ten: 'Đèn rọi (D)',    icon: 'fa-lightbulb' },
+    { id: 'thanh', ten: 'Thanh đọc (T)',  icon: 'fa-grip-lines' }
+];
+let _bnConTro = 'off';
+let _bnViTri  = null;      // vị trí con trỏ trên khung, px CSS
+
+function _bnDungConTro() {
+    const khung = document.getElementById('bnKhung');
+    if (!khung || document.getElementById('bnConTro')) return;
+    const d = document.createElement('div');
+    d.id = 'bnConTro';
+    d.className = 'absolute inset-0 pointer-events-none hidden';
+    d.style.zIndex = '5';
+    khung.appendChild(d);
+
+    const dock = document.createElement('div');
+    dock.id = 'bnDock';
+    dock.className = 'hidden absolute left-1/2 -translate-x-1/2 bottom-4 flex items-center gap-1.5 px-2.5 py-2 rounded-2xl';
+    dock.style.cssText += 'background:rgba(15,23,42,.82);backdrop-filter:blur(6px);box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:12';
+    document.getElementById('bnShow').appendChild(dock);
+    _bnVeDock();
+}
+
+function _bnVeDock() {
+    const dock = document.getElementById('bnDock');
+    if (!dock) return;
+    const nut = (goi, icon, ten, bat) => `
+        <button onclick="${goi}" title="${ten}"
+          class="w-11 h-11 rounded-xl flex items-center justify-center text-white text-lg transition ${bat ? 'bg-sky-500' : 'bg-white bg-opacity-15 hover:bg-opacity-25'}">
+          <i class="fas ${icon}"></i></button>`;
+    const vach = '<span class="w-px h-7 bg-white bg-opacity-25 mx-0.5"></span>';
+
+    dock.innerHTML =
+        BN_CON_TRO.map(c => nut(`bnDoiConTro('${c.id}')`, c.icon, c.ten, _bnConTro === c.id)).join('') +
+        vach +
+        BN_MAU.slice(0, 4).map(m => `
+          <button onclick="bnDockMau('${m.ma}')" title="Bút ${m.ten}"
+            class="w-8 h-8 rounded-lg border-2" style="background:${m.ma};border-color:${(_bnMau === m.ma && _bnKieu !== 'tay') ? '#fff' : 'transparent'}"></button>`).join('') +
+        nut('bnDoiKieu(\'daquang\');_bnVeDock()', 'fa-highlighter', 'Bút dạ quang', _bnKieu === 'daquang') +
+        nut('bnDoiKieu(\'tay\');_bnVeDock()', 'fa-eraser', 'Tẩy', _bnKieu === 'tay') +
+        nut('bnHoanTac()', 'fa-rotate-left', 'Hoàn tác (Z)', false) +
+        vach +
+        nut('bnBatLup();_bnVeDock()', 'fa-magnifying-glass-plus', 'Soi — bấm vào chỗ cần xem', _bnLup || _bnLupZoom > 1.01) +
+        nut('bnDoiAnh(-1)', 'fa-chevron-left', 'Ảnh trước (←)', false) +
+        nut('bnDoiAnh(1)', 'fa-chevron-right', 'Ảnh sau (→)', false) +
+        nut('bnThoatChieu()', 'fa-compress', 'Thoát toàn màn hình (F)', false);
+}
+
+function bnDockMau(ma) { bnDoiMau(ma); _bnVeDock(); }
+function bnThoatChieu() { if (_bnLaFull()) bnTatFull(); if (_bnAnThanh) bnHienThanh(); setTimeout(_bnCapNhatDock, 200); }
+
+// Cụm nút chỉ hiện khi đang toàn màn hình hoặc đã ẩn thanh công cụ
+function _bnCapNhatDock() {
+    _bnDungConTro();
+    const dock = document.getElementById('bnDock');
+    const show = document.getElementById('bnShow');
+    if (!dock || !show) return;
+    const dangChieu = !show.classList.contains('hidden') && (_bnLaFull() || _bnAnThanh);
+    dock.classList.toggle('hidden', !dangChieu);
+    dock.classList.toggle('flex', dangChieu);
+    if (dangChieu) _bnVeDock();
+    else { _bnConTro = 'off'; _bnVeConTro(); }
+}
+
+function bnDoiConTro(id) {
+    _bnConTro = (_bnConTro === id) ? 'off' : id;
+    const cv = document.getElementById('bnCanvas');
+    if (cv) cv.style.cursor = _bnConTro === 'laser' ? 'none' : (_bnLup ? 'zoom-in' : 'crosshair');
+    _bnVeDock(); _bnVeConTro();
+    if (_bnConTro !== 'off' && typeof showToast === 'function') {
+        showToast(BN_CON_TRO.find(c => c.id === _bnConTro).ten + ' — rê chuột để chỉ cho cả lớp', true);
+    }
+}
+
+function _bnVeConTro() {
+    const lop = document.getElementById('bnConTro');
+    const khung = document.getElementById('bnKhung');
+    if (!lop || !khung) return;
+    if (_bnConTro === 'off' || !_bnViTri) { lop.classList.add('hidden'); lop.style.background = 'none'; lop.innerHTML = ''; return; }
+
+    const W = khung.clientWidth, H = khung.clientHeight;
+    const { x, y } = _bnViTri;
+    lop.classList.remove('hidden');
+
+    if (_bnConTro === 'laser') {
+        lop.style.background = 'none';
+        const d = Math.round(Math.min(W, H) * 0.035);
+        lop.innerHTML = `<div style="position:absolute;left:${x - d}px;top:${y - d}px;width:${d * 2}px;height:${d * 2}px;
+            border-radius:50%;background:radial-gradient(circle,#ff2d2d 0%,#ff5252 38%,rgba(255,60,60,.45) 62%,rgba(255,60,60,0) 100%);
+            box-shadow:0 0 ${d}px ${Math.round(d / 2)}px rgba(255,40,40,.55)"></div>`;
+    } else if (_bnConTro === 'den') {
+        lop.innerHTML = '';
+        const r = Math.round(Math.min(W, H) * 0.17);
+        lop.style.background = `radial-gradient(circle ${r}px at ${x}px ${y}px,
+            rgba(0,0,0,0) 0, rgba(0,0,0,0) ${r - 18}px, rgba(0,0,0,.78) ${r + 10}px, rgba(0,0,0,.78) 100%)`;
+    } else {
+        lop.innerHTML = '';
+        const nua = Math.round(H * 0.085);
+        const tren = Math.max(0, y - nua), duoi = Math.min(H, y + nua);
+        lop.style.background = `linear-gradient(to bottom,
+            rgba(0,0,0,.8) 0px, rgba(0,0,0,.8) ${tren}px,
+            rgba(0,0,0,0) ${tren + 6}px, rgba(0,0,0,0) ${duoi - 6}px,
+            rgba(0,0,0,.8) ${duoi}px, rgba(0,0,0,.8) 100%)`;
+    }
+}

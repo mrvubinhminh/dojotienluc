@@ -18,6 +18,11 @@ document.addEventListener('keydown', (e) => {
     const typingModal = document.getElementById('typingPlayModal');
     if (typingModal && !typingModal.classList.contains('hidden')) return;
 
+    // Đang chiếu cho cả lớp thì bỏ qua: hộp gõ số STT sẽ che mất nội dung đang chiếu
+    const dangChieu = ['bnShow', 'kbStep', 'kbShow', 'rubricShow']
+        .some(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); });
+    if (dangChieu) return;
+
     const key = e.key.toUpperCase();
 
 
