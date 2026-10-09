@@ -33,10 +33,10 @@ let _bnKieu   = 'but';   // 'but' | 'daquang' | 'tay'
 let _bnMau    = BN_MAU[0].ma;
 let _bnCo     = BN_CO[1].px;
 let _bnVe     = false;
-let _bnLup     = false;    // đang bật kính lúp?
-let _bnLupTuDong = true;   // để máy tự chọn độ phóng vừa đủ
-let _bnLupZoom = 3;        // độ phóng đang dùng
-const BN_LUP_D = 300;      // đường kính kính lúp, px CSS
+let _bnLup     = false;         // đang ở chế độ chọn chỗ để soi?
+let _bnLupTuDong = true;        // để máy tự chọn mức phóng vừa đủ
+let _bnLupZoom = 1;             // 1 = xem toàn ảnh
+let _bnLupTam  = { x: 0.5, y: 0.5 };  // tâm vùng đang soi, theo tỉ lệ 0..1 của khung
 let _bnNetTam = null;
 let _bnAnThanh = false;
 
@@ -91,7 +91,7 @@ function _bnDungKhung() {
             <button onclick="bnHoanTac()" title="Hoàn tác" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-rotate-left"></i></button>
             <button onclick="bnXoaNet()" title="Xoá hết nét vẽ" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-broom"></i></button>
             <span class="w-px h-7 bg-white bg-opacity-20 mx-0.5"></span>
-            <button onclick="bnBatLup()" id="bnBtnLup" title="Kính lúp — rê chuột để soi rõ chỗ bất kỳ" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-magnifying-glass-plus"></i></button>
+            <button onclick="bnBatLup()" id="bnBtnLup" title="Soi — bấm vào chỗ cần xem, cả màn hình phóng to chỗ đó" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-magnifying-glass-plus"></i></button>
             <button onclick="bnXoay()" title="Xoay ảnh" class="w-9 h-9 rounded-lg bg-white bg-opacity-15 text-white"><i class="fas fa-rotate"></i></button>
             <button onclick="bnTaiAnhDaChua()" title="Tải ảnh đã chữa của bài này về máy" class="w-9 h-9 rounded-lg bg-emerald-500 bg-opacity-80 text-white"><i class="fas fa-download"></i></button>
             <button onclick="bnTaiTatCa()" title="Tải tất cả ảnh đang xem về máy" class="w-9 h-9 rounded-lg bg-emerald-500 bg-opacity-50 text-white"><i class="fas fa-file-zipper"></i></button>
@@ -102,13 +102,15 @@ function _bnDungKhung() {
         </div>
 
         <div class="flex-1 min-h-0 flex items-center justify-center p-1">
-          <div id="bnKhung" class="relative" style="background:#000;max-width:100%;max-height:100%">
-            <img id="bnImg" alt="Bài làm của nhóm" style="display:block;width:100%;height:100%;object-fit:contain">
+          <div id="bnKhung" class="relative overflow-hidden" style="background:#000;max-width:100%;max-height:100%">
+            <img id="bnImg" alt="Bài làm của nhóm" style="display:block;width:100%;height:100%;object-fit:contain;transform-origin:0 0">
             <canvas id="bnCanvas" class="absolute inset-0" style="touch-action:none;cursor:crosshair"></canvas>
-            <canvas id="bnLupCv" class="absolute hidden pointer-events-none"
-                    style="border-radius:50%;box-shadow:0 0 0 5px rgba(255,255,255,.9),0 12px 40px rgba(0,0,0,.6);background:#000"></canvas>
-            <div id="bnLupNhan" class="absolute hidden pointer-events-none px-3 py-1 rounded-lg font-black text-white"
-                 style="background:rgba(0,0,0,.7);font-size:14px"></div>
+            <div id="bnLupNhan" class="absolute hidden pointer-events-none left-3 bottom-3 px-4 py-2 rounded-xl font-black text-white"
+                 style="background:rgba(14,165,233,.85);font-size:clamp(.9rem,1.6vw,1.4rem)"></div>
+            <button onclick="bnVeToanAnh()" id="bnBtnVeAnh" class="hidden absolute right-3 bottom-3 px-4 py-2 rounded-xl font-black text-white"
+                    style="background:rgba(0,0,0,.6);font-size:clamp(.85rem,1.4vw,1.2rem)">
+              <i class="fas fa-compress mr-1"></i> Toàn ảnh
+            </button>
             <div id="bnNhan" class="absolute left-3 top-3 px-4 py-1.5 rounded-xl font-black text-white pointer-events-none"
                  style="background:rgba(0,0,0,.55);font-size:clamp(1rem,2.2vw,2rem)"></div>
             <button onclick="bnHienThanh()" id="bnBtnHien" class="hidden absolute right-3 top-3 w-11 h-11 rounded-xl bg-black bg-opacity-50 text-white"><i class="fas fa-eye"></i></button>
@@ -134,7 +136,6 @@ function _bnDungKhung() {
     const cv = document.getElementById('bnCanvas');
     cv.addEventListener('pointerdown', _bnBatDau);
     cv.addEventListener('pointermove', _bnDiChuyen);
-    cv.addEventListener('pointerleave', _bnAnLup);
     cv.addEventListener('wheel', _bnLanChuot, { passive: false });
     window.addEventListener('pointerup', _bnKetThuc);
     window.addEventListener('resize', _bnDatKhung);
@@ -149,7 +150,11 @@ function _bnPhim(e) {
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); bnDoiAnh(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); bnDoiAnh(-1); }
-    else if (e.key === 'Escape') { if (_bnAnThanh) bnHienThanh(); else closeBaiNhom(); }
+    else if (e.key === 'Escape') {
+        if (_bnLupZoom > 1.01) bnVeToanAnh();
+        else if (_bnAnThanh) bnHienThanh();
+        else closeBaiNhom();
+    }
     else if (e.key === 'z' || e.key === 'Z') bnHoanTac();
 }
 
@@ -272,7 +277,7 @@ function _bnVeThumbs() {
     }).join('');
 }
 
-function bnToiAnh(i) { _bnHienTai = i; _bnVeThumbs(); _bnChieu(); }
+function bnToiAnh(i) { _bnHienTai = i; _bnLupZoom = 1; _bnLupTam = { x: 0.5, y: 0.5 }; _bnVeThumbs(); _bnChieu(); }
 function bnDoiAnh(d) {
     const ds = _bnDanhSach();
     if (!ds.length) return;
@@ -295,11 +300,7 @@ function _bnChieu() {
     if (img.getAttribute('src') !== a.url) img.src = a.url;
     img.style.transform = _bnBienHinh(a);
     if (nhan) nhan.innerText = a.nhom ? `Nhóm ${a.nhom}` : (a.ten || '');
-    img.onload = () => {
-        _bnDatKhung();
-        if (_bnLupTuDong) _bnLupZoom = _bnZoomVuaDu();
-    };
-    _bnAnLup();
+    img.onload = () => _bnDatKhung();
     _bnDatKhung();
 }
 
@@ -325,11 +326,7 @@ function _bnDatKhung() {
         cv.style.height = h + 'px';
         _bnVeLaiNet();
     }
-    const a = _bnAnhHienTai();
-    const img = document.getElementById('bnImg');
-    if (a && img) img.style.transform = _bnBienHinh(a);
-    if (_bnLup && _bnLupTuDong) _bnLupZoom = _bnZoomVuaDu();
-    _bnAnLup();
+    _bnApDungSoi();
 }
 
 // ── Bút đánh dấu ─────────────────────────────────────────────────────────────
@@ -352,23 +349,22 @@ function _bnCapNhatNutKieu() {
 function _bnToaDo(e) {
     const cv = document.getElementById('bnCanvas');
     const r = cv.getBoundingClientRect();
-    // Lưu theo tỉ lệ 0..1 để không lệch khi đổi kích thước màn hình
-    return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    // Gỡ phép phóng trước đã, rồi mới lưu theo tỉ lệ 0..1 của khung gốc —
+    // nhờ vậy vẽ lúc đang soi vẫn ghi đúng chỗ trên bài làm.
+    const { tx, ty, z } = _bnTinhTien(r.width, r.height);
+    return { x: ((e.clientX - r.left) - tx) / z / r.width,
+             y: ((e.clientY - r.top) - ty) / z / r.height };
 }
 function _bnBatDau(e) {
     if (!_bnAnhHienTai()) return;
-    if (_bnLup) { const r = e.currentTarget.getBoundingClientRect(); _bnVeLup(e.clientX - r.left, e.clientY - r.top); return; }
+    if (_bnLup) { const r = e.currentTarget.getBoundingClientRect(); _bnSoiTai(e.clientX - r.left, e.clientY - r.top); return; }
     _bnVe = true;
     // Một số trình duyệt ném lỗi nếu con trỏ không còn hợp lệ — bắt lấy cho chắc
     try { document.getElementById('bnCanvas').setPointerCapture?.(e.pointerId); } catch { /* không bắt được con trỏ cũng vẽ được */ }
     _bnNetTam = { kieu: _bnKieu, mau: _bnMau, co: _bnCo, diem: [_bnToaDo(e)] };
 }
 function _bnDiChuyen(e) {
-    if (_bnLup) {
-        const r = e.currentTarget.getBoundingClientRect();
-        _bnVeLup(e.clientX - r.left, e.clientY - r.top);
-        return;
-    }
+    if (_bnLup) return;          // đang chọn chỗ soi thì không vẽ
     if (!_bnVe || !_bnNetTam) return;
     _bnNetTam.diem.push(_bnToaDo(e));
     _bnVeLaiNet();
@@ -397,8 +393,7 @@ function bnXoaNet() {
 function bnXoay() {
     const a = _bnAnhHienTai(); if (!a) return;
     a.xoay = (a.xoay + 90) % 360;
-    document.getElementById('bnImg').style.transform = _bnBienHinh(a);
-    _bnAnLup();
+    _bnApDungSoi();
 }
 function bnXoaAnh() {
     const a = _bnAnhHienTai(); if (!a) return;
@@ -414,69 +409,100 @@ function _bnVeLaiNet() {
     const cv = document.getElementById('bnCanvas');
     if (!cv) return;
     const g = cv.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, cv.width, cv.height);
     const a = _bnAnhHienTai();
     if (!a) return;
     const ds = (_bnNet[a.id] || []).concat(_bnNetTam ? [_bnNetTam] : []);
     const dpr = window.devicePixelRatio || 1;
+    // Nét bút phóng theo ảnh: soi vào chỗ đã khoanh thì vết khoanh cũng to lên
+    const { tx, ty, z } = _bnTinhTien(cv.width / dpr, cv.height / dpr);
+    g.setTransform(dpr, 0, 0, dpr, tx * dpr, ty * dpr);
+    g.scale(z, z);
     g.lineCap = 'round'; g.lineJoin = 'round';
 
     for (const n of ds) {
         if (n.diem.length < 1) continue;
         g.beginPath();
+        const W = cv.width / dpr, H = cv.height / dpr;
         n.diem.forEach((p, i) => {
-            const x = p.x * cv.width, y = p.y * cv.height;
+            const x = p.x * W, y = p.y * H;
             if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
         });
         if (n.kieu === 'tay') {
             g.globalCompositeOperation = 'destination-out';
-            g.lineWidth = n.co * 4 * dpr;
+            g.lineWidth = n.co * 4;
             g.strokeStyle = 'rgba(0,0,0,1)';
             g.globalAlpha = 1;
         } else if (n.kieu === 'daquang') {
             g.globalCompositeOperation = 'source-over';
-            g.lineWidth = n.co * 3.2 * dpr;
+            g.lineWidth = n.co * 3.2;
             g.strokeStyle = n.mau;
             g.globalAlpha = 0.38;
         } else {
             g.globalCompositeOperation = 'source-over';
-            g.lineWidth = n.co * dpr;
+            g.lineWidth = n.co;
             g.strokeStyle = n.mau;
             g.globalAlpha = 1;
         }
         // Chấm một điểm cũng phải thấy được
         if (n.diem.length === 1) {
             const p = n.diem[0];
-            g.lineTo(p.x * cv.width + 0.1, p.y * cv.height + 0.1);
+            g.lineTo(p.x * W + 0.1, p.y * H + 0.1);
         }
         g.stroke();
     }
+    g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'source-over';
     g.globalAlpha = 1;
 }
 
 // ============================================================
-// KÍNH LÚP — soi rõ một vùng bất kỳ của ảnh
+// SOI — phóng to một vùng 16:9 quanh điểm cần xem, chiếm TRỌN màn hình
 // ------------------------------------------------------------
-// "Vừa đủ" nghĩa là phóng tới đúng lúc nhìn thấy ảnh ở độ phân giải
-// GỐC của file (1 điểm ảnh ảnh = 1 điểm ảnh màn hình). Phóng hơn nữa chỉ
-// được ảnh to mà mờ, không thêm chi tiết nào. Vì vậy độ phóng tự tính là
+// Bật nút Soi rồi bấm vào chỗ nào trên bài làm, cả màn hình sẽ thành
+// đúng vùng quanh chỗ đó, phóng to hết cỡ để cả lớp cùng nhìn rõ. Bấm
+// chỗ khác là chuyển sang soi chỗ đó. Vùng soi luôn là hình chữ nhật
+// 16:9 giống khung chiếu, nên không bao giờ hở viền đen.
+//
+// "Vừa đủ" nghĩa là phóng tới đúng lúc nhìn thấy ảnh ở độ phân giải GỐC
+// của file (1 điểm ảnh ảnh = 1 điểm ảnh màn hình). Phóng hơn nữa chỉ
+// được to mà mờ. Vì vậy mức phóng tự tính là
 //      zoom = (bề rộng gốc của ảnh) / (bề rộng ảnh đang hiển thị)
-// rồi kẹp trong khoảng 2–6 lần: ảnh chụp điện thoại thường cho 3–5 lần,
-// ảnh độ phân giải thấp vẫn được phóng tối thiểu 2 lần cho dễ đọc.
+// kẹp trong 1,5–6 lần.
 // ============================================================
 
 // Ảnh xoay 90° hay 270° thì phải thu nhỏ lại mới nằm lọt trong khung 16:9
+function _bnHeSoXoay(a, W, H) {
+    return (!a || a.xoay % 180 === 0 || !W || !H) ? 1 : Math.min(W / H, H / W);
+}
+
+// Giới hạn tâm soi để vùng soi không chạy ra ngoài khung (khỏi hở viền đen)
+function _bnChanTam() {
+    const nua = 0.5 / _bnLupZoom;
+    _bnLupTam.x = Math.min(1 - nua, Math.max(nua, _bnLupTam.x));
+    _bnLupTam.y = Math.min(1 - nua, Math.max(nua, _bnLupTam.y));
+}
+
+// Phép tịnh tiến đưa tâm soi về giữa khung
+function _bnTinhTien(W, H) {
+    const z = _bnLupZoom;
+    return { tx: W / 2 - _bnLupTam.x * W * z, ty: H / 2 - _bnLupTam.y * H * z, z };
+}
+
+// Phép biến hình của thẻ ảnh: xoay + thu cho vừa khung, rồi mới phóng và dời
 function _bnBienHinh(a) {
     const khung = document.getElementById('bnKhung');
     if (!khung || !a) return 'none';
     const W = khung.clientWidth, H = khung.clientHeight;
-    const s = (a.xoay % 180 === 0 || !W || !H) ? 1 : Math.min(W / H, H / W);
-    return `rotate(${a.xoay}deg) scale(${s})`;
+    const s = _bnHeSoXoay(a, W, H);
+    const { tx, ty, z } = _bnTinhTien(W, H);
+    // Gốc toạ độ đặt ở góc trái trên nên phải tự xoay quanh tâm khung
+    return `translate(${tx}px, ${ty}px) scale(${z}) translate(${W / 2}px, ${H / 2}px) `
+         + `rotate(${a.xoay}deg) scale(${s}) translate(${-W / 2}px, ${-H / 2}px)`;
 }
 
-// Số liệu hình học của ảnh đang chiếu: cỡ khung, hệ số thu nhỏ của
-// object-fit:contain, góc xoay và hệ số scale do xoay.
+// Số liệu hình học của ảnh khi CHƯA phóng — dùng cho ánh xạ và cho ảnh xuất ra
 function _bnHinhHoc() {
     const khung = document.getElementById('bnKhung');
     const img = document.getElementById('bnImg');
@@ -484,119 +510,95 @@ function _bnHinhHoc() {
     if (!khung || !img || !a || !img.naturalWidth) return null;
     const W = khung.clientWidth, H = khung.clientHeight;
     const nw = img.naturalWidth, nh = img.naturalHeight;
-    const k = Math.min(W / nw, H / nh);              // contain: ảnh bị thu nhỏ bấy nhiêu lần
-    const s = (a.xoay % 180 === 0) ? 1 : Math.min(W / H, H / W);
+    const k = Math.min(W / nw, H / nh);
+    const s = _bnHeSoXoay(a, W, H);
     return { W, H, nw, nh, k, s, goc: a.xoay, rongHienThi: nw * k * s };
 }
 
-// Độ phóng vừa đủ để nhìn ảnh ở đúng độ phân giải gốc
+// Mức phóng vừa đủ để nhìn ảnh ở đúng độ phân giải gốc
 function _bnZoomVuaDu() {
     const h = _bnHinhHoc();
     if (!h) return 3;
-    const can = 1 / (h.k * h.s);                    // phóng bấy nhiêu là về đúng cỡ gốc
-    return Math.round(Math.min(6, Math.max(2, can)) * 10) / 10;
+    return Math.round(Math.min(6, Math.max(1.5, 1 / (h.k * h.s))) * 10) / 10;
 }
 
-// Đổi một điểm trên khung (px CSS) thành toạ độ điểm ảnh của file gốc
+// Đổi điểm trên khung (px CSS, đã gỡ phóng) thành toạ độ điểm ảnh của file gốc
 function _bnKhungSangAnh(x, y, h) {
     const cx = h.W / 2, cy = h.H / 2;
-    // Gỡ ngược phép biến hình CSS: rotate(góc) scale(s)
     const rad = -h.goc * Math.PI / 180;
     const dx = (x - cx) / h.s, dy = (y - cy) / h.s;
     const ix = cx + dx * Math.cos(rad) - dy * Math.sin(rad);
     const iy = cy + dx * Math.sin(rad) + dy * Math.cos(rad);
-    // Gỡ ngược object-fit: contain
     const dw = h.nw * h.k, dh = h.nh * h.k;
     return { x: (ix - (h.W - dw) / 2) / h.k, y: (iy - (h.H - dh) / 2) / h.k };
 }
 
+// Áp dụng mức phóng hiện tại lên ảnh, nét bút và nhãn
+function _bnApDungSoi() {
+    const khung = document.getElementById('bnKhung');
+    const img = document.getElementById('bnImg');
+    const a = _bnAnhHienTai();
+    if (!khung) return;
+    _bnChanTam();
+    if (img && a) img.style.transform = _bnBienHinh(a);
+    _bnVeLaiNet();
+
+    const nhan = document.getElementById('bnLupNhan');
+    if (nhan) {
+        if (_bnLupZoom > 1.01) {
+            nhan.innerHTML = `Đang soi ${_bnLupZoom}×`;
+            nhan.classList.remove('hidden');
+        } else nhan.classList.add('hidden');
+    }
+    const ve = document.getElementById('bnBtnVeAnh');
+    if (ve) ve.classList.toggle('hidden', _bnLupZoom <= 1.01);
+}
+
+// Bật / tắt chế độ soi
 function bnBatLup() {
+    if (_bnLupZoom > 1.01) { bnVeToanAnh(); return; }   // đang soi thì bấm nữa là về toàn ảnh
     _bnLup = !_bnLup;
-    if (_bnLup && _bnLupTuDong) _bnLupZoom = _bnZoomVuaDu();
     const n = document.getElementById('bnBtnLup');
     if (n) n.className = `w-9 h-9 rounded-lg text-white ${_bnLup ? 'bg-sky-500' : 'bg-white bg-opacity-15'}`;
     const cv = document.getElementById('bnCanvas');
     if (cv) cv.style.cursor = _bnLup ? 'zoom-in' : 'crosshair';
-    if (!_bnLup) _bnAnLup();
-    else if (typeof showToast === 'function') showToast(`Kính lúp ${_bnLupZoom}× — rê chuột lên ảnh, lăn chuột để chỉnh`, true);
+    if (_bnLup && typeof showToast === 'function') showToast('Bấm vào chỗ cần soi — cả màn hình sẽ phóng to chỗ đó', true);
 }
 
-function _bnAnLup() {
-    document.getElementById('bnLupCv')?.classList.add('hidden');
-    document.getElementById('bnLupNhan')?.classList.add('hidden');
+// Soi vào một điểm của khung (px CSS, toạ độ màn hình đang thấy)
+function _bnSoiTai(x, y) {
+    const khung = document.getElementById('bnKhung');
+    if (!khung) return;
+    const W = khung.clientWidth, H = khung.clientHeight;
+    // Gỡ phép phóng hiện tại để ra toạ độ gốc của khung
+    const { tx, ty, z } = _bnTinhTien(W, H);
+    const gx = (x - tx) / z, gy = (y - ty) / z;
+    if (_bnLupTuDong) _bnLupZoom = _bnZoomVuaDu();
+    if (_bnLupZoom <= 1.01) _bnLupZoom = 2;
+    _bnLupTam = { x: gx / W, y: gy / H };
+    _bnApDungSoi();
 }
 
-function _bnVeLup(x, y) {
-    const cv = document.getElementById('bnLupCv');
-    const nhan = document.getElementById('bnLupNhan');
-    const img = document.getElementById('bnImg');
-    const h = _bnHinhHoc();
-    if (!cv || !h || !img) { _bnAnLup(); return; }
-
-    const D = Math.min(BN_LUP_D, Math.round(Math.min(h.W, h.H) * 0.55));
-    const dpr = window.devicePixelRatio || 1;
-    cv.width = Math.round(D * dpr); cv.height = Math.round(D * dpr);
-    cv.style.width = D + 'px'; cv.style.height = D + 'px';
-    // Đặt kính lúp lệch lên trên con trỏ cho khỏi che chỗ đang soi
-    let lx = x - D / 2, ly = y - D - 24;
-    if (ly < 4) ly = y + 24;
-    lx = Math.max(4, Math.min(h.W - D - 4, lx));
-    ly = Math.max(4, Math.min(h.H - D - 4, ly));
-    cv.style.left = lx + 'px'; cv.style.top = ly + 'px';
-    cv.classList.remove('hidden');
-
-    const g = cv.getContext('2d');
-    g.save();
-    g.scale(dpr, dpr);
-    g.clearRect(0, 0, D, D);
-
-    // 1) Vùng ảnh gốc tương ứng, vẽ phóng to
-    const tam = _bnKhungSangAnh(x, y, h);
-    const canh = (D / _bnLupZoom) / (h.k * h.s);      // bề rộng vùng lấy, tính bằng điểm ảnh gốc
-    g.save();
-    g.translate(D / 2, D / 2);
-    g.rotate(h.goc * Math.PI / 180);
-    try {
-        g.drawImage(img, tam.x - canh / 2, tam.y - canh / 2, canh, canh, -D / 2, -D / 2, D, D);
-    } catch { /* ảnh chưa tải xong */ }
-    g.restore();
-
-    // 2) Nét bút cũng phải phóng theo, nếu không soi vào chỗ đã chữa lại không thấy gì
-    const a = _bnAnhHienTai();
-    const nets = (_bnNet[a?.id] || []).concat(_bnNetTam ? [_bnNetTam] : []);
-    g.lineCap = 'round'; g.lineJoin = 'round';
-    for (const n of nets) {
-        if (!n.diem.length) continue;
-        g.beginPath();
-        n.diem.forEach((p, i) => {
-            const px = (p.x * h.W - x) * _bnLupZoom + D / 2;
-            const py = (p.y * h.H - y) * _bnLupZoom + D / 2;
-            if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
-        });
-        if (n.kieu === 'tay') { g.globalCompositeOperation = 'destination-out'; g.lineWidth = n.co * 4 * _bnLupZoom; g.globalAlpha = 1; }
-        else if (n.kieu === 'daquang') { g.globalCompositeOperation = 'source-over'; g.lineWidth = n.co * 3.2 * _bnLupZoom; g.strokeStyle = n.mau; g.globalAlpha = 0.38; }
-        else { g.globalCompositeOperation = 'source-over'; g.lineWidth = n.co * _bnLupZoom; g.strokeStyle = n.mau; g.globalAlpha = 1; }
-        if (n.diem.length === 1) g.lineTo((n.diem[0].x * h.W - x) * _bnLupZoom + D / 2 + 0.1, (n.diem[0].y * h.H - y) * _bnLupZoom + D / 2 + 0.1);
-        g.stroke();
-    }
-    g.restore();
-
-    if (nhan) {
-        nhan.innerText = `${_bnLupZoom}×${_bnLupTuDong ? ' (tự chọn)' : ''}`;
-        nhan.style.left = lx + 'px';
-        nhan.style.top = (ly + D + 6) + 'px';
-        nhan.classList.remove('hidden');
-    }
+function bnVeToanAnh() {
+    _bnLupZoom = 1;
+    _bnLupTam = { x: 0.5, y: 0.5 };
+    _bnLup = false;
+    const n = document.getElementById('bnBtnLup');
+    if (n) n.className = 'w-9 h-9 rounded-lg text-white bg-white bg-opacity-15';
+    const cv = document.getElementById('bnCanvas');
+    if (cv) cv.style.cursor = 'crosshair';
+    _bnApDungSoi();
 }
 
-// Lăn chuột để chỉnh tay độ phóng
+// Lăn chuột để chỉnh mức phóng, giữ nguyên chỗ đang soi
 function _bnLanChuot(e) {
-    if (!_bnLup) return;
+    if (_bnLupZoom <= 1.01 && !_bnLup) return;
     e.preventDefault();
     _bnLupTuDong = false;
-    _bnLupZoom = Math.round(Math.min(8, Math.max(1.5, _bnLupZoom + (e.deltaY < 0 ? 0.5 : -0.5))) * 10) / 10;
-    const r = document.getElementById('bnCanvas').getBoundingClientRect();
-    _bnVeLup(e.clientX - r.left, e.clientY - r.top);
+    const cu = _bnLupZoom;
+    _bnLupZoom = Math.round(Math.min(8, Math.max(1, cu + (e.deltaY < 0 ? 0.5 : -0.5))) * 10) / 10;
+    if (_bnLupZoom <= 1.01) { bnVeToanAnh(); return; }
+    _bnApDungSoi();
 }
 
 // ============================================================
