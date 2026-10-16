@@ -67,7 +67,8 @@ let _vqTrung     = [];     // [{ stt, name, giai, diem }]
 let _vqGoc      = 0;
 let _vqDangQuay = false;
 let _vqDuoiKim  = -1;
-let _vqIdLichSu = null;    // id dòng lịch sử vừa ghi, để hoàn tác bỏ đúng dòng      // nan đang nằm dưới kim, để biết lúc nào kim nảy
+let _vqIdLichSu = null;    // id dòng lịch sử vừa ghi, để hoàn tác bỏ đúng dòng
+let _vqPha      = 0;       // pha của vệt sáng chạy quanh vòng    // id dòng lịch sử vừa ghi, để hoàn tác bỏ đúng dòng      // nan đang nằm dưới kim, để biết lúc nào kim nảy
 
 // ── Bảng màu, khoảng cách: khai báo một chỗ, không viết cứng trong từng ô ──
 function _vqDungKieu() {
@@ -98,9 +99,13 @@ function _vqDungKieu() {
 .vq-ghost:hover{background:var(--vq-vien)}
 .vq-ghost:active{transform:scale(.97)}
 
-.vq-prize{flex-shrink:0;margin:0 auto var(--vq-2);padding:var(--vq-2) var(--vq-4);
-  border-radius:999px;background:var(--vq-mat);border:1px solid var(--vq-vien);
-  display:flex;align-items:center;gap:var(--vq-3);max-width:94vw}
+.vq-prize{padding:var(--vq-2) var(--vq-4);border-radius:999px;background:var(--vq-mat);
+  border:1px solid var(--vq-vien);display:flex;align-items:center;gap:var(--vq-3);max-width:94vw}
+@media(min-width:900px){
+  .vq-prize{flex-direction:column;gap:var(--vq-1);text-align:center;border-radius:var(--vq-r-to);
+    padding:var(--vq-4) var(--vq-3);justify-self:end;align-self:center;max-width:300px}
+  .vq-prize .ico{font-size:clamp(2.4rem,4.4vw,3.6rem)}
+}
 .vq-prize .ico{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1}
 .vq-prize .ten{font-weight:900;font-size:clamp(1.1rem,2.8vw,2rem);line-height:1.1}
 .vq-prize .diem{font-weight:900;color:var(--vq-vang);font-size:clamp(.95rem,2vw,1.4rem)}
@@ -111,15 +116,19 @@ function _vqDungKieu() {
 /* Màn hẹp: xếp dọc và CHO CUỘN, không để các khối đè lên nhau */
 .vq-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr;justify-items:center;
   align-content:center;gap:var(--vq-3);padding:0 var(--vq-3);overflow-y:auto}
-.vq-main .vq-chen{display:none}
 @media(min-width:900px){
-  .vq-main{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center}
-  .vq-main .vq-chen{display:block}
-  .vq-main .vq-rail{justify-self:start;max-width:300px}
+  .vq-main{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+           grid-template-rows:minmax(0,1fr);align-items:stretch;overflow:hidden}
+  .vq-main .vq-rail{justify-self:start;align-self:center;max-width:300px}
 }
-.vq-wheel{position:relative;line-height:0}
-.vq-wheel canvas{max-width:min(72vw,30vh);height:auto;display:block}
-@media(min-width:900px){.vq-wheel canvas{max-width:min(82vw,42vh)}}
+/* Vòng quay lớn nhất có thể trong chỗ CÒN TRỐNG, chứ không ấn định một con
+   số vh — ấn định thì máy 768px cao sẽ bị vòng đè lên ô giải và nút QUAY. */
+.vq-wheel{position:relative;line-height:0;display:flex;align-items:center;justify-content:center;min-height:0}
+.vq-wheel canvas{max-width:min(80vw,34vh);height:auto;display:block}
+@media(min-width:900px){
+  .vq-wheel{height:100%}
+  .vq-wheel canvas{max-width:min(88vw,60vh);max-height:100%;width:auto;height:auto}
+}
 .vq-kim{position:absolute;left:50%;top:-4px;transform:translateX(-50%);z-index:2;
   transform-origin:50% 10%;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
 .vq-kim-tam{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;
@@ -229,16 +238,15 @@ function _vqDungKhung() {
           </div>
         </header>
 
-        <!-- Giải đang quay: luôn đứng yên một chỗ nên mắt không phải đi tìm -->
-        <div id="vqGiaiHienTai" class="vq-prize" aria-live="polite"></div>
-
         <main class="vq-main">
-          <div class="vq-chen" aria-hidden="true"></div>
+          <!-- Giải đang quay nằm ở cột trái vốn bỏ trống, nhờ vậy vòng quay
+               được trọn chiều cao còn lại. Luôn đứng yên một chỗ. -->
+          <div id="vqGiaiHienTai" class="vq-prize" aria-live="polite"></div>
           <div class="vq-wheel">
             <div id="vqKim" class="vq-kim" aria-hidden="true">
               <div class="vq-kim-tam"></div>
             </div>
-            <canvas id="vqCanvas" width="520" height="520" role="img" aria-label="Vòng quay số thứ tự học sinh"></canvas>
+            <canvas id="vqCanvas" width="760" height="760" role="img" aria-label="Vòng quay số thứ tự học sinh"></canvas>
           </div>
           <aside id="vqDaTrung" class="vq-rail" aria-label="Danh sách đã trúng thưởng"></aside>
         </main>
@@ -440,21 +448,48 @@ function vqHoanTac() {
     if (typeof showToast === 'function') showToast(`Đã hoàn tác: ${t.name} −${t.diem} điểm`, false);
 }
 
-function _vqVeVong(sang = -1) {
+function _vqVeVong(sang = -1, pha = null) {
     const cv = document.getElementById('vqCanvas');
     if (!cv) return;
     const g = cv.getContext('2d');
-    const cx = cv.width / 2, cy = cv.height / 2, r = cx - 6;
+    const ty = cv.width / 520;                 // vòng vẽ to hơn thì chữ, nét dày theo
+    const vienNgoai = 14 * ty;                 // chừa chỗ cho quầng sáng
+    const cx = cv.width / 2, cy = cv.height / 2, r = cx - vienNgoai;
     g.clearRect(0, 0, cv.width, cv.height);
     if (!_vqDuThi.length) return;
 
-    const goc = (2 * Math.PI) / _vqDuThi.length;
+    const n = _vqDuThi.length;
+    const goc = (2 * Math.PI) / n;
+    const dangQuay = pha !== null;
+
+    // Quầng sáng ngoài đập theo nhịp, cho vòng quay nổi hẳn trên nền tối
+    if (dangQuay) {
+        const nhip = 0.5 + 0.5 * Math.sin(pha * 2);
+        g.save();
+        g.globalCompositeOperation = 'lighter';     // cộng sáng cho ra vẻ phát quang
+        g.beginPath(); g.arc(cx, cy, r + vienNgoai * 0.5, 0, Math.PI * 2);
+        g.lineWidth = vienNgoai * (0.45 + 0.55 * nhip);
+        g.strokeStyle = `rgba(251,191,36,${0.30 + 0.45 * nhip})`;
+        g.stroke();
+        g.restore();
+    }
+
     g.save(); g.translate(cx, cy); g.rotate(_vqGoc);
-    for (let i = 0; i < _vqDuThi.length; i++) {
+    for (let i = 0; i < n; i++) {
         g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, r, i * goc, (i + 1) * goc); g.closePath();
         g.fillStyle = sang === i ? '#ffffff' : VQ_MAU[i % VQ_MAU.length];
         g.fill();
-        g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
+
+        // Vệt sáng chạy vòng quanh: mỗi nan sáng lên lệch pha nhau nên trông
+        // như đèn chạy đuổi. Hai vòng sóng quanh bánh xe cho có nhịp.
+        if (dangQuay && sang !== i) {
+            const song = 0.5 + 0.5 * Math.sin(pha - i * goc * 2);
+            const manh = Math.pow(song, 2.8);   // chỉ đỉnh sóng mới sáng, nan
+            g.fillStyle = `rgba(255,255,255,${0.32 * manh})`;   // khác vẫn giữ màu riêng
+            g.fill();
+        }
+
+        g.lineWidth = 3 * ty; g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
 
         g.save();
         g.rotate(i * goc + goc / 2);
@@ -466,22 +501,24 @@ function _vqVeVong(sang = -1) {
         g.textBaseline = 'middle';
         g.fillStyle = sang === i ? '#0f172a' : '#ffffff';
         const huong = lat ? -1 : 1;
-        const coSo = _vqDuThi.length > 28 ? 16 : (_vqDuThi.length > 16 ? 22 : 28);
+        const coSo = Math.round((n > 28 ? 16 : (n > 16 ? 22 : 28)) * ty);
+        const le = 16 * ty;
         g.font = `900 ${coSo}px sans-serif`;
-        g.fillText(String(_vqDuThi[i].stt), huong * (r - 16), 0);
-        if (_vqDuThi.length <= 20) {
+        g.fillText(String(_vqDuThi[i].stt), huong * (r - le), 0);
+        if (n <= 20) {
             g.font = `600 ${Math.round(coSo * 0.52)}px sans-serif`;
             let ten = _vqDuThi[i].name;
             if (ten.length > 14) ten = ten.slice(0, 14) + '…';
-            g.fillText(ten, huong * (r - 16 - coSo * 1.6), 0);
+            g.fillText(ten, huong * (r - le - coSo * 1.6), 0);
         }
         g.restore();
     }
     g.restore();
 
-    g.beginPath(); g.arc(cx, cy, 26, 0, Math.PI * 2);
+    const banKinhTruc = 26 * ty * (dangQuay ? 1 + 0.12 * Math.sin(pha * 2) : 1);
+    g.beginPath(); g.arc(cx, cy, banKinhTruc, 0, Math.PI * 2);
     g.fillStyle = '#fbbf24'; g.fill();
-    g.lineWidth = 4; g.strokeStyle = '#fff'; g.stroke();
+    g.lineWidth = 4 * ty; g.strokeStyle = '#fff'; g.stroke();
 }
 
 // ── Quay ─────────────────────────────────────────────────────────────────────
@@ -517,7 +554,9 @@ function quayThuong() {
         let f = (t - batDau) / thoiGian;
         if (f > 1) f = 1;
         _vqGoc = tong * giamDan(f);
-        _vqVeVong();
+        // Nhịp sáng chậm dần đúng theo đà của vòng quay, nên mắt thấy ăn khớp
+        _vqPha += _vqGiamChuyenDong() ? 0 : (0.13 + 0.42 * (1 - f));
+        _vqVeVong(-1, _vqGiamChuyenDong() ? null : _vqPha);
 
         // Ai đang nằm dưới kim thì hiện tên ngay — quay càng chậm, tên đổi càng
         // chậm, chính chỗ đó làm cả lớp nín thở
