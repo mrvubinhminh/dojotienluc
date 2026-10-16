@@ -30,6 +30,7 @@ let _vqDuThi    = [];      // học sinh còn trong vòng quay
 let _vqTrung     = [];     // [{ stt, name, giai, diem }]
 let _vqGoc      = 0;
 let _vqDangQuay = false;
+let _vqDuoiKim  = -1;      // nan đang nằm dưới kim, để biết lúc nào kim nảy
 
 // ── Dựng khung ───────────────────────────────────────────────────────────────
 function _vqDungKhung() {
@@ -87,11 +88,17 @@ function _vqDungKhung() {
         </div>
 
         <div class="flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-6 px-5 pb-5">
-          <div class="relative flex-shrink-0" id="vqKhungVong">
-            <div class="absolute left-1/2 -translate-x-1/2 -top-1 z-10" style="filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))">
-              <div style="width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fbbf24"></div>
+          <div class="flex-shrink-0 flex flex-col items-center gap-2">
+            <div class="relative" id="vqKhungVong">
+              <div id="vqKim" class="absolute left-1/2 -translate-x-1/2 -top-1 z-10"
+                   style="filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));transform-origin:50% 10%">
+                <div style="width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fbbf24"></div>
+              </div>
+              <canvas id="vqCanvas" width="520" height="520" style="max-width:min(84vw,46vh);height:auto"></canvas>
             </div>
-            <canvas id="vqCanvas" width="520" height="520" style="max-width:min(86vw,52vh);height:auto"></canvas>
+            <!-- Tên chạy liên tục dưới vòng quay cho cả lớp hồi hộp dõi theo -->
+            <div id="vqTenSong" class="text-center font-black text-white leading-tight"
+                 style="min-height:2.4em;font-size:clamp(1.1rem,2.6vw,2rem);transition:color .12s linear"></div>
           </div>
 
           <div class="flex-1 min-w-0 min-h-0 max-w-xl w-full h-full flex flex-col items-center gap-3">
@@ -178,8 +185,9 @@ function _vqVeDanhSach() {
     if (!box) return;
     box.innerHTML = _vqDuThi.map((s, i) => `
       <button onclick="vqDoiChon(${i})" title="${s.name}"
-        class="rounded-xl py-2 font-black transition ${s.chon ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'}">
-        ${s.stt}
+        class="rounded-xl py-1.5 px-1 transition ${s.chon ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'}">
+        <div class="font-black text-lg leading-none">${s.stt}</div>
+        <div class="text-[10px] leading-tight truncate ${s.chon ? 'text-white text-opacity-80' : 'text-gray-400'}">${s.name}</div>
       </button>`).join('');
     _vqTomTat();
 }
@@ -320,15 +328,59 @@ function quayThuong() {
     const batDau = performance.now();
     const giamDan = x => 1 - Math.pow(1 - x, 4);
 
+    _vqDuoiKim = -1;
     function chay(t) {
         let f = (t - batDau) / thoiGian;
         if (f > 1) f = 1;
         _vqGoc = tong * giamDan(f);
         _vqVeVong();
+
+        // Ai đang nằm dưới kim thì hiện tên ngay — quay càng chậm, tên đổi càng
+        // chậm, chính chỗ đó làm cả lớp nín thở
+        let a = (-Math.PI / 2 - _vqGoc) % (2 * Math.PI);
+        if (a < 0) a += 2 * Math.PI;
+        const duoi = Math.floor(a / gocMoi) % _vqDuThi.length;
+        if (duoi !== _vqDuoiKim) { _vqDuoiKim = duoi; _vqNayKim(); }
+        _vqTenChay(_vqDuThi[duoi], f);
+
         if (f < 1) requestAnimationFrame(chay);
         else { _vqGoc = dich; _vqVeVong(idx); _vqTraoThuong(idx, giai); }
     }
     requestAnimationFrame(chay);
+}
+
+// Kim nảy một cái mỗi lần vượt qua một nan, nghe như kim gõ vào chốt
+function _vqNayKim() {
+    const kim = document.getElementById('vqKim');
+    if (!kim) return;
+    kim.style.transition = 'none';
+    kim.style.transform = 'translateX(-50%) rotate(-15deg)';
+    requestAnimationFrame(() => {
+        kim.style.transition = 'transform .1s cubic-bezier(.2,1.6,.4,1)';
+        kim.style.transform = 'translateX(-50%) rotate(0deg)';
+    });
+}
+
+// Tên chạy dưới vòng quay: càng về cuối chữ càng to, càng nóng màu
+function _vqTenChay(hs, f) {
+    const el = document.getElementById('vqTenSong');
+    if (!el || !hs) return;
+    const gan = Math.max(0, (f - 0.78) / 0.22);          // 0 → 1 trong chặng cuối
+    const phong = 1 + 0.22 * gan;
+    el.style.transform = `scale(${phong.toFixed(3)})`;
+    el.style.color = gan > 0.72 ? '#fca5a5' : (gan > 0.3 ? '#fcd34d' : '#ffffff');
+    el.innerHTML = `<span style="opacity:.6;font-size:.62em">Số</span> ${hs.stt}
+                    <span style="opacity:.55">·</span> ${hs.name}`;
+}
+
+function _vqPhaoGiay(to) {
+    if (typeof confetti !== 'function') return;
+    const mau = ['#fbbf24', '#f59e0b', '#ef4444', '#22c55e', '#3b82f6', '#a855f7'];
+    confetti({ particleCount: to ? 220 : 130, spread: to ? 130 : 95, origin: { y: 0.55 }, zIndex: 20000, colors: mau });
+    if (to) {
+        setTimeout(() => confetti({ particleCount: 120, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, zIndex: 20000, colors: mau }), 180);
+        setTimeout(() => confetti({ particleCount: 120, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, zIndex: 20000, colors: mau }), 320);
+    }
 }
 
 function _vqTraoThuong(idx, giai) {
@@ -356,6 +408,8 @@ function _vqTraoThuong(idx, giai) {
         else if (typeof renderReport === 'function') renderReport();
     }
     document.getElementById('soundPositive')?.play().catch(() => {});
+    // Giải to nhất trong cơ cấu thì ăn mừng hoành tráng hơn
+    _vqPhaoGiay(giai.diem >= Math.max(..._vqGiai.map(g => g.diem)));
 
     _vqTrung.push({ stt: nguoi.stt, name: nguoi.name, giai: giai.ten, diem: giai.diem, icon: giai.icon });
     // Trúng rồi thì ra khỏi vòng quay, mỗi em chỉ một giải
@@ -371,6 +425,9 @@ function _vqTraoThuong(idx, giai) {
       </div>`;
     if (typeof showToast === 'function') showToast(`${nguoi.name} trúng ${giai.ten} (+${giai.diem} điểm)`, true);
 
+    const ten = document.getElementById('vqTenSong');
+    if (ten) { ten.innerHTML = ''; ten.style.transform = 'scale(1)'; ten.style.color = '#ffffff'; }
+    _vqDuoiKim = -1;
     _vqGoc = 0;
     _vqCapNhat();
     _vqVeVong();
