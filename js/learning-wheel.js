@@ -245,7 +245,10 @@ function lwScoreStudent(isCorrect) {
         
         if (typeof checkMilestone === 'function') checkMilestone(s, old);
         if (typeof checkGoalAchievements === 'function') setTimeout(()=>checkGoalAchievements(s.id), 100);
-        if (typeof saveState === 'function') saveState();
+        // Trước đây gọi saveState() — hàm này không tồn tại, nên điểm thưởng
+        // của Vòng Quay Học Tập không hề được lưu và cũng không đồng bộ.
+        if (typeof saveData === 'function') saveData();
+        if (typeof scheduleAutoSync === 'function') scheduleAutoSync();
         if (typeof renderStudents === 'function') renderStudents();
         
         const audioId = isCorrect ? 'soundPositive' : 'soundNegative';

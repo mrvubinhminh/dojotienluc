@@ -2463,6 +2463,13 @@ Câu 2: 1 + 1 = ?"></textarea>
                 <p class="text-[11px] text-gray-500 text-center leading-tight">Quay ngẫu nhiên học sinh & câu hỏi!</p>
             </button>
 
+            <!-- Vòng Quay May Mắn -->
+            <button onclick="closeGameMenu(); openVongQuayMayMan();" class="flex flex-col items-center p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl hover:border-amber-400 hover:bg-amber-100 transition active:scale-95 group text-left relative overflow-hidden">
+                <i class="fas fa-gift text-4xl text-amber-500 mb-3 group-hover:scale-110 transition duration-300"></i>
+                <h3 class="font-bold text-gray-800 text-center mb-1">Vòng Quay May Mắn</h3>
+                <p class="text-[11px] text-gray-500 text-center leading-tight">Quay số thứ tự nhận phần thưởng, từ giải thấp lên cao</p>
+            </button>
+
             <!-- Đấu Trường Thẻ Bài -->
             <button onclick="closeGameMenu(); openCardFlip();" class="flex flex-col items-center p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-100 transition active:scale-95 group text-left relative overflow-hidden">
                 <i class="fas fa-clone text-4xl text-emerald-500 mb-3 group-hover:scale-110 transition duration-300"></i>
@@ -2846,6 +2853,7 @@ Câu 2: 1 + 1 = ?"></textarea>
         <script src="js/time-bomb.js"></script>
         <script src="js/boss-battle.js"></script>
         <script src="js/learning-wheel.js"></script>
+    <script src="js/vong-quay-may-man.js"></script>
         <script src="js/card-flip.js"></script>
         <script src="js/tug-of-war.js"></script>
     <script src="js/init.js"></script>
