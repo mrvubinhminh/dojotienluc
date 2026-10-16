@@ -66,7 +66,107 @@ let _vqDuThi    = [];      // học sinh còn trong vòng quay
 let _vqTrung     = [];     // [{ stt, name, giai, diem }]
 let _vqGoc      = 0;
 let _vqDangQuay = false;
-let _vqDuoiKim  = -1;      // nan đang nằm dưới kim, để biết lúc nào kim nảy
+let _vqDuoiKim  = -1;
+let _vqIdLichSu = null;    // id dòng lịch sử vừa ghi, để hoàn tác bỏ đúng dòng      // nan đang nằm dưới kim, để biết lúc nào kim nảy
+
+// ── Bảng màu, khoảng cách: khai báo một chỗ, không viết cứng trong từng ô ──
+function _vqDungKieu() {
+    if (document.getElementById('vqKieu')) return;
+    const st = document.createElement('style');
+    st.id = 'vqKieu';
+    st.textContent = `
+.vq{
+  --vq-nen:#0f172a; --vq-nen-2:#1e1b4b; --vq-nen-3:#312e81;
+  --vq-chu:#ffffff; --vq-chu-mo:rgba(255,255,255,.62);
+  --vq-vang:#fbbf24; --vq-vang-dam:#f59e0b; --vq-do-nhat:#fca5a5;
+  --vq-mat:rgba(255,255,255,.09); --vq-vien:rgba(255,255,255,.16);
+  --vq-r:18px; --vq-r-to:26px;
+  --vq-1:4px; --vq-2:8px; --vq-3:14px; --vq-4:22px;
+  --vq-cham:44px;                 /* vùng chạm tối thiểu */
+  background:linear-gradient(160deg,var(--vq-nen),var(--vq-nen-2) 58%,var(--vq-nen-3));
+  color:var(--vq-chu); font-family:"Be Vietnam Pro",system-ui,sans-serif;
+}
+.vq button:focus-visible{outline:3px solid var(--vq-vang);outline-offset:3px;border-radius:var(--vq-r)}
+
+.vq-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--vq-2);
+  padding:var(--vq-2) var(--vq-3);flex-shrink:0}
+.vq-bar-end{display:flex;align-items:center;gap:var(--vq-2)}
+.vq-progress{margin:0;color:var(--vq-chu-mo);font-weight:700;font-size:.95rem;text-align:center;flex:1;min-width:0}
+.vq-ghost{display:inline-flex;align-items:center;gap:var(--vq-2);min-height:var(--vq-cham);
+  padding:0 var(--vq-3);border-radius:var(--vq-r);background:var(--vq-mat);
+  color:var(--vq-chu);font-weight:700;font-size:.9rem;transition:background .18s ease-out}
+.vq-ghost:hover{background:var(--vq-vien)}
+.vq-ghost:active{transform:scale(.97)}
+
+.vq-prize{flex-shrink:0;margin:0 auto var(--vq-2);padding:var(--vq-2) var(--vq-4);
+  border-radius:999px;background:var(--vq-mat);border:1px solid var(--vq-vien);
+  display:flex;align-items:center;gap:var(--vq-3);max-width:94vw}
+.vq-prize .ico{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1}
+.vq-prize .ten{font-weight:900;font-size:clamp(1.1rem,2.8vw,2rem);line-height:1.1}
+.vq-prize .diem{font-weight:900;color:var(--vq-vang);font-size:clamp(.95rem,2vw,1.4rem)}
+.vq-prize .nhan{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--vq-chu-mo);font-weight:800}
+
+/* Ba cột: ô trống - vòng quay - bảng trúng. Nhờ ô trống bên trái mà vòng
+   quay nằm đúng trục giữa trang, thẳng hàng với nút QUAY và dải chữ dưới. */
+/* Màn hẹp: xếp dọc và CHO CUỘN, không để các khối đè lên nhau */
+.vq-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr;justify-items:center;
+  align-content:center;gap:var(--vq-3);padding:0 var(--vq-3);overflow-y:auto}
+.vq-main .vq-chen{display:none}
+@media(min-width:900px){
+  .vq-main{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center}
+  .vq-main .vq-chen{display:block}
+  .vq-main .vq-rail{justify-self:start;max-width:300px}
+}
+.vq-wheel{position:relative;line-height:0}
+.vq-wheel canvas{max-width:min(72vw,30vh);height:auto;display:block}
+@media(min-width:900px){.vq-wheel canvas{max-width:min(82vw,42vh)}}
+.vq-kim{position:absolute;left:50%;top:-4px;transform:translateX(-50%);z-index:2;
+  transform-origin:50% 10%;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+.vq-kim-tam{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;
+  border-top:34px solid var(--vq-vang)}
+
+.vq-rail{width:100%;max-width:420px;max-height:16vh;overflow-y:auto;display:flex;flex-direction:column;gap:var(--vq-1)}
+@media(min-width:900px){.vq-rail{max-height:52vh}}
+.vq-rail .nhan{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--vq-chu-mo);font-weight:800;margin:0 0 var(--vq-1)}
+.vq-rail .dong{display:flex;align-items:center;gap:var(--vq-2);padding:var(--vq-2) var(--vq-3);
+  border-radius:var(--vq-r);background:var(--vq-mat)}
+.vq-rail .stt{min-width:34px;height:28px;border-radius:9px;background:var(--vq-vang);
+  color:#0f172a;font-weight:900;display:flex;align-items:center;justify-content:center}
+.vq-rail .ten{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.vq-rail .giai{color:var(--vq-chu-mo);font-size:.8rem;font-weight:700}
+.vq-rail .diem{color:var(--vq-vang);font-weight:900}
+.vq-rail .trong{color:var(--vq-chu-mo);font-size:.85rem;font-style:italic;padding:var(--vq-2) var(--vq-3)}
+
+.vq-action{flex-shrink:0;display:flex;justify-content:center;padding:var(--vq-2) var(--vq-3)}
+.vq-primary{display:inline-flex;align-items:center;justify-content:center;gap:var(--vq-3);
+  min-height:var(--vq-cham);padding:var(--vq-3) clamp(28px,8vw,72px);border-radius:var(--vq-r-to);
+  background:linear-gradient(180deg,var(--vq-vang),var(--vq-vang-dam));color:#1f1300;
+  font-weight:900;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.04em;
+  box-shadow:0 8px 0 #b45309;transition:transform .15s ease-out,box-shadow .15s ease-out}
+.vq-primary:hover:not(:disabled){filter:brightness(1.06)}
+.vq-primary:active:not(:disabled){transform:translateY(6px);box-shadow:0 2px 0 #b45309}
+.vq-primary:disabled{background:var(--vq-mat);color:var(--vq-chu-mo);box-shadow:none;cursor:not-allowed}
+.vq-kbd{font-size:.68rem;font-weight:800;opacity:.6;border:1px solid currentColor;border-radius:6px;padding:1px 6px}
+.vq-primary:disabled .vq-kbd{display:none}
+
+.vq-band{flex-shrink:0;text-align:center;padding:var(--vq-1) var(--vq-3) var(--vq-3)}
+#vqTenSong{font-weight:900;line-height:1;font-size:clamp(2.2rem,7.8vw,6rem);
+  transition:color .12s linear,transform .12s ease-out;min-height:1.1em}
+#vqTenSong .so{display:block;font-size:.34em;opacity:.6;line-height:1.2;font-weight:800}
+#vqTenSong.trung{color:#0f172a;background:linear-gradient(135deg,var(--vq-vang),var(--vq-vang-dam));
+  border-radius:var(--vq-r-to);padding:var(--vq-2) var(--vq-4);display:inline-block}
+#vqThanhNgu{margin:var(--vq-2) 0 0;font-style:italic;font-weight:700;color:#fde68a;
+  font-size:clamp(1rem,2.2vw,1.7rem)}
+.vq-hide-sm{display:none}
+@media(min-width:720px){.vq-hide-sm{display:inline}}
+
+@media(prefers-reduced-motion:reduce){
+  .vq *,.vq *::before,.vq *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important}
+}`;
+    document.head.appendChild(st);
+}
 
 // ── Dựng khung ───────────────────────────────────────────────────────────────
 function _vqDungKhung() {
@@ -81,7 +181,7 @@ function _vqDungKhung() {
               <h2 class="text-2xl font-black text-gray-800">🎁 Vòng Quay May Mắn</h2>
               <p class="text-gray-500 text-sm mt-0.5">Quay số thứ tự học sinh để nhận quà, từ giải thấp lên giải cao</p>
             </div>
-            <button onclick="closeVqSetup()" class="text-gray-400 hover:text-gray-700 text-2xl w-10 h-10">&times;</button>
+            <button onclick="closeVqSetup()" aria-label="Đóng" class="text-gray-400 hover:text-gray-700 text-2xl" style="min-width:44px;min-height:44px">&times;</button>
           </div>
           <div class="flex-1 overflow-y-auto p-5 space-y-5">
             <div>
@@ -112,51 +212,51 @@ function _vqDungKhung() {
         </div>
       </div>
 
-      <div id="vqGame" class="fixed inset-0 z-[126] hidden flex-col" style="background:linear-gradient(160deg,#0f172a,#1e1b4b 60%,#312e81)">
-        <div class="flex items-center justify-between px-5 py-3 flex-shrink-0">
-          <button onclick="closeVqGame()" class="text-white text-opacity-70 hover:text-opacity-100 font-bold text-sm">
-            <i class="fas fa-arrow-left mr-1"></i> Thoát
-          </button>
-          <div id="vqTienDo" class="text-white text-opacity-80 font-bold text-sm"></div>
-          <button onclick="vqDoiFull()" class="text-white text-opacity-70 hover:text-opacity-100 font-bold text-sm">
-            <i class="fas fa-expand-arrows-alt mr-1"></i> Toàn màn hình (F)
-          </button>
-        </div>
+      <div id="vqGame" class="vq fixed inset-0 z-[126] hidden flex-col" role="dialog" aria-label="Vòng quay may mắn">
 
-        <div class="flex-1 min-h-0 flex flex-col">
-        <div class="flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-6 px-5">
-          <div class="flex-shrink-0 flex flex-col items-center">
-            <div class="relative" id="vqKhungVong">
-              <div id="vqKim" class="absolute left-1/2 -translate-x-1/2 -top-1 z-10"
-                   style="filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));transform-origin:50% 10%">
-                <div style="width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fbbf24"></div>
-              </div>
-              <canvas id="vqCanvas" width="520" height="520" style="max-width:min(80vw,46vh);height:auto"></canvas>
-            </div>
-          </div>
-
-          <div class="flex-1 min-w-0 min-h-0 max-w-xl w-full h-full flex flex-col items-center gap-3">
-            <div id="vqGiaiHienTai" class="w-full flex-shrink-0 rounded-3xl px-6 py-4 text-center" style="background:rgba(255,255,255,.1)"></div>
-            <div id="vqKetQua" class="w-full flex-shrink-0"></div>
-            <button onclick="quayThuong()" id="vqNutQuay"
-              class="w-full flex-shrink-0 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 text-slate-900 py-5 rounded-3xl font-black text-2xl shadow-[0_10px_0_rgba(146,64,14,1)] active:translate-y-2 active:shadow-none transition-all">
-              🎲 QUAY
+        <header class="vq-bar">
+          <button onclick="closeVqGame()" class="vq-ghost" aria-label="Thoát vòng quay">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="vq-hide-sm">Thoát</span>
+          </button>
+          <p id="vqTienDo" class="vq-progress" aria-live="polite"></p>
+          <div class="vq-bar-end">
+            <button onclick="vqHoanTac()" id="vqNutHoanTac" class="vq-ghost hidden" aria-label="Hoàn tác lượt quay vừa rồi">
+              <i class="fas fa-rotate-left" aria-hidden="true"></i><span class="vq-hide-sm">Hoàn tác</span>
             </button>
-            <div id="vqDaTrung" class="w-full flex-1 min-h-0 overflow-y-auto space-y-1.5 pb-1"></div>
+            <button onclick="vqDoiFull()" class="vq-ghost" aria-label="Bật tắt toàn màn hình, phím F">
+              <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i><span class="vq-hide-sm">Toàn màn hình (F)</span>
+            </button>
           </div>
+        </header>
+
+        <!-- Giải đang quay: luôn đứng yên một chỗ nên mắt không phải đi tìm -->
+        <div id="vqGiaiHienTai" class="vq-prize" aria-live="polite"></div>
+
+        <main class="vq-main">
+          <div class="vq-chen" aria-hidden="true"></div>
+          <div class="vq-wheel">
+            <div id="vqKim" class="vq-kim" aria-hidden="true">
+              <div class="vq-kim-tam"></div>
+            </div>
+            <canvas id="vqCanvas" width="520" height="520" role="img" aria-label="Vòng quay số thứ tự học sinh"></canvas>
+          </div>
+          <aside id="vqDaTrung" class="vq-rail" aria-label="Danh sách đã trúng thưởng"></aside>
+        </main>
+
+        <div class="vq-action">
+          <button onclick="quayThuong()" id="vqNutQuay" class="vq-primary">🎲 QUAY<span class="vq-kbd">Space</span></button>
         </div>
 
-        <!-- Dải dưới cùng rộng hết màn hình: đang quay thì chạy tên, quay xong
-             thì nhường chỗ cho một câu khích lệ -->
-        <div class="flex-shrink-0 px-4 pb-4 pt-1 text-center">
-          <div id="vqTenSong" class="font-black text-white leading-none"
-               style="font-size:clamp(3.3rem,7.8vw,6rem);transition:color .12s linear"></div>
-          <div id="vqThanhNgu" class="font-bold italic text-amber-200 text-opacity-90"
-               style="font-size:clamp(1rem,2.2vw,1.9rem)"></div>
-        </div>
-        </div>
+        <!-- Một ô duy nhất ở dưới: đang quay thì chạy tên, quay xong thì hiện
+             người trúng, lúc rảnh thì chiếu câu khích lệ. Không ô nào nhảy chỗ. -->
+        <footer class="vq-band">
+          <div id="vqTenSong" aria-live="polite"></div>
+          <p id="vqThanhNgu"></p>
+        </footer>
       </div>`;
+
     document.body.appendChild(root);
+    _vqDungKieu();
     document.addEventListener('keydown', _vqPhim);
 }
 
@@ -210,7 +310,7 @@ function _vqVeBangGiai() {
           <input type="number" min="1" max="20" value="${g.soLuong}" onchange="vqSuaGiai(${i},'soLuong',this.value)" class="w-14 text-center font-black text-gray-700 bg-white border border-gray-200 rounded-lg py-1.5">
           <span class="text-gray-500 text-sm font-bold">giải</span>
         </div>
-        <button onclick="vqXoaGiai(${i})" class="w-9 h-9 rounded-lg text-red-500 hover:bg-red-50"><i class="fas fa-trash"></i></button>
+        <button onclick="vqXoaGiai(${i})" aria-label="Xoá ${'$'}{g.ten}" title="Xoá giải này" class="rounded-lg text-red-500 hover:bg-red-50" style="min-width:44px;min-height:44px"><i class="fas fa-trash" aria-hidden="true"></i></button>
       </div>`).join('');
     _vqTomTat();
 }
@@ -276,34 +376,68 @@ function closeVqGame() {
 }
 
 function _vqCapNhat() {
-    const con = _vqHangCho.length - _vqLuot;
     document.getElementById('vqTienDo').innerText =
         `Lượt ${Math.min(_vqLuot + 1, _vqHangCho.length)}/${_vqHangCho.length} · còn ${_vqDuThi.length} học sinh`;
 
     const g = _vqHangCho[_vqLuot];
     const box = document.getElementById('vqGiaiHienTai');
+    const nut = document.getElementById('vqNutQuay');
     if (g) {
         box.innerHTML = `
-          <div class="text-white text-opacity-60 font-bold uppercase tracking-widest text-xs">Đang quay cho</div>
-          <div class="text-5xl mt-1">${g.icon}</div>
-          <div class="text-white font-black mt-1" style="font-size:clamp(1.4rem,3vw,2.4rem)">${g.ten}</div>
-          <div class="text-amber-300 font-black text-xl mt-0.5">+${g.diem} điểm cộng</div>`;
+          <span class="ico">${g.icon}</span>
+          <span><span class="nhan">Đang quay cho</span><br><span class="ten">${g.ten}</span></span>
+          <span class="diem">+${g.diem} điểm</span>`;
+        nut.disabled = false;
+        nut.innerHTML = '🎲 QUAY<span class="vq-kbd">Space</span>';
     } else {
-        box.innerHTML = `<div class="text-white font-black" style="font-size:clamp(1.3rem,3vw,2rem)">🎉 Đã trao hết ${_vqTrung.length} giải!</div>`;
-        document.getElementById('vqNutQuay').classList.add('hidden');
+        box.innerHTML = `<span class="ico">🎉</span><span class="ten">Đã trao hết ${_vqTrung.length} giải</span>`;
+        nut.disabled = true;
+        nut.innerHTML = 'Xong rồi!';
     }
 
-    document.getElementById('vqDaTrung').innerHTML = _vqTrung.length ? `
-        <div class="text-white text-opacity-50 font-bold text-xs uppercase tracking-widest mb-1">Đã trúng thưởng</div>` +
-        [..._vqTrung].reverse().map(t => `
-          <div class="flex items-center gap-2 bg-white bg-opacity-10 rounded-xl px-3 py-2">
-            <span class="text-xl">${t.icon}</span>
-            <span class="w-10 h-7 rounded-lg bg-amber-400 text-slate-900 font-black flex items-center justify-center">${t.stt}</span>
-            <span class="flex-1 min-w-0 truncate text-white font-bold">${t.name}</span>
-            <span class="text-white text-opacity-70 text-sm font-bold">${t.giai}</span>
-            <span class="text-amber-300 font-black">+${t.diem}</span>
-          </div>`).join('') : '';
-    void con;
+    // Trạng thái rỗng cũng phải nói cho thầy cô biết đang chờ gì
+    document.getElementById('vqDaTrung').innerHTML = _vqTrung.length
+        ? `<p class="nhan">Đã trúng thưởng</p>` + [..._vqTrung].reverse().map(t => `
+            <div class="dong">
+              <span aria-hidden="true">${t.icon}</span>
+              <span class="stt">${t.stt}</span>
+              <span class="ten">${t.name}</span>
+              <span class="giai vq-hide-sm">${t.giai}</span>
+              <span class="diem">+${t.diem}</span>
+            </div>`).join('')
+        : `<p class="nhan">Đã trúng thưởng</p><p class="trong">Chưa có ai — bấm QUAY để bắt đầu</p>`;
+
+    document.getElementById('vqNutHoanTac').classList.toggle('hidden', _vqTrung.length === 0);
+}
+
+// Hoàn tác lượt vừa quay: trả điểm, xoá dòng lịch sử, cho em đó về lại vòng quay
+function vqHoanTac() {
+    const t = _vqTrung.at(-1);
+    if (!t) return;
+    if (!window.confirm(`Hoàn tác lượt vừa rồi?\n\n${t.name} sẽ bị trừ lại ${t.diem} điểm và quay về danh sách dự quay.`)) return;
+
+    const s = (typeof students !== 'undefined' ? students : []).find(x => x.id === t.id);
+    if (s) {
+        s.points -= t.diem;
+        s.positivePoints = Math.max(0, s.positivePoints - t.diem);
+    }
+    if (typeof history !== 'undefined' && t.lichSuId != null) {
+        const k = history.findIndex(h => h.id === t.lichSuId);
+        if (k >= 0) history.splice(k, 1);
+    }
+    if (typeof saveData === 'function') saveData();
+    if (typeof scheduleAutoSync === 'function') scheduleAutoSync();
+    if (typeof renderStudents === 'function' && typeof currentView !== 'undefined' && currentView === 'classroom') renderStudents();
+
+    _vqDuThi.push({ id: t.id, name: t.name, stt: t.stt, chon: true });
+    _vqDuThi.sort((a, b) => a.stt - b.stt);
+    _vqTrung.pop();
+    _vqLuot = Math.max(0, _vqLuot - 1);
+
+    const ten = document.getElementById('vqTenSong');
+    if (ten) { ten.innerHTML = ''; ten.className = ''; }
+    _vqCapNhat(); _vqVeVong();
+    if (typeof showToast === 'function') showToast(`Đã hoàn tác: ${t.name} −${t.diem} điểm`, false);
 }
 
 function _vqVeVong(sang = -1) {
@@ -360,13 +494,16 @@ function quayThuong() {
     _vqDangQuay = true;
     const nut = document.getElementById('vqNutQuay');
     nut.disabled = true; nut.innerText = 'ĐANG QUAY…';
-    document.getElementById('vqKetQua').innerHTML = '';
+    const tenCu = document.getElementById('vqTenSong');
+    if (tenCu) { tenCu.className = ''; tenCu.innerHTML = ''; }
     const tn = document.getElementById('vqThanhNgu');
     if (tn) tn.style.visibility = 'hidden';
 
     try { vqNhac.currentTime = 0; vqNhac.play().catch(() => {}); } catch { /* trình duyệt chặn */ }
     let thoiGian = 6000;
     if (!isNaN(vqNhac.duration) && vqNhac.duration > 0 && vqNhac.duration !== Infinity) thoiGian = vqNhac.duration * 1000;
+    // Máy cài giảm chuyển động thì quay nhanh gọn, khỏi chóng mặt
+    if (_vqGiamChuyenDong()) thoiGian = Math.min(thoiGian, 1200);
 
     const idx = Math.floor(Math.random() * _vqDuThi.length);
     const gocMoi = (2 * Math.PI) / _vqDuThi.length;
@@ -399,7 +536,7 @@ function quayThuong() {
 // Kim nảy một cái mỗi lần vượt qua một nan, nghe như kim gõ vào chốt
 function _vqNayKim() {
     const kim = document.getElementById('vqKim');
-    if (!kim) return;
+    if (!kim || _vqGiamChuyenDong()) return;
     kim.style.transition = 'none';
     kim.style.transform = 'translateX(-50%) rotate(-15deg)';
     requestAnimationFrame(() => {
@@ -416,8 +553,8 @@ function _vqTenChay(hs, f) {
     const phong = 1 + 0.22 * gan;
     el.style.transform = `scale(${phong.toFixed(3)})`;
     el.style.color = gan > 0.72 ? '#fca5a5' : (gan > 0.3 ? '#fcd34d' : '#ffffff');
-    el.innerHTML = `<span style="display:block;font-size:.34em;opacity:.6;line-height:1.1">Số ${hs.stt}</span>
-                    <span style="display:block">${hs.name}</span>`;
+    el.className = '';
+    el.innerHTML = `<span class="so">Số ${hs.stt}</span>${hs.name}`;
 }
 
 // Lấy một câu khác câu vừa chiếu, để không lặp lại ngay
@@ -430,8 +567,12 @@ function _vqChieuThanhNgu() {
     el.innerText = '“' + VQ_THANH_NGU[i] + '”';
 }
 
+function _vqGiamChuyenDong() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 function _vqPhaoGiay(to) {
-    if (typeof confetti !== 'function') return;
+    if (typeof confetti !== 'function' || _vqGiamChuyenDong()) return;
     const mau = ['#fbbf24', '#f59e0b', '#ef4444', '#22c55e', '#3b82f6', '#a855f7'];
     confetti({ particleCount: to ? 220 : 130, spread: to ? 130 : 95, origin: { y: 0.55 }, zIndex: 20000, colors: mau });
     if (to) {
@@ -453,7 +594,8 @@ function _vqTraoThuong(idx, giai) {
         s.points += giai.diem;
         s.positivePoints += giai.diem;
         if (typeof history !== 'undefined') {
-            history.push({ id: Date.now() + Math.random(), classId: currentClassId, studentId: s.id,
+            _vqIdLichSu = Date.now() + Math.random();
+            history.push({ id: _vqIdLichSu, classId: currentClassId, studentId: s.id,
                            studentName: s.name, skillName: `Vòng quay may mắn — ${giai.ten}`,
                            points: giai.diem, timestamp: new Date().toISOString() });
         }
@@ -468,22 +610,21 @@ function _vqTraoThuong(idx, giai) {
     // Giải to nhất trong cơ cấu thì ăn mừng hoành tráng hơn
     _vqPhaoGiay(giai.diem >= Math.max(..._vqGiai.map(g => g.diem)));
 
-    _vqTrung.push({ stt: nguoi.stt, name: nguoi.name, giai: giai.ten, diem: giai.diem, icon: giai.icon });
+    _vqTrung.push({ id: nguoi.id, stt: nguoi.stt, name: nguoi.name, giai: giai.ten,
+                    diem: giai.diem, icon: giai.icon, lichSuId: _vqIdLichSu });
     // Trúng rồi thì ra khỏi vòng quay, mỗi em chỉ một giải
     _vqDuThi.splice(idx, 1);
     _vqLuot++;
 
-    document.getElementById('vqKetQua').innerHTML = `
-      <div class="rounded-3xl px-6 py-5 text-center animate-bounce-in" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">
-        <div class="text-slate-900 text-opacity-70 font-black uppercase tracking-widest text-xs">${giai.icon} ${giai.ten}</div>
-        <div class="font-black text-slate-900 mt-1" style="font-size:clamp(2.6rem,7vw,5rem);line-height:1">Số ${nguoi.stt}</div>
-        <div class="font-black text-slate-900" style="font-size:clamp(1.1rem,2.6vw,2rem)">${nguoi.name}</div>
-        <div class="text-slate-900 font-black text-xl mt-1">+${giai.diem} điểm cộng</div>
-      </div>`;
+    const ten = document.getElementById('vqTenSong');
+    if (ten) {
+        ten.className = 'trung';
+        ten.innerHTML = `<span class="so">${giai.icon} ${giai.ten} · Số ${nguoi.stt} · +${giai.diem} điểm</span>${nguoi.name}`;
+        ten.style.transform = 'scale(1)';
+        ten.style.color = '';
+    }
     if (typeof showToast === 'function') showToast(`${nguoi.name} trúng ${giai.ten} (+${giai.diem} điểm)`, true);
 
-    const ten = document.getElementById('vqTenSong');
-    if (ten) { ten.innerHTML = ''; ten.style.transform = 'scale(1)'; ten.style.color = '#ffffff'; }
     const tn2 = document.getElementById('vqThanhNgu');
     if (tn2) tn2.style.visibility = 'visible';
     _vqChieuThanhNgu();
