@@ -20,6 +20,42 @@ const VQ_GIAI_MAU = [
     { ten: 'Giải Đặc Biệt', diem: 5, soLuong: 1, icon: '🏆' }
 ];
 
+// 30 câu tục ngữ, thành ngữ về sự cố gắng trong học tập — chiếu sau mỗi
+// lượt trao thưởng để em chưa trúng cũng được một lời khích lệ
+const VQ_THANH_NGU = [
+    'Có công mài sắt, có ngày nên kim.',
+    'Học, học nữa, học mãi.',
+    'Đi một ngày đàng, học một sàng khôn.',
+    'Không thầy đố mày làm nên.',
+    'Học thầy không tày học bạn.',
+    'Muốn biết phải hỏi, muốn giỏi phải học.',
+    'Dốt đến đâu học lâu cũng biết.',
+    'Ăn vóc học hay.',
+    'Luyện mãi thành tài, miệt mài tất giỏi.',
+    'Dao có mài mới sắc, người có học mới nên.',
+    'Siêng làm thì có, siêng học thì hay.',
+    'Kiến tha lâu cũng đầy tổ.',
+    'Nước chảy đá mòn.',
+    'Có chí thì nên.',
+    'Thua keo này ta bày keo khác.',
+    'Thất bại là mẹ thành công.',
+    'Chớ thấy sóng cả mà ngã tay chèo.',
+    'Lửa thử vàng, gian nan thử sức.',
+    'Có cứng mới đứng đầu gió.',
+    'Cần cù bù thông minh.',
+    'Một kho vàng không bằng một nang chữ.',
+    'Học ăn, học nói, học gói, học mở.',
+    'Tiên học lễ, hậu học văn.',
+    'Ngọc không mài không sáng, người không học không nên.',
+    'Góp gió thành bão.',
+    'Khổ luyện thành tài.',
+    'Chậm mà chắc, chắc mà bền.',
+    'Bền chí ắt nên.',
+    'Đi lâu rồi cũng tới, học mãi rồi cũng hay.',
+    'Tay làm hàm nhai, chăm học thì nên người.'
+];
+let _vqThanhNguCu = -1;
+
 const vqNhac = new Audio('https://files.catbox.moe/jp6q4j.mp3');
 vqNhac.preload = 'auto';
 
@@ -87,18 +123,16 @@ function _vqDungKhung() {
           </button>
         </div>
 
-        <div class="flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-6 px-5 pb-5">
-          <div class="flex-shrink-0 flex flex-col items-center gap-2">
+        <div class="flex-1 min-h-0 flex flex-col">
+        <div class="flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-6 px-5">
+          <div class="flex-shrink-0 flex flex-col items-center">
             <div class="relative" id="vqKhungVong">
               <div id="vqKim" class="absolute left-1/2 -translate-x-1/2 -top-1 z-10"
                    style="filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));transform-origin:50% 10%">
                 <div style="width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fbbf24"></div>
               </div>
-              <canvas id="vqCanvas" width="520" height="520" style="max-width:min(84vw,46vh);height:auto"></canvas>
+              <canvas id="vqCanvas" width="520" height="520" style="max-width:min(80vw,46vh);height:auto"></canvas>
             </div>
-            <!-- Tên chạy liên tục dưới vòng quay cho cả lớp hồi hộp dõi theo -->
-            <div id="vqTenSong" class="text-center font-black text-white leading-tight"
-                 style="min-height:2.4em;font-size:clamp(1.1rem,2.6vw,2rem);transition:color .12s linear"></div>
           </div>
 
           <div class="flex-1 min-w-0 min-h-0 max-w-xl w-full h-full flex flex-col items-center gap-3">
@@ -110,6 +144,16 @@ function _vqDungKhung() {
             </button>
             <div id="vqDaTrung" class="w-full flex-1 min-h-0 overflow-y-auto space-y-1.5 pb-1"></div>
           </div>
+        </div>
+
+        <!-- Dải dưới cùng rộng hết màn hình: đang quay thì chạy tên, quay xong
+             thì nhường chỗ cho một câu khích lệ -->
+        <div class="flex-shrink-0 px-4 pb-4 pt-1 text-center">
+          <div id="vqTenSong" class="font-black text-white leading-none"
+               style="font-size:clamp(3.3rem,7.8vw,6rem);transition:color .12s linear"></div>
+          <div id="vqThanhNgu" class="font-bold italic text-amber-200 text-opacity-90"
+               style="font-size:clamp(1rem,2.2vw,1.9rem)"></div>
+        </div>
         </div>
       </div>`;
     document.body.appendChild(root);
@@ -221,6 +265,7 @@ function batDauQuayThuong() {
     _vqGoc = 0;
     closeVqSetup();
     _vqHien('vqGame', true);
+    _vqChieuThanhNgu();
     _vqCapNhat();
     _vqVeVong();
 }
@@ -316,6 +361,8 @@ function quayThuong() {
     const nut = document.getElementById('vqNutQuay');
     nut.disabled = true; nut.innerText = 'ĐANG QUAY…';
     document.getElementById('vqKetQua').innerHTML = '';
+    const tn = document.getElementById('vqThanhNgu');
+    if (tn) tn.style.visibility = 'hidden';
 
     try { vqNhac.currentTime = 0; vqNhac.play().catch(() => {}); } catch { /* trình duyệt chặn */ }
     let thoiGian = 6000;
@@ -369,8 +416,18 @@ function _vqTenChay(hs, f) {
     const phong = 1 + 0.22 * gan;
     el.style.transform = `scale(${phong.toFixed(3)})`;
     el.style.color = gan > 0.72 ? '#fca5a5' : (gan > 0.3 ? '#fcd34d' : '#ffffff');
-    el.innerHTML = `<span style="opacity:.6;font-size:.62em">Số</span> ${hs.stt}
-                    <span style="opacity:.55">·</span> ${hs.name}`;
+    el.innerHTML = `<span style="display:block;font-size:.34em;opacity:.6;line-height:1.1">Số ${hs.stt}</span>
+                    <span style="display:block">${hs.name}</span>`;
+}
+
+// Lấy một câu khác câu vừa chiếu, để không lặp lại ngay
+function _vqChieuThanhNgu() {
+    const el = document.getElementById('vqThanhNgu');
+    if (!el) return;
+    let i = Math.floor(Math.random() * VQ_THANH_NGU.length);
+    if (VQ_THANH_NGU.length > 1 && i === _vqThanhNguCu) i = (i + 1) % VQ_THANH_NGU.length;
+    _vqThanhNguCu = i;
+    el.innerText = '“' + VQ_THANH_NGU[i] + '”';
 }
 
 function _vqPhaoGiay(to) {
@@ -427,6 +484,9 @@ function _vqTraoThuong(idx, giai) {
 
     const ten = document.getElementById('vqTenSong');
     if (ten) { ten.innerHTML = ''; ten.style.transform = 'scale(1)'; ten.style.color = '#ffffff'; }
+    const tn2 = document.getElementById('vqThanhNgu');
+    if (tn2) tn2.style.visibility = 'visible';
+    _vqChieuThanhNgu();
     _vqDuoiKim = -1;
     _vqGoc = 0;
     _vqCapNhat();
