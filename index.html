@@ -2247,7 +2247,7 @@ Câu 2: 1 + 1 = ?"></textarea>
         <button onclick="closeGameMenu()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
         
         <h2 class="text-2xl font-black text-gray-800 mb-2"><i class="fas fa-gamepad text-indigo-500 mr-2"></i>Kho Trò Chơi</h2>
-        <p class="text-gray-500 text-sm mb-4" id="gameMenuDem">14 trò chơi — chọn một trò để hâm nóng lớp học!</p>
+        <p class="text-gray-500 text-sm mb-4" id="gameMenuDem">15 trò chơi — chọn một trò để hâm nóng lớp học!</p>
         
         <div class="tc-luoi" id="gameMenuLuoi">
             <button onclick="closeGameMenu(); openTimeBomb();" class="tc-o tc-red" title="Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!" aria-label="Quả Bom Hẹn Giờ — Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!">
@@ -2269,6 +2269,10 @@ Câu 2: 1 + 1 = ?"></textarea>
             <button onclick="closeGameMenu(); openBomBong();" class="tc-o tc-violet" title="Đúng liên tiếp 3 vòng mới ăn điểm" aria-label="Bơm Bóng — Đúng liên tiếp 3 vòng mới ăn điểm">
                 <span class="tc-bieu">🎈</span>
                 <span class="tc-ten">Bơm Bóng</span>
+            </button>
+            <button onclick="closeGameMenu(); openGoiTenVui();" class="tc-o tc-emerald" title="9 kiểu gọi tên ngẫu nhiên: trộm trứng, câu cá, bóng bay, khủng long, đèn pin, hộp quà, thẻ đỏ, đường đua, tên lửa" aria-label="Gọi Tên Vui — 9 kiểu gọi tên ngẫu nhiên">
+                <span class="tc-bieu">🎉</span>
+                <span class="tc-ten">Gọi Tên Vui</span>
             </button>
             <button onclick="closeGameMenu(); openUfoGoiTen();" class="tc-o tc-indigo" title="Mỗi bạn một con bò — đĩa bay quét tìm" aria-label="Đĩa Bay Gọi Tên — Mỗi bạn một con bò — đĩa bay quét tìm">
                 <span class="tc-bieu">🛸</span>
@@ -2684,6 +2688,7 @@ Câu 2: 1 + 1 = ?"></textarea>
     <script src="js/cau-kinh.js"></script>
     <script src="js/dau-gia.js"></script>
     <script src="js/ai-la-trieu-phu.js"></script>
+    <script src="js/goi-ten-vui.js"></script>
         <script src="js/card-flip.js"></script>
         <script src="js/tug-of-war.js"></script>
     <script src="js/init.js"></script>
