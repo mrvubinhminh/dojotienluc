@@ -14,6 +14,14 @@
 
 const UF_TOC_DO = [1, 1.5, 2];
 
+// Nhạc nền hồi hộp, vào trò chơi bốc ngẫu nhiên một bài
+const UF_NHAC = [
+    'https://files.catbox.moe/gwv058.mp3',
+    'https://files.catbox.moe/emlt9m.mp3'
+];
+const UF_AM_LUONG = 0.3;      // để nhỏ cho tiếng thầy cô vẫn nghe rõ
+const UF_AM_NHO   = 0.1;      // hạ xuống lúc công bố tên cho khỏi át
+
 let _ufBo       = [];      // [{ id, ten, stt, anh, x, y, dx, dy, nghi, lat, el, ... }]
 let _ufDaGoi    = [];      // [{ id, ten, stt, anh }]
 let _ufTocDo    = 1;
@@ -26,6 +34,8 @@ let _ufUfo      = { x: 0.5, y: 0.22, muc: 0.5 };
 let _ufMoi      = null;    // con bò đang bị nhắm
 let _ufHenGio   = [];
 let _ufAudio    = null;
+let _ufNhac     = null;      // thẻ <audio> đang phát nhạc nền
+let _ufChoCham  = false;     // trình duyệt chặn tự phát, chờ chạm màn hình
 
 function _ufGiam() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,6 +90,49 @@ function _ufTieng(kieu) {
             o.start(t0); o.stop(t0 + .4);
         }
     } catch (e) { /* trình duyệt chặn âm thanh thì thôi */ }
+}
+
+// ── Nhạc nền ─────────────────────────────────────────────────────────────────
+function _ufBatNhac() {
+    _ufDungNhac();
+    if (!_ufAmThanh) return;
+    try {
+        const bai = UF_NHAC[Math.floor(Math.random() * UF_NHAC.length)];
+        const a = new Audio(bai);
+        a.loop = true;
+        a.volume = UF_AM_LUONG;
+        a.preload = 'auto';
+        a.addEventListener('error', () => { _ufNhac = null; });   // hỏng mạng thì chơi tiếp, không nhạc
+        _ufNhac = a;
+        _ufThuPhat();
+    } catch (e) { _ufNhac = null; }
+}
+
+// Trình duyệt chỉ cho phát sau khi người dùng chạm vào trang. Mở trò chơi từ
+// nút bấm nên thường phát được ngay; nếu bị chặn thì chờ cú chạm đầu tiên.
+function _ufThuPhat() {
+    if (!_ufNhac || !_ufAmThanh) return;
+    const hua = _ufNhac.play();
+    if (hua && hua.catch) hua.catch(() => {
+        if (_ufChoCham) return;
+        _ufChoCham = true;
+        const lan1 = () => {
+            _ufChoCham = false;
+            document.getElementById('ufGame')?.removeEventListener('pointerdown', lan1);
+            if (_ufDangMo() && _ufAmThanh) _ufNhac?.play().catch(() => {});
+        };
+        document.getElementById('ufGame')?.addEventListener('pointerdown', lan1);
+    });
+}
+
+function _ufDungNhac() {
+    if (!_ufNhac) return;
+    try { _ufNhac.pause(); _ufNhac.currentTime = 0; } catch (e) {}
+    _ufNhac = null;
+}
+
+function _ufAmNho(nho) {
+    if (_ufNhac) _ufNhac.volume = nho ? UF_AM_NHO : UF_AM_LUONG;
 }
 
 // ── Kiểu dáng ────────────────────────────────────────────────────────────────
@@ -399,11 +452,13 @@ function openUfoGoiTen() {
     _ufVeDaGoi();
     _ufLoi('Đĩa bay đang lượn tìm bò…');
     _ufChay();
+    _ufBatNhac();
 }
 
 function dongUfoGoiTen() {
     _ufHuyHen();
     _ufDungChay();
+    _ufDungNhac();
     if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     document.getElementById('ufGame')?.classList.add('hidden');
     document.getElementById('ufKet')?.classList.add('hidden');
@@ -636,6 +691,7 @@ function _ufHut(b) {
 // ── Công bố tên ──────────────────────────────────────────────────────────────
 function _ufCongBo(b) {
     _ufTrangThai = 'HIEN';
+    _ufAmNho(true);
     _ufTieng('hien');
     _ufDaGoi.push({ id: b.id, ten: b.ten, stt: b.stt, anh: b.anh });
     _ufVeDaGoi();
@@ -665,6 +721,7 @@ function _ufCongBo(b) {
 }
 
 function ufTiepTuc() {
+    _ufAmNho(false);
     document.getElementById('ufKet')?.classList.add('hidden');
     _ufTrangThai = 'CHO';
     _ufMoi = null;
@@ -680,6 +737,7 @@ function ufChoDiem(id) {
         // bảng điểm nằm dưới lớp phủ nên tạm ẩn sân cỏ, xong bấm lại là vào tiếp
         document.getElementById('ufGame')?.classList.add('hidden');
         _ufDungChay();
+        _ufDungNhac();
         openPointsModal(id);
         if (typeof showToast === 'function') showToast('Cho điểm xong hãy mở lại Đĩa bay gọi tên', 'success');
     }
@@ -773,4 +831,7 @@ function ufDoiAm() {
     _ufAmThanh = !_ufAmThanh;
     const b = document.getElementById('ufNutAm');
     if (b) b.innerHTML = `${_ufAmThanh ? '🔊' : '🔇'}<span class="dai"> ${_ufAmThanh ? 'bật' : 'tắt'}</span>`;
+    if (!_ufAmThanh) { try { _ufNhac?.pause(); } catch (e) {} }
+    else if (_ufNhac) _ufThuPhat();
+    else _ufBatNhac();                       // lúc vào bị tắt tiếng thì giờ bốc bài mới
 }
