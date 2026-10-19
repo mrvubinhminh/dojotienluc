@@ -19,6 +19,41 @@
     </script>
     
     <link rel="stylesheet" href="css/styles.css">
+<style id="tcKieu">
+/* ===== Kho Trò Chơi: lưới dày để chứa được nhiều trò ===== */
+.tc-hop{max-width:min(96vw,1120px);max-height:92vh;display:flex;flex-direction:column}
+.tc-luoi{display:grid;gap:8px;overflow-y:auto;padding:2px;
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(min-width:420px){.tc-luoi{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:640px){.tc-luoi{gap:10px;grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(min-width:860px){.tc-luoi{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.tc-o{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
+  min-height:88px;padding:9px 5px;border-radius:16px;border:2px solid var(--tc-vien);
+  background:var(--tc-nen);transition:transform .15s ease-out,border-color .15s,background .15s}
+.tc-o:hover{border-color:var(--tc-dam);background:var(--tc-nen-2);transform:translateY(-2px)}
+.tc-o:active{transform:scale(.95)}
+.tc-o:focus-visible{outline:3px solid var(--tc-dam);outline-offset:2px}
+.tc-bieu{font-size:clamp(20px,4.6vw,30px);line-height:1.1;color:var(--tc-dam)}
+/* chỉ xuống dòng ở khoảng trắng, không cắt giữa chữ tiếng Việt */
+.tc-ten{font-weight:800;color:#1f2937;text-align:center;line-height:1.12;
+  font-size:clamp(9.5px,1.9vw,13px);overflow-wrap:break-word}
+@media(min-width:640px){
+  .tc-o{min-height:96px;padding:11px 6px}
+  .tc-bieu{font-size:28px}
+  .tc-ten{font-size:12.5px}
+}
+.tc-red{--tc-nen:#fef2f2;--tc-nen-2:#fee2e2;--tc-vien:#fecaca;--tc-dam:#ef4444}
+.tc-orange{--tc-nen:#fff7ed;--tc-nen-2:#ffedd5;--tc-vien:#fed7aa;--tc-dam:#f97316}
+.tc-amber{--tc-nen:#fffbeb;--tc-nen-2:#fef3c7;--tc-vien:#fde68a;--tc-dam:#f59e0b}
+.tc-emerald{--tc-nen:#ecfdf5;--tc-nen-2:#d1fae5;--tc-vien:#a7f3d0;--tc-dam:#10b981}
+.tc-teal{--tc-nen:#f0fdfa;--tc-nen-2:#ccfbf1;--tc-vien:#99f6e4;--tc-dam:#14b8a6}
+.tc-sky{--tc-nen:#f0f9ff;--tc-nen-2:#e0f2fe;--tc-vien:#bae6fd;--tc-dam:#0ea5e9}
+.tc-indigo{--tc-nen:#eef2ff;--tc-nen-2:#e0e7ff;--tc-vien:#c7d2fe;--tc-dam:#6366f1}
+.tc-violet{--tc-nen:#f5f3ff;--tc-nen-2:#ede9fe;--tc-vien:#ddd6fe;--tc-dam:#8b5cf6}
+.tc-purple{--tc-nen:#faf5ff;--tc-nen-2:#f3e8ff;--tc-vien:#e9d5ff;--tc-dam:#a855f7}
+.tc-slate{--tc-nen:#f8fafc;--tc-nen-2:#f1f5f9;--tc-vien:#e2e8f0;--tc-dam:#64748b}
+@media(prefers-reduced-motion:reduce){.tc-o{transition:none}}
+</style>
 </head>
 <body class="bg-dojo-bg font-sans antialiased text-gray-800 pb-20 select-none overflow-x-hidden">
 
@@ -2207,110 +2242,69 @@ Câu 2: 1 + 1 = ?"></textarea>
 
 <!-- GAME MENU MODAL -->
 <div id="gameMenuModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 z-50 hidden items-center justify-center transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-white p-6 rounded-3xl max-w-lg w-full mx-4 relative overflow-hidden shadow-2xl">
+    <div class="bg-white p-5 sm:p-6 rounded-3xl w-full mx-3 relative overflow-hidden shadow-2xl tc-hop">
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500"></div>
         <button onclick="closeGameMenu()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
         
         <h2 class="text-2xl font-black text-gray-800 mb-2"><i class="fas fa-gamepad text-indigo-500 mr-2"></i>Kho Trò Chơi</h2>
-        <p class="text-gray-500 text-sm mb-6">Chọn một trò chơi để hâm nóng lớp học!</p>
+        <p class="text-gray-500 text-sm mb-4" id="gameMenuDem">14 trò chơi — chọn một trò để hâm nóng lớp học!</p>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Quả bom hẹn giờ -->
-            <button onclick="closeGameMenu(); openTimeBomb();" class="flex flex-col items-center p-4 bg-red-50 border-2 border-red-100 rounded-2xl hover:border-red-400 hover:bg-red-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-bomb text-4xl text-red-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Quả Bom Hẹn Giờ</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!</p>
+        <div class="tc-luoi" id="gameMenuLuoi">
+            <button onclick="closeGameMenu(); openTimeBomb();" class="tc-o tc-red" title="Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!" aria-label="Quả Bom Hẹn Giờ — Chuyền bom tốc độ cao. Ai cầm bom lúc nổ sẽ bị phạt!">
+                <span class="tc-bieu"><i class="fas fa-bomb" aria-hidden="true"></i></span>
+                <span class="tc-ten">Quả Bom Hẹn Giờ</span>
             </button>
-            
-            <!-- Đánh Trùm -->
-            <button onclick="closeGameMenu(); openBossBattle();" class="flex flex-col items-center p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl hover:border-indigo-400 hover:bg-indigo-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-dragon text-4xl text-indigo-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Chinh Phục Cực Địa</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Cả lớp hợp lực đánh trùm. Trả lời đúng để gây sát thương!</p>
+            <button onclick="closeGameMenu(); openBossBattle();" class="tc-o tc-indigo" title="Cả lớp hợp lực đánh trùm. Trả lời đúng để gây sát thương!" aria-label="Chinh Phục Cực Địa — Cả lớp hợp lực đánh trùm. Trả lời đúng để gây sát thương!">
+                <span class="tc-bieu"><i class="fas fa-dragon" aria-hidden="true"></i></span>
+                <span class="tc-ten">Chinh Phục Cực Địa</span>
             </button>
-            <!-- Luyện gõ Tiếng Anh -->
-            <button onclick="closeGameMenu(); openTypingGameMenu();" class="flex flex-col items-center p-4 bg-sky-50 border-2 border-sky-100 rounded-2xl hover:border-sky-400 hover:bg-sky-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-keyboard text-4xl text-sky-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Luyện Gõ Tiếng Anh</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Luyện 10 ngón & học từ vựng</p>
+            <button onclick="closeGameMenu(); openTypingGameMenu();" class="tc-o tc-sky" title="Luyện 10 ngón & học từ vựng" aria-label="Luyện Gõ Tiếng Anh — Luyện 10 ngón & học từ vựng">
+                <span class="tc-bieu"><i class="fas fa-keyboard" aria-hidden="true"></i></span>
+                <span class="tc-ten">Luyện Gõ Tiếng Anh</span>
             </button>
-
-
-                        <!-- Vòng Quay Học Tập -->
-            <button onclick="closeGameMenu(); openLearningWheel();" class="flex flex-col items-center p-4 bg-teal-50 border-2 border-teal-100 rounded-2xl hover:border-teal-400 hover:bg-teal-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-dharmachakra text-4xl text-teal-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Vòng Quay Học Tập</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Quay ngẫu nhiên học sinh & câu hỏi!</p>
+            <button onclick="closeGameMenu(); openLearningWheel();" class="tc-o tc-teal" title="Quay ngẫu nhiên học sinh & câu hỏi!" aria-label="Vòng Quay Học Tập — Quay ngẫu nhiên học sinh & câu hỏi!">
+                <span class="tc-bieu"><i class="fas fa-dharmachakra" aria-hidden="true"></i></span>
+                <span class="tc-ten">Vòng Quay Học Tập</span>
             </button>
-
-            <!-- Bơm Bóng -->
-            <button onclick="closeGameMenu(); openBomBong();" class="flex flex-col items-center p-4 bg-violet-50 border-2 border-violet-100 rounded-2xl hover:border-violet-400 hover:bg-violet-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">🎈</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Bơm Bóng</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Đúng liên tiếp 3 vòng mới ăn điểm</p>
+            <button onclick="closeGameMenu(); openBomBong();" class="tc-o tc-violet" title="Đúng liên tiếp 3 vòng mới ăn điểm" aria-label="Bơm Bóng — Đúng liên tiếp 3 vòng mới ăn điểm">
+                <span class="tc-bieu">🎈</span>
+                <span class="tc-ten">Bơm Bóng</span>
             </button>
-
-            <!-- Đĩa bay gọi tên -->
-            <button onclick="closeGameMenu(); openUfoGoiTen();" class="flex flex-col items-center p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl hover:border-indigo-400 hover:bg-indigo-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">🛸</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Đĩa Bay Gọi Tên</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Mỗi bạn một con bò — đĩa bay quét tìm</p>
+            <button onclick="closeGameMenu(); openUfoGoiTen();" class="tc-o tc-indigo" title="Mỗi bạn một con bò — đĩa bay quét tìm" aria-label="Đĩa Bay Gọi Tên — Mỗi bạn một con bò — đĩa bay quét tìm">
+                <span class="tc-bieu">🛸</span>
+                <span class="tc-ten">Đĩa Bay Gọi Tên</span>
             </button>
-
-            <!-- Ai là triệu phú -->
-            <button onclick="closeGameMenu(); openAiLaTrieuPhu();" class="flex flex-col items-center p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl hover:border-indigo-400 hover:bg-indigo-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">📞</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Ai Là Triệu Phú</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Ghế nóng, thang điểm, 3 quyền trợ giúp</p>
+            <button onclick="closeGameMenu(); openAiLaTrieuPhu();" class="tc-o tc-indigo" title="Ghế nóng, thang điểm, 3 quyền trợ giúp" aria-label="Ai Là Triệu Phú — Ghế nóng, thang điểm, 3 quyền trợ giúp">
+                <span class="tc-bieu">📞</span>
+                <span class="tc-ten">Ai Là Triệu Phú</span>
             </button>
-
-            <!-- Đấu giá tri thức -->
-            <button onclick="closeGameMenu(); openDauGia();" class="flex flex-col items-center p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl hover:border-amber-400 hover:bg-amber-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">⚖️</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Đấu Giá Tri Thức</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Đặt điểm giành quyền trả lời — đúng gấp đôi</p>
+            <button onclick="closeGameMenu(); openDauGia();" class="tc-o tc-amber" title="Đặt điểm giành quyền trả lời — đúng gấp đôi" aria-label="Đấu Giá Tri Thức — Đặt điểm giành quyền trả lời — đúng gấp đôi">
+                <span class="tc-bieu">⚖️</span>
+                <span class="tc-ten">Đấu Giá Tri Thức</span>
             </button>
-
-            <!-- Cầu kính may mắn -->
-            <button onclick="closeGameMenu(); openCauKinh();" class="flex flex-col items-center p-4 bg-sky-50 border-2 border-sky-100 rounded-2xl hover:border-sky-400 hover:bg-sky-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">🌉</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Cầu Kính May Mắn</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Chọn trái hay phải — bước sai là rơi</p>
+            <button onclick="closeGameMenu(); openCauKinh();" class="tc-o tc-sky" title="Chọn trái hay phải — bước sai là rơi" aria-label="Cầu Kính May Mắn — Chọn trái hay phải — bước sai là rơi">
+                <span class="tc-bieu">🌉</span>
+                <span class="tc-ten">Cầu Kính May Mắn</span>
             </button>
-
-            <!-- Lật mảnh ghép -->
-            <button onclick="closeGameMenu(); openLatManhGhep();" class="flex flex-col items-center p-4 bg-purple-50 border-2 border-purple-100 rounded-2xl hover:border-purple-400 hover:bg-purple-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">🧩</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Lật Mảnh Ghép</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Đoán hình bí mật — đoán sớm được nhiều điểm</p>
+            <button onclick="closeGameMenu(); openLatManhGhep();" class="tc-o tc-purple" title="Đoán hình bí mật — đoán sớm được nhiều điểm" aria-label="Lật Mảnh Ghép — Đoán hình bí mật — đoán sớm được nhiều điểm">
+                <span class="tc-bieu">🧩</span>
+                <span class="tc-ten">Lật Mảnh Ghép</span>
             </button>
-
-            <!-- Người cuối cùng may mắn -->
-            <button onclick="closeGameMenu(); openNguoiCuoiCung();" class="flex flex-col items-center p-4 bg-orange-50 border-2 border-orange-100 rounded-2xl hover:border-orange-400 hover:bg-orange-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <span class="text-4xl mb-3 group-hover:scale-110 transition duration-300">🔥</span>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Người Cuối Cùng</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Loại dần tới khi còn một bạn</p>
+            <button onclick="closeGameMenu(); openNguoiCuoiCung();" class="tc-o tc-orange" title="Loại dần tới khi còn một bạn" aria-label="Người Cuối Cùng — Loại dần tới khi còn một bạn">
+                <span class="tc-bieu">🔥</span>
+                <span class="tc-ten">Người Cuối Cùng</span>
             </button>
-
-            <!-- Vòng Quay May Mắn -->
-            <button onclick="closeGameMenu(); openVongQuayMayMan();" class="flex flex-col items-center p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl hover:border-amber-400 hover:bg-amber-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-gift text-4xl text-amber-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Vòng Quay May Mắn</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Quay số thứ tự nhận phần thưởng, từ giải thấp lên cao</p>
+            <button onclick="closeGameMenu(); openVongQuayMayMan();" class="tc-o tc-amber" title="Quay số thứ tự nhận phần thưởng, từ giải thấp lên cao" aria-label="Vòng Quay May Mắn — Quay số thứ tự nhận phần thưởng, từ giải thấp lên cao">
+                <span class="tc-bieu"><i class="fas fa-gift" aria-hidden="true"></i></span>
+                <span class="tc-ten">Vòng Quay May Mắn</span>
             </button>
-
-            <!-- Đấu Trường Thẻ Bài -->
-            <button onclick="closeGameMenu(); openCardFlip();" class="flex flex-col items-center p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-clone text-4xl text-emerald-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Đấu Trường Thẻ Bài</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Lật thẻ bí ẩn để nhận điểm thưởng lớn hoặc cạm bẫy!</p>
+            <button onclick="closeGameMenu(); openCardFlip();" class="tc-o tc-emerald" title="Lật thẻ bí ẩn để nhận điểm thưởng lớn hoặc cạm bẫy!" aria-label="Đấu Trường Thẻ Bài — Lật thẻ bí ẩn để nhận điểm thưởng lớn hoặc cạm bẫy!">
+                <span class="tc-bieu"><i class="fas fa-clone" aria-hidden="true"></i></span>
+                <span class="tc-ten">Đấu Trường Thẻ Bài</span>
             </button>
-            
-            <!-- Kéo Co Hạng Nặng -->
-            <button onclick="closeGameMenu(); openTugOfWar();" class="flex flex-col items-center p-4 bg-orange-50 border-2 border-orange-100 rounded-2xl hover:border-orange-400 hover:bg-orange-100 transition active:scale-95 group text-left relative overflow-hidden">
-                <i class="fas fa-people-arrows text-4xl text-orange-500 mb-3 group-hover:scale-110 transition duration-300"></i>
-                <h3 class="font-bold text-gray-800 text-center mb-1">Kéo Co Hạng Nặng</h3>
-                <p class="text-[11px] text-gray-500 text-center leading-tight">Chia 2 phe đối kháng trực tiếp. Trả lời đúng để kéo cờ!</p>
+            <button onclick="closeGameMenu(); openTugOfWar();" class="tc-o tc-orange" title="Chia 2 phe đối kháng trực tiếp. Trả lời đúng để kéo cờ!" aria-label="Kéo Co Hạng Nặng — Chia 2 phe đối kháng trực tiếp. Trả lời đúng để kéo cờ!">
+                <span class="tc-bieu"><i class="fas fa-people-arrows" aria-hidden="true"></i></span>
+                <span class="tc-ten">Kéo Co Hạng Nặng</span>
             </button>
         </div>
     </div>
