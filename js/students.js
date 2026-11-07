@@ -194,8 +194,11 @@ function handleExcelUpload(e, isSyncUpdate = false) {
     const r=new FileReader();
     r.onload=function(ev){
         try{
-            const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
-            const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+            const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:true});
+            let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+            // Nhận cả bảng điểm Sở (tiêu đề ở dòng 6, cột B là mã định danh): quy về STT | Họ tên | Ngày sinh.
+            const parsed=typeof parseClassListWorkbook==='function'?parseClassListWorkbook(wb,f.name):null;
+            if(parsed) rows=[['STT','Họ và tên','Ngày sinh'],...parsed.students.map(s=>[s.stt,s.name,s.dob])];
             let c=0, updated=0;
             
             // Lấy danh sách học sinh hiện tại của lớp

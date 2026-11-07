@@ -92,7 +92,7 @@
     </div>
     <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="classListContainer"></div>
     <div class="p-4 border-t border-gray-100 flex flex-col gap-3">
-        <button onclick="document.getElementById('excelInput').click()" class="w-full py-3 bg-green-100 text-green-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-green-200"><i class="fas fa-file-excel"></i> Nhập danh sách (Excel)</button>
+        <button onclick="openClassListImport()" class="w-full py-3 bg-green-100 text-green-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-green-200" title="Tạo lớp mới hoặc thêm vào lớp đang chọn từ file Excel (STT, Họ và tên, Ngày sinh, Mã định danh)"><i class="fas fa-file-excel"></i> Nhập lớp từ Excel</button>
         <input type="file" id="excelInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event)">
 
         <button onclick="document.getElementById('excelSyncInput').click()" class="w-full py-3 bg-amber-100 text-amber-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-amber-200 mt-2" title="Cập nhật lại tên/STT học sinh từ danh sách Excel mới, đồng thời giữ nguyên Điểm số & Ảnh đại diện cũ"><i class="fas fa-sync-alt"></i> Đồng bộ đè danh sách (Giữ điểm)</button>
@@ -2647,6 +2647,7 @@ Câu 2: 1 + 1 = ?"></textarea>
     <script src="js/sidebar-class-management.js"></script>
     <script src="js/google-classroom-import.js"></script>
     <script src="js/students.js"></script>
+    <script src="js/class-list-import.js"></script>
     <script src="js/points-modal.js"></script>
     <script src="js/edit-delete-student.js"></script>
     <script src="js/batch-crop.js"></script>
