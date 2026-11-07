@@ -19,7 +19,7 @@ function renderHistory() {
     Object.entries(groups).forEach(([date,items])=>{
         container.insertAdjacentHTML('beforeend',`<div class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-3 mb-1 px-1">${date}</div>`);
         items.forEach(h=>{
-            const isPos=h.points>0;
+            const isPos=h.points>0, isReset=h.type==='reset';
             const time=new Date(h.timestamp).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
             const st=students.find(s=>s.id===h.studentId);
             const avatar=st?st.avatar:avatarBaseUrl+h.studentName.replace(/\s/g,'');
@@ -30,7 +30,7 @@ function renderHistory() {
                         <p class="font-bold text-gray-800 text-sm truncate">${h.studentName}</p>
                         <p class="text-xs text-gray-500">${h.skillName} · ${time}</p>
                     </div>
-                    <div class="font-black text-base flex-shrink-0 ${isPos?'text-dojo-green':'text-dojo-red'}">${isPos?'+':''}${h.points}</div>
+                    <div class="font-black text-base flex-shrink-0 ${isReset?'text-gray-500':isPos?'text-dojo-green':'text-dojo-red'}">${isReset?'về 0':(isPos?'+':'')+h.points}</div>
                 </div>`);
         });
     });

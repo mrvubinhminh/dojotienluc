@@ -7,7 +7,9 @@
 3. Điểm cộng, điểm trừ và tổng điểm của tất cả học sinh trong lớp được đưa về 0. Danh sách học sinh, lịch sử và các kỳ đã lưu vẫn giữ nguyên. Chức năng này không tạo kỳ mới; muốn lưu kết quả thành một kỳ, dùng **Kết thúc kỳ**.
 4. Chờ nhãn **Đã lưu điểm ☁️**. Nếu mất mạng, lệnh được giữ lại và gửi khi kết nối trở lại.
 
-Reset là lệnh riêng trong sổ giao dịch, được máy chủ xử lý theo thứ tự nhận. Tất cả điểm máy chủ đã nhận trước lệnh reset về 0; giao dịch điểm đến sau reset được cộng tiếp, kể cả giao dịch từ thiết bị khác từng mất mạng. Gửi lại cùng lệnh reset không reset lần thứ hai. Chỉ lớp được chọn bị tác động. Các cột điểm trong bảng Students cũng được cập nhật từ sổ giao dịch.
+Reset là lệnh riêng trong sổ giao dịch, được máy chủ xử lý theo thứ tự nhận. Tất cả điểm máy chủ đã nhận trước lệnh reset về 0; giao dịch điểm đến sau reset được cộng tiếp, kể cả giao dịch từ thiết bị khác từng mất mạng. Gửi lại cùng lệnh reset không reset lần thứ hai. Chỉ lớp được chọn bị tác động. Các cột điểm trong bảng Students được cập nhật từ sổ giao dịch mỗi khi máy chủ nhận giao dịch mới (lần kiểm tra định kỳ không có gì mới thì không ghi lại bảng).
+
+Dòng lịch sử của lệnh reset được đánh dấu `type: 'reset'` (bảng History có thêm cột `type`). Dòng này hiện màu xám "về 0" và không được tính là điểm trừ trong Phiếu nhận xét tuần, Sổ liên lạc, thống kê hồ sơ học sinh hay trang phụ huynh xem điểm. Kết thúc kỳ cũng dùng cơ chế này. Nếu lệnh reset chưa lưu được trên máy, kỳ học vừa tạo được huỷ và app báo lỗi.
 
 **Mã Apps Script đầy đủ:** [apps-script-v2.gs](apps-script-v2.gs). Sao chép toàn bộ tệp vào dự án Apps Script và triển khai phiên bản mới cho deployment hiện tại. Mẫu mã trong phần hướng dẫn đồng bộ của ứng dụng cũng đã được cập nhật. Bản máy chủ V2 cũ chưa có lệnh reset cần được thay bằng tệp mới này.
 

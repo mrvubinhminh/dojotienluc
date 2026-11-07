@@ -52,17 +52,22 @@ function dojoSnapshot(ledger) {
     if(e.kind==='opening') {
       var s=e.student;
       if(!deleted[String(s.id)] && !d.students.some(function(x){return String(x.id)===String(s.id);})) d.students.push(s);
-      totals[String(s.id)]={points:Number(s.points)||0,positivePoints:Number(s.positivePoints)||0,negativePoints:Number(s.negativePoints)||0};
     }
   });
+  // Ledger order matters: an opening appended after an old reset must not be zeroed by it.
   ledger.entries.forEach(function(e){
+    if(e.kind==='opening') {
+      var o=e.student, ok=String(o.id);
+      if(!totals[ok]) totals[ok]={points:Number(o.points)||0,positivePoints:Number(o.positivePoints)||0,negativePoints:Number(o.negativePoints)||0};
+      return;
+    }
     if(e.kind) return;
     if(e.type==='classReset') {
       d.students.filter(function(s){return String(s.classId)===String(e.classId);}).forEach(function(s){
         var t=totals[String(s.id)];
         if(!t) return;
         var id=e.operationId+':'+s.id;
-        records[id]={id:id,classId:s.classId,studentId:s.id,studentName:s.name,skillName:e.reason||'Reset điểm lớp về 0',points:-t.points,timestamp:e.timestamp};
+        records[id]={id:id,classId:s.classId,studentId:s.id,studentName:s.name,skillName:e.reason||'Reset điểm lớp về 0',points:-t.points,type:'reset',timestamp:e.timestamp};
         t.points=0;t.positivePoints=0;t.negativePoints=0;
       });
       return;
@@ -103,6 +108,7 @@ function dojoValidateBatch(b) {
   if (!b || typeof b.operationId!=='string' || !/^[a-zA-Z0-9-]{10,100}$/.test(b.operationId) || !Array.isArray(b.changes) || (!b.changes.length && b.type!=='classReset')) throw new Error('Giao dịch không hợp lệ');
   if(b.type && b.type!=='classReset') throw new Error('Loại giao dịch không hợp lệ');
   if(b.type==='classReset' && (b.classId===undefined || b.classId===null || String(b.classId)==='')) throw new Error('Thiếu lớp cần reset');
+  if(b.type==='classReset' && b.changes.length) throw new Error('Lệnh reset không được kèm thay đổi điểm');
   b.changes.forEach(function(c){
     if (!c.opening || c.studentId===undefined || String(c.opening.id)!==String(c.studentId)) throw new Error('Thiếu học sinh');
     [c.delta,c.positiveDelta,c.negativeDelta,c.opening.points,c.opening.positivePoints,c.opening.negativePoints].forEach(function(n){if(typeof n!=='number'||!isFinite(n)) throw new Error('Điểm không hợp lệ');});
@@ -134,7 +140,7 @@ function doPost(e) {
         });
         dojoAppend(ledger.sheet,fresh); ledger.entries=ledger.entries.concat(fresh);
         var snapshot=dojoSnapshot(ledger);
-        dojoWritePointProjection(snapshot);
+        if(fresh.length) dojoWritePointProjection(snapshot);
         return respond({status:'ok',protocol:2,data:snapshot});
       }
       if(p.action==='push') {
@@ -279,7 +285,7 @@ function writeAllData(data) {
 
   // --- Lịch sử cho điểm ---
   writeSheet(ss, 'History',
-    ['id','classId','studentId','studentName','skillName','points','timestamp'],
+    ['id','classId','studentId','studentName','skillName','points','timestamp','type'],
     data.history||[]);
 
   // --- Đợt đánh giá ---

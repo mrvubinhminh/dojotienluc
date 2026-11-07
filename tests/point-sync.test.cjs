@@ -136,3 +136,31 @@ test('reset projects zero counters into Students sheet without changing student 
  sheet.appendRow(['id','name','points','positivePoints','negativePoints']);sheet.appendRow([1,'An',10,10,0]);s.sheets.set('Students',sheet);
  c.queueClassPointReset(1);const r=s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});assert.equal(r.status,'ok');assert.deepEqual(sheet.rows[1],[1,'An',0,0,0]);
 });
+test('reset history rows are marked as reset (client and server) so reports do not count them as penalties',()=>{
+ const c=client(),s=server();c.queueClassPointReset(1);
+ assert.ok(c.history.every(h=>h.type==='reset'));
+ const r=s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});
+ assert.equal(r.data.history.find(h=>h.skillName==='Reset điểm lớp về 0').type,'reset');
+});
+test('empty poll does not rewrite the Students sheet',()=>{
+ const s=server(),sheet=new Sheet();sheet.appendRow(['id','name','points','positivePoints','negativePoints']);sheet.appendRow([1,'An',10,10,0]);s.sheets.set('Students',sheet);
+ let writes=0;const orig=sheet.getRange.bind(sheet);sheet.getRange=(...a)=>{const r=orig(...a);const sv=r.setValues;r.setValues=v=>{writes++;sv(v)};return r};
+ assert.equal(s.call('syncPoints',{protocol:2,batches:[]}).status,'ok');assert.equal(writes,0);
+ const c=client();add(c,2);s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});assert.ok(writes>0);assert.equal(sheet.rows[1][2],12);
+});
+test('server rejects a classReset command that carries score changes',()=>{
+ const c=client(),s=server();add(c,2);const [b]=plain(c.pendingPointBatches());
+ const r=s.call('syncPoints',{protocol:2,batches:[{...b,type:'classReset',classId:1}]});
+ assert.equal(r.status,'error');assert.equal(s.pull().data.students[0].points,10);
+});
+test('student whose opening balance is recorded after an older reset keeps that balance',()=>{
+ const s=server(),c=client();c.queueClassPointReset(1);s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});
+ // A new student appears in the Students sheet later with existing points.
+ const d=client();vm.runInContext("students.push({id:9,classId:1,name:'Mới',points:4,positivePoints:4,negativePoints:0});resetPointBaseline();students[1].points=5;students[1].positivePoints=5;capturePointChanges()",d);
+ const r=s.call('syncPoints',{protocol:2,batches:plain(d.pendingPointBatches())});
+ assert.equal(r.data.students.find(x=>x.id===9).points,5);assert.equal(r.data.students.find(x=>x.id===1).points,0);
+});
+test('reset stays queued and reports success even if the full snapshot save fails afterwards',()=>{
+ const c=client();c.saveData=()=>{throw Error('quota')};
+ assert.doesNotThrow(()=>c.queueClassPointReset(1));assert.equal(c.students[0].points,0);assert.equal(c.pendingPointBatches()[0].type,'classReset');
+});

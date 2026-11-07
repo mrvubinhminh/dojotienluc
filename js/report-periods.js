@@ -131,8 +131,10 @@ function endPeriod() {
     const defaultName=`Tuần ${new Date().toLocaleDateString('vi-VN')}`;
     const name=prompt(`Đặt tên kỳ học (VD: Tuần 1, Tháng 10/2025):`,defaultName);
     if(!name) return;
-    periods.push({id:Date.now(),classId:currentClassId,name:name.trim(),endDate:new Date().toISOString(),students:cs.map(s=>({...s}))});
-    queueClassPointReset(currentClassId, `Kết thúc kỳ: ${name.trim()} — reset điểm về 0`);
+    const period={id:Date.now(),classId:currentClassId,name:name.trim(),endDate:new Date().toISOString(),students:cs.map(s=>({...s}))};
+    periods.push(period);
+    try { queueClassPointReset(currentClassId, `Kết thúc kỳ: ${name.trim()} — reset điểm về 0`); }
+    catch(e) { periods=periods.filter(p=>p!==period); showToast('Chưa kết thúc kỳ: '+e.message,false); return; }
     document.getElementById('totalClassPoints').innerText='Tổng điểm: 0';
     showToast(`Đã lưu kỳ "${name.trim()}" và reset điểm!`);
     currentPeriodId=null; renderReport();

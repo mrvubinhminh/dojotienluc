@@ -95,12 +95,14 @@ function queueClassPointReset(classId, reason='Reset điểm lớp về 0') {
     localStorage.setItem(pointPrefix()+batch.operationId,JSON.stringify(batch));
     for(const s of students.filter(s=>String(s.classId)===String(classId))) {
         history.push({id:batch.operationId+':'+s.id,classId:s.classId,studentId:s.id,studentName:s.name,
-            skillName:reason,points:-s.points,timestamp:batch.timestamp});
+            skillName:reason,points:-s.points,type:'reset',timestamp:batch.timestamp});
         s.points=0;s.positivePoints=0;s.negativePoints=0;
     }
     _pointGeneration++;
     resetPointBaseline();
-    saveData();
+    // The reset is already durable in the outbox; a failed snapshot save (already toasted
+    // by saveData) must not make callers think the reset did not happen.
+    try { saveData(); } catch(e) { console.error(e); }
     if(typeof scheduleAutoSync==='function') scheduleAutoSync();
     refreshPointViews();
     return batch;
@@ -123,7 +125,7 @@ function applyPointSnapshot(data) {
     for (const batch of pending) {
       if(batch.type==='classReset') {
           for(const s of students.filter(s=>String(s.classId)===String(batch.classId))) {
-              merged.set(batch.operationId+':'+s.id,{id:batch.operationId+':'+s.id,classId:s.classId,studentId:s.id,studentName:s.name,skillName:batch.reason,points:-s.points,timestamp:batch.timestamp});
+              merged.set(batch.operationId+':'+s.id,{id:batch.operationId+':'+s.id,classId:s.classId,studentId:s.id,studentName:s.name,skillName:batch.reason,points:-s.points,type:'reset',timestamp:batch.timestamp});
               s.points=0;s.positivePoints=0;s.negativePoints=0;
           }
       }

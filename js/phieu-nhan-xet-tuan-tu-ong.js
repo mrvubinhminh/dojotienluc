@@ -58,7 +58,7 @@ function closeWeeklyReports() { document.getElementById('weeklyReportOverlay').c
 function generateStudentReport(s, startDate, endDate) {
     const startStr = dateToStr(startDate), endStr = dateToStr(endDate);
     // Points this period
-    const ph = history.filter(h=>h.studentId===s.id && h.classId===s.classId &&
+    const ph = history.filter(h=>h.type!=='reset' && h.studentId===s.id && h.classId===s.classId &&
         new Date(h.timestamp)>=startDate && new Date(h.timestamp)<=endDate);
     const periodPos = ph.filter(h=>h.points>0).reduce((sum,h)=>sum+h.points,0);
     const periodNeg = ph.filter(h=>h.points<0).reduce((sum,h)=>sum+Math.abs(h.points),0);
