@@ -221,7 +221,8 @@ function doGet(e) {
 }
 
 function buildViewHtml(data) {
-  const safe = s => String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safe = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num = v => { const n = Number(v); return isFinite(n) ? n : 0; };
   const gradeColor = v => v>=8?'#16a34a':v<5?'#dc2626':'#555';
   const gradeBadge = v => v>=8?' ⭐':v<5?' ⚠️':'';
   const dt = new Date(data.generatedAt||Date.now()).toLocaleDateString('vi-VN');
@@ -234,7 +235,7 @@ function buildViewHtml(data) {
     const ptsColor = pts>0?'#16a34a':pts<0?'#dc2626':'#555';
     body = `
 <div class="header">
-  <img class="avatar" src="${safe(s.avatar)}" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 80\"><circle cx=\"40\" cy=\"40\" r=\"40\" fill=\"%23dbeafe\"/><text x=\"50%\" y=\"55%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"32\" fill=\"%2333a3dc\">${safe(s.name||'').charAt(0)}</text></svg>'">
+  ${/^https?:\/\//i.test(String(s.avatar||''))?'<img class="avatar" src="'+safe(s.avatar)+'">':''}
   <h1>${safe(s.name)}</h1>
   <p>Lớp ${safe(data.className)} &nbsp;|&nbsp; STT: ${safe(s.stt)}</p>
   ${msIcon?'<p class="ms">'+msIcon+'</p>':''}
@@ -244,6 +245,7 @@ function buildViewHtml(data) {
   <div class="row"><span>Điểm cộng</span><span class="badge g">+${s.positivePoints||0}</span></div>
   <div class="row"><span>Điểm trừ</span><span class="badge r">-${s.negativePoints||0}</span></div>
   <div class="row"><b>Tổng điểm</b><b style="font-size:26px;color:${ptsColor}">${pts}</b></div>
+  ${data.rank&&data.rank.total?'<div class="row"><span>Thứ hạng trong lớp</span><b style="font-size:20px;color:#4f46e5">'+num(data.rank.position)+'/'+num(data.rank.total)+'</b></div>'+(data.rank.nextRank?'<div class="row"><span>Cần thêm để bắt kịp hạng '+num(data.rank.nextRank)+'</span><b>'+num(data.rank.gapToNext)+' điểm</b></div>':'')+'<div class="row"><span>Trung bình lớp</span><span>'+num(data.rank.average)+'</span></div>':''}
 </div>
 ${data.grades&&data.grades.length?'<div class="card"><h2>📚 Kết quả học tập</h2>'+data.grades.map(g=>'<p class="period">'+safe(g.periodName)+'</p><table>'+Object.entries(g.grades).map(([sub,val])=>'<tr><td>'+safe(sub)+'</td><td style="font-weight:700;color:'+gradeColor(val)+'">'+val+gradeBadge(val)+'</td></tr>').join('')+'</table>').join('')+'</div>':''}
 ${data.history&&data.history.length?'<div class="card"><h2>📋 Lịch sử gần đây</h2>'+data.history.slice(0,10).map(h=>'<div class="row"><span>'+safe(h.skillName)+'</span><span class="badge '+(h.points>0?'g':'r')+'">'+(h.points>0?'+':'')+h.points+'</span></div>').join('')+'</div>':''}
@@ -254,11 +256,12 @@ ${data.history&&data.history.length?'<div class="card"><h2>📋 Lịch sử gầ
 <div class="card">
 <table style="width:100%">
 <tr style="background:#f0f4f8"><th>#</th><th style="text-align:left">Họ và tên</th><th>Điểm</th></tr>
-${(data.students||[]).map((s,i)=>'<tr><td style="text-align:center;color:#888">'+(i+1)+'</td><td><b>'+safe(s.name)+'</b></td><td style="text-align:center;font-weight:800;color:'+(s.points>0?'#16a34a':s.points<0?'#dc2626':'#555')+'">'+s.points+'</td></tr>').join('')}
+${(data.students||[]).map((s,i)=>'<tr><td style="text-align:center;color:#888">'+(num(s.rank)||(i+1))+'</td><td><b>'+safe(s.name)+'</b></td><td style="text-align:center;font-weight:800;color:'+(num(s.points)>0?'#16a34a':num(s.points)<0?'#dc2626':'#555')+'">'+num(s.points)+'</td></tr>').join('')}
 </table></div>`;
   }
 
   return `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;padding:16px;background:#f1f5f9;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1e293b}.header{background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff;border-radius:18px;padding:20px;text-align:center;margin:0 auto 14px;max-width:520px}.header h1{margin:6px 0 4px;font-size:22px}.header p{margin:0;opacity:.85;font-size:14px}.avatar{width:80px;height:80px;border-radius:50%;background:#dbeafe;object-fit:contain}.ms{font-size:28px}.card{background:#fff;border-radius:16px;padding:14px 16px;margin:0 auto 12px;max-width:520px;box-shadow:0 1px 6px rgba(0,0,0,.06)}.card h2{font-size:15px;margin:0 0 8px;color:#475569}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:14px}.row:last-child{border:none}.badge{font-weight:800;padding:2px 8px;border-radius:999px}.badge.g{color:#16a34a;background:#f0fdf4}.badge.r{color:#dc2626;background:#fef2f2}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px 6px;border-bottom:1px solid #f1f5f9}.period{font-weight:700;color:#94a3b8;font-size:12px;margin:8px 0 2px}footer{text-align:center;font-size:12px;color:#94a3b8;margin-top:8px}</style>
 </head><body>${body}
 <footer>📅 ${dt} &nbsp;|&nbsp; 🔒 Chỉ xem – Không thể chỉnh sửa</footer>
 </body></html>`;
