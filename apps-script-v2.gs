@@ -277,7 +277,7 @@ function writeAllData(data) {
 
   // --- Học sinh ---
   writeSheet(ss, 'Students',
-    ['id','classId','stt','name','dob','points','positivePoints','negativePoints','avatar','hocTot','studentCode'],
+    ['id','classId','stt','name','dob','points','positivePoints','negativePoints','avatar','hocTot','studentCode','baseName','nameSuffix'],
     data.students||[]);
 
   // --- Lịch sử cho điểm ---

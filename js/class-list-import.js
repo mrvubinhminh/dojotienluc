@@ -87,13 +87,35 @@ function parseClassListRows(rows) {
             studentCode: h.code >= 0 ? _cliClean(row[h.code]) : ''
         };
         const key = _cliNorm(name) + '|' + student.dob;
-        if (seen.has(key)) warnings.push(`Dòng ${r + 1}: "${name}" trùng với dòng ${seen.get(key)}.`);
+        // Trùng cả tên và ngày sinh: có thể một em bị ghi hai lần (trùng tên thôi thì gắn A/B bên dưới).
+        if (seen.has(key) && student.dob) warnings.push(`Dòng ${r + 1}: "${name}" trùng cả tên và ngày sinh với dòng ${seen.get(key)}, kiểm tra xem có ghi lặp không.`);
         else seen.set(key, r + 1);
         students.push(student);
     }
+    labelDuplicateNames(students, warnings);
     if (h.dob < 0) warnings.push('File không có cột Ngày sinh, học sinh sẽ để trống ngày sinh.');
     return { ...info, students, warnings };
 }
+
+// Học sinh trùng họ tên được thêm ký hiệu A, B, C... theo thứ tự trong danh sách
+// (VD: "Nguyễn Ngọc Phương Vy A", "Nguyễn Ngọc Phương Vy B"). baseName giữ tên gốc.
+const _CLI_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function labelDuplicateNames(list, warnings) {
+    const groups = new Map();
+    for (const s of list) {
+        s.baseName = s.baseName || s.name;
+        const k = _cliNorm(s.baseName);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(s);
+    }
+    for (const g of groups.values()) {
+        if (g.length < 2) continue;
+        g.forEach((s, i) => { s.nameSuffix = _CLI_LETTERS[i] || String(i + 1); s.name = `${s.baseName} ${s.nameSuffix}`; });
+        warnings?.push(`Có ${g.length} em trùng tên "${g[0].baseName}": đã thêm ký hiệu ${g.map(s => s.nameSuffix).join(', ')} để phân biệt.`);
+    }
+    return list;
+}
+function _cliBase(s) { return s.baseName || (s.nameSuffix ? String(s.name).replace(new RegExp('\\s+' + s.nameSuffix + '$'), '') : s.name); }
 
 // Chọn trang tính đầu tiên có dòng tiêu đề (bỏ qua trang "HuongDan"...).
 function parseClassListWorkbook(wb, fileName) {
@@ -112,8 +134,32 @@ function parseClassListWorkbook(wb, fileName) {
 // (thiếu ngày sinh ở một bên thì so theo tên).
 function isSameImportedStudent(existing, s) {
     if (existing.studentCode && s.studentCode) return String(existing.studentCode) === String(s.studentCode);
-    if (_cliNorm(existing.name) !== _cliNorm(s.name)) return false;
+    // Cả hai đều có ký hiệu A/B: phải trùng cả ký hiệu; nếu không thì so theo tên gốc.
+    const both = existing.nameSuffix && s.nameSuffix;
+    if (_cliNorm(both ? existing.name : _cliBase(existing)) !== _cliNorm(both ? s.name : _cliBase(s))) return false;
     return !existing.dob || !s.dob || _cliDate(existing.dob) === s.dob;
+}
+
+// Thêm học sinh mới vào lớp đã có em trùng tên: em cũ chưa có ký hiệu được gắn A
+// (đổi tên hiển thị, lịch sử vẫn theo mã học sinh), em mới nhận chữ cái kế tiếp.
+// Trả về số em được gắn/đổi ký hiệu.
+function _cliLabelAgainstClass(student, members) {
+    const key = _cliNorm(_cliBase(student));
+    const same = members.filter(m => _cliNorm(_cliBase(m)) === key);
+    if (!same.length) return 0;
+    let changed = 0;
+    const used = new Set(same.filter(m => m.nameSuffix).map(m => m.nameSuffix));
+    const next = () => { const l = [..._CLI_LETTERS].find(x => !used.has(x)); used.add(l); return l; };
+    for (const m of same) if (!m.nameSuffix) {
+        m.baseName = m.name; m.nameSuffix = next(); m.name = `${m.baseName} ${m.nameSuffix}`;
+        if (!m.realName || m.realName === m.baseName) m.realName = m.name;
+        changed++;
+    }
+    // Chưa có ký hiệu, hoặc ký hiệu từ file đã bị em khác trong lớp dùng: lấy chữ cái kế tiếp.
+    if (!student.nameSuffix || used.has(student.nameSuffix)) student.nameSuffix = next();
+    student.baseName = _cliBase(student);
+    student.name = student.realName = `${student.baseName} ${student.nameSuffix}`;
+    return changed + 1;
 }
 
 // ---------------- Giao diện ----------------
@@ -237,16 +283,23 @@ function confirmClassListImport() {
         className = classes.find(c => c.id === classId)?.name || '';
     }
     const members = students.filter(s => s.classId === classId);
+    const original = [...members], matched = new Set();
     let nextId = students.length ? Math.max(...students.map(s => Number(s.id) || 0)) + 1 : 1;
     let nextStt = members.reduce((m, s) => Math.max(m, parseInt(s.stt) || 0), 0) + 1;
-    let added = 0;
+    let added = 0, relabel = 0;
     for (const s of p.students) {
-        if (mode === 'append' && members.some(m => isSameImportedStudent(m, s))) { skipped++; continue; }
+        if (mode === 'append') {
+            // Mỗi em đang có trong lớp chỉ ghép với một dòng của file (2 em "Lê An" trong file, lớp có 1 em → thêm 1 em).
+            const same = original.find(m => !matched.has(m) && isSameImportedStudent(m, s));
+            if (same) { matched.add(same); skipped++; continue; }
+        }
         const seed = s.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s/g, '');
         const st = mode === 'new' ? s.stt : nextStt++;
         const student = { id: nextId++, classId, stt: st, name: s.name, realName: s.name, dob: s.dob,
             points: 0, positivePoints: 0, negativePoints: 0, avatar: avatarBaseUrl + seed };
         if (s.studentCode) student.studentCode = s.studentCode;
+        if (s.nameSuffix) { student.baseName = s.baseName; student.nameSuffix = s.nameSuffix; }
+        if (mode === 'append') relabel += _cliLabelAgainstClass(student, members);
         students.push(student); members.push(student); added++;
     }
     try { saveData(); }
@@ -264,5 +317,5 @@ function confirmClassListImport() {
         if (currentView === 'classroom') renderStudents(); else if (currentView === 'report') renderReport();
     }
     const syncHint = syncSettings?.url ? ' Nhớ bấm Lưu/Đẩy lên để đưa lớp lên Google Sheets.' : '';
-    showToast(`Lớp ${className}: đã thêm ${added} học sinh${skipped ? `, bỏ qua ${skipped} em đã có` : ''}.${syncHint}`, true, 5000);
+    showToast(`Lớp ${className}: đã thêm ${added} học sinh${skipped ? `, bỏ qua ${skipped} em đã có` : ''}${relabel ? `, thêm ký hiệu A/B cho ${relabel} em trùng tên` : ''}.${syncHint}`, true, 5000);
 }

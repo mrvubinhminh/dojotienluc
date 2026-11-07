@@ -30,10 +30,33 @@ test('separate "Họ đệm" | "Tên" columns are combined; footer and signature
 });
 test('duplicates inside the file are reported; unknown layout returns null',()=>{
  const r=parse([['STT','Họ và tên','Ngày sinh'],[1,'Lê An','01/01/2011'],[2,'Lê  An','01/01/2011']]);
- assert.equal(r.warnings.length,1);assert.equal(ctx.parseClassListRows([['a','b'],['1','x']]),null);
+ assert.equal(r.warnings.length,2);assert.ok(r.warnings[0].includes('trùng cả tên và ngày sinh'));assert.equal(ctx.parseClassListRows([['a','b'],['1','x']]),null);
 });
 test('existing student matching: code first, then name + date of birth',()=>{
  assert.ok(ctx.isSameImportedStudent({name:'Lê An',dob:'01/01/2011'},{name:'lê  an',dob:'01/01/2011',studentCode:''}));
  assert.ok(!ctx.isSameImportedStudent({name:'Lê An',dob:'01/01/2011'},{name:'Lê An',dob:'02/01/2011',studentCode:''}));
  assert.ok(!ctx.isSameImportedStudent({name:'Lê An',studentCode:'1'},{name:'Lê An',studentCode:'2'}));
+});
+test('students with the same name in the file get A, B suffixes in list order',()=>{
+ const r=parse([['STT','HỌ TÊN','SBD'],[37,'Nguyễn Ngọc Phương Vy','1'],[38,'Lê An','2'],[39,'Nguyễn Ngọc  Phương Vy','3'],[40,'nguyễn ngọc phương vy','4']]);
+ assert.deepEqual(r.students.map(s=>s.name),['Nguyễn Ngọc Phương Vy A','Lê An','Nguyễn Ngọc Phương Vy B','nguyễn ngọc phương vy C']);
+ assert.deepEqual(r.students.map(s=>s.nameSuffix??''),['A','','B','C']);
+ assert.ok(r.warnings.some(w=>w.includes('đã thêm ký hiệu A, B, C')));
+});
+test('re-importing a list with A/B names matches the same students, not the first one twice',()=>{
+ const r=parse([['STT','Họ và tên'],[1,'Vy'],[2,'Vy']]);
+ const [a,b]=r.students, existA={name:'Vy A',baseName:'Vy',nameSuffix:'A'}, existB={name:'Vy B',baseName:'Vy',nameSuffix:'B'};
+ assert.ok(ctx.isSameImportedStudent(existA,a));assert.ok(!ctx.isSameImportedStudent(existA,b));assert.ok(ctx.isSameImportedStudent(existB,b));
+ // Em cũ chưa có ký hiệu vẫn được nhận ra là cùng người khi file chỉ có một em tên đó.
+ assert.ok(ctx.isSameImportedStudent({name:'Vy'},{name:'Vy'}));
+});
+test('adding a same-name student to a class labels the existing one A and the new one B',()=>{
+ const members=[{name:'Trần Minh Khang',realName:'Trần Minh Khang'}],nw={name:'Trần Minh Khang'};
+ assert.equal(ctx._cliLabelAgainstClass(nw,members),2);
+ assert.deepEqual([members[0].name,members[0].realName,nw.name],['Trần Minh Khang A','Trần Minh Khang A','Trần Minh Khang B']);
+ members.push(nw);const third={name:'Trần Minh Khang'};ctx._cliLabelAgainstClass(third,members);assert.equal(third.name,'Trần Minh Khang C');
+ // Ký hiệu từ file bị trùng với em đã có thì lấy chữ kế tiếp.
+ const fileA={name:'Lê Vy A',baseName:'Lê Vy',nameSuffix:'A'},m2=[{name:'Lê Vy'}];ctx._cliLabelAgainstClass(fileA,m2);
+ assert.deepEqual([m2[0].name,fileA.name],['Lê Vy A','Lê Vy B']);
+ assert.equal(ctx._cliLabelAgainstClass({name:'Người Khác'},m2),0);
 });
