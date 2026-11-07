@@ -54,6 +54,16 @@ function dojoSnapshot(ledger) {
   });
   ledger.entries.forEach(function(e){
     if(e.kind) return;
+    if(e.type==='classReset') {
+      d.students.filter(function(s){return String(s.classId)===String(e.classId);}).forEach(function(s){
+        var t=totals[String(s.id)];
+        if(!t) return;
+        var id=e.operationId+':'+s.id;
+        records[id]={id:id,classId:s.classId,studentId:s.id,studentName:s.name,skillName:e.reason||'Reset điểm lớp về 0',points:-t.points,timestamp:e.timestamp};
+        t.points=0;t.positivePoints=0;t.negativePoints=0;
+      });
+      return;
+    }
     e.changes.forEach(function(c,i){
       var key=String(c.studentId);
       if (!totals[key]) totals[key]={points:Number(c.opening.points)||0,positivePoints:Number(c.opening.positivePoints)||0,negativePoints:Number(c.opening.negativePoints)||0};
@@ -71,8 +81,25 @@ function dojoSnapshot(ledger) {
   d.revision=dojoRevision();
   return d;
 }
+// Keep visible Students columns consistent with the authoritative ledger.
+function dojoWritePointProjection(data) {
+  var sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Students');
+  if(!sh || sh.getLastRow()<2) return;
+  var rows=sh.getDataRange().getValues(), headers=rows[0], idCol=headers.indexOf('id'), byId={};
+  if(idCol<0) return;
+  data.students.forEach(function(s){byId[String(s.id)]=s;});
+  ['points','positivePoints','negativePoints'].forEach(function(key){
+    var col=headers.indexOf(key);
+    if(col<0) return;
+    var values=rows.slice(1).map(function(row){var s=byId[String(row[idCol])];return [s?s[key]:row[col]];});
+    sh.getRange(2,col+1,values.length,1).setValues(values);
+  });
+  SpreadsheetApp.flush();
+}
 function dojoValidateBatch(b) {
-  if (!b || typeof b.operationId!=='string' || !/^[a-zA-Z0-9-]{10,100}$/.test(b.operationId) || !Array.isArray(b.changes) || !b.changes.length) throw new Error('Giao dịch không hợp lệ');
+  if (!b || typeof b.operationId!=='string' || !/^[a-zA-Z0-9-]{10,100}$/.test(b.operationId) || !Array.isArray(b.changes) || (!b.changes.length && b.type!=='classReset')) throw new Error('Giao dịch không hợp lệ');
+  if(b.type && b.type!=='classReset') throw new Error('Loại giao dịch không hợp lệ');
+  if(b.type==='classReset' && (b.classId===undefined || b.classId===null || String(b.classId)==='')) throw new Error('Thiếu lớp cần reset');
   b.changes.forEach(function(c){
     if (!c.opening || c.studentId===undefined || String(c.opening.id)!==String(c.studentId)) throw new Error('Thiếu học sinh');
     [c.delta,c.positiveDelta,c.negativeDelta,c.opening.points,c.opening.positivePoints,c.opening.negativePoints].forEach(function(n){if(typeof n!=='number'||!isFinite(n)) throw new Error('Điểm không hợp lệ');});
@@ -103,7 +130,9 @@ function doPost(e) {
           }
         });
         dojoAppend(ledger.sheet,fresh); ledger.entries=ledger.entries.concat(fresh);
-        return respond({status:'ok',protocol:2,data:dojoSnapshot(ledger)});
+        var snapshot=dojoSnapshot(ledger);
+        dojoWritePointProjection(snapshot);
+        return respond({status:'ok',protocol:2,data:snapshot});
       }
       if(p.action==='push') {
         var current=dojoSnapshot(ledger), rev=dojoRevision();

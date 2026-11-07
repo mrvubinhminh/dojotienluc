@@ -132,8 +132,7 @@ function endPeriod() {
     const name=prompt(`Đặt tên kỳ học (VD: Tuần 1, Tháng 10/2025):`,defaultName);
     if(!name) return;
     periods.push({id:Date.now(),classId:currentClassId,name:name.trim(),endDate:new Date().toISOString(),students:cs.map(s=>({...s}))});
-    students.forEach(s=>{if(s.classId===currentClassId){s.points=0;s.positivePoints=0;s.negativePoints=0;}});
-    saveData();
+    queueClassPointReset(currentClassId, `Kết thúc kỳ: ${name.trim()} — reset điểm về 0`);
     document.getElementById('totalClassPoints').innerText='Tổng điểm: 0';
     showToast(`Đã lưu kỳ "${name.trim()}" và reset điểm!`);
     currentPeriodId=null; renderReport();
@@ -241,3 +240,18 @@ function doExportWithPeriods() {
     showToast(`Đã xuất ${sheetCount} sheet Excel!`);
 }
 
+
+// Explicit zero reset keeps students and audit history, without closing a period.
+function resetClassPoints() {
+    const cls=classes.find(c=>c.id===currentClassId);
+    if(!cls) return;
+    const members=students.filter(s=>s.classId===currentClassId);
+    if(!members.length) {showToast('Lớp chưa có học sinh!',false);return;}
+    if(!confirm(`Đưa toàn bộ điểm cộng, điểm trừ và tổng điểm của lớp "${cls.name}" về 0?\n\nDanh sách học sinh và lịch sử vẫn được giữ. Điểm đã được máy chủ nhận trước lệnh reset cũng sẽ về 0. Điểm nhận sau lệnh reset sẽ được cộng tiếp.`)) return;
+    try {
+        queueClassPointReset(currentClassId);
+        currentPeriodId=null;
+        refreshPointViews();
+        showToast(`Đã reset điểm lớp ${cls.name} về 0; đang chờ đồng bộ.`);
+    } catch(e) {showToast('Chưa lưu được lệnh reset: '+e.message,false);}
+}

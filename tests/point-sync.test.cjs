@@ -100,3 +100,39 @@ test('restored local snapshot and outstanding outbox do not double-apply points 
  const b=client(storage);b.students[0].points=12;b.students[0].positivePoints=12;b.resetPointBaseline();
  b.rawSyncRequest=async(action,data)=>s.call(action,plain(data));await b.flushPointTransactions();assert.equal(b.students[0].points,12);assert.equal(b.pendingPointBatches().length,0);
 });
+test('class reset zeros authoritative server totals even when another device added unseen points',()=>{
+ const a=client(),b=client(),s=server();add(b,7);
+ s.call('syncPoints',{protocol:2,batches:plain(b.pendingPointBatches())});
+ a.queueClassPointReset(1);
+ const reset=plain(a.pendingPointBatches());
+ const r=s.call('syncPoints',{protocol:2,batches:reset});assert.equal(r.status,'ok');
+ assert.deepEqual([r.data.students[0].points,r.data.students[0].positivePoints,r.data.students[0].negativePoints],[0,0,0]);
+ assert.equal(r.data.history.find(h=>h.skillName==='Reset điểm lớp về 0').points,-17);
+ // A repeated reset request must not erase points awarded afterwards.
+ const c=client();add(c,3);s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});
+ assert.equal(s.call('syncPoints',{protocol:2,batches:reset}).data.students[0].points,3);
+});
+test('offline award, reset and subsequent award replay in order without changing another class',()=>{
+ const c=client(),s=server();vm.runInContext("students.push({id:2,classId:2,name:'B',points:0,positivePoints:0,negativePoints:0});resetPointBaseline();students[1].points=5;students[1].positivePoints=5;capturePointChanges()",c);
+ add(c,2);c.queueClassPointReset(1);add(c,3);
+ c.applyPointSnapshot(s.pull().data);assert.equal(c.students[0].points,3);assert.equal(c.students[1].points,5);
+ const r=s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});assert.equal(r.status,'ok');
+ assert.equal(r.data.students.find(s=>s.id===1).points,3);assert.equal(r.data.students.find(s=>s.id===2).points,5);
+});
+test('reset outbox survives reload and applies once after connection returns',async()=>{
+ const storage=new Storage(),c=client(storage),s=server();c.queueClassPointReset(1);
+ const restored=client(storage);assert.equal(restored.students[0].points,0);assert.equal(restored.pendingPointBatches()[0].type,'classReset');
+ restored.rawSyncRequest=async(a,d)=>s.call(a,plain(d));await restored.flushPointTransactions();assert.equal(restored.students[0].points,0);assert.equal(restored.pendingPointBatches().length,0);
+});
+test('reset does not change local scores if the durable outbox cannot be saved',()=>{
+ const c=client();c.localStorage.setItem=()=>{throw Error('quota')};assert.throws(()=>c.queueClassPointReset(1));assert.equal(c.students[0].points,10);
+});
+test('reset clears positive and negative counters even when the net score is already zero',()=>{
+ const c=client(),s=server();vm.runInContext('students[0].points=0;students[0].positivePoints=10;students[0].negativePoints=10;capturePointChanges()',c);
+ c.queueClassPointReset(1);const r=s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});assert.equal(r.status,'ok');assert.equal(r.data.students[0].positivePoints,0);assert.equal(r.data.students[0].negativePoints,0);
+});
+test('reset projects zero counters into Students sheet without changing student information',()=>{
+ const c=client(),s=server(),sheet=new Sheet();
+ sheet.appendRow(['id','name','points','positivePoints','negativePoints']);sheet.appendRow([1,'An',10,10,0]);s.sheets.set('Students',sheet);
+ c.queueClassPointReset(1);const r=s.call('syncPoints',{protocol:2,batches:plain(c.pendingPointBatches())});assert.equal(r.status,'ok');assert.deepEqual(sheet.rows[1],[1,'An',0,0,0]);
+});
