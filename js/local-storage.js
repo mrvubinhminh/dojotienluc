@@ -52,7 +52,7 @@ function loadData() {
         const hb=localStorage.getItem('dojo_hoaBa');
         if(hb) hoaBa = JSON.parse(hb);
         const sy=localStorage.getItem('dojo_sync');
-        if(sy) { syncSettings = JSON.parse(sy); if(!syncSettings.url) syncSettings.url = DEFAULT_SYNC_URL; }
+        if(sy) { syncSettings = JSON.parse(sy); if(!syncSettings.url) syncSettings.url = ''; }
         if(classes.length > 0) currentClassId = classes[0].id;
     } catch(e) { console.warn('Tải thất bại:', e); }
     initializePointJournal();

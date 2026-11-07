@@ -460,16 +460,16 @@ function setSyncScriptCode() {
     if (el) el.textContent = APPS_SCRIPT_CODE;
 }
 
-// Extract Script ID from saved URL (or return '' if it's the default shared URL)
+// Extract Script ID from saved URL
 function _syncUrlToId(url) {
-    if (!url || url === DEFAULT_SYNC_URL) return '';
+    if (!url) return '';
     const m = url.match(/\/macros\/s\/([^/]+)\/exec/);
     return m ? m[1] : url; // fallback: show raw if format unknown
 }
-// Build full URL from Script ID (or return DEFAULT_SYNC_URL if empty)
+// Build full URL from Script ID ('' = chưa cài đồng bộ)
 function _syncIdToUrl(id) {
     const trimmed = id.trim();
-    if (!trimmed) return DEFAULT_SYNC_URL;
+    if (!trimmed) return '';
     if (trimmed.startsWith('https://')) return trimmed; // already full URL
     return `https://script.google.com/macros/s/${trimmed}/exec`;
 }

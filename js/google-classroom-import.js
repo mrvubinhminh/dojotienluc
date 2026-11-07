@@ -7,7 +7,7 @@ let _classroomStudents = [];
 
 function openClassroomImport() {
     toggleSidebar();
-    if (syncSettings.url === DEFAULT_SYNC_URL || !syncSettings.url) {
+    if (!syncSettings.url) {
         showToast('Cần cài đặt Deployment ID riêng trước khi dùng tính năng này!', false, 4000);
         switchView('settings');
         return;

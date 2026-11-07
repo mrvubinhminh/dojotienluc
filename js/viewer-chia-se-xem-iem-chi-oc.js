@@ -56,9 +56,9 @@ function buildClassViewData() {
 // ----- Generate shareable URL -----
 function buildShareUrl(data) {
     const encoded = encodeViewData(data);
-    // Prefer GAS URL (accessible anywhere), fallback to local hash
-    const base = syncSettings.url || DEFAULT_SYNC_URL;
-    return `${base}?view=${encoded}`;
+    // Ưu tiên trang xem của Apps Script; chưa cài đồng bộ thì dùng chính trang ứng dụng (#view=).
+    if (syncSettings.url) return `${syncSettings.url}?view=${encoded}`;
+    return `${location.origin}${location.pathname}#view=${encoded}`;
 }
 
 // ----- Open share modal -----

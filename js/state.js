@@ -24,8 +24,9 @@ let _gradesHKMode = null;        // null = period mode, 'HK1'/'HK2' = sync from 
 let _gradesSubjectFilter = null; // null = tất cả môn, 'Toán'/'Văn'/... = sổ điểm riêng môn đó
 let _editingNoteId = null;
 let currentPeriodId  = null;
-const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzo4f6_Nm9UFWAg-TrMN32iz77rABLKzeijSrD69Lym3plVYap3LtecV9zn5JpwQcHgIQ/exec';
-let syncSettings     = { url: DEFAULT_SYNC_URL, lastSync:null };
+// Không có URL đồng bộ mặc định: mỗi máy tự nhập Deployment ID của mình trong Cài đặt đồng bộ.
+// (Trước đây URL Apps Script nằm sẵn ở đây, nên ai mở trang cũng đọc/ghi được Google Sheet.)
+let syncSettings     = { url: '', lastSync:null };
 let selectedStudentId = null;
 let isAwardAll = false;
 let currentView = 'classroom';
