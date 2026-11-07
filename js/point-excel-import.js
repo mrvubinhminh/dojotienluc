@@ -206,3 +206,74 @@ function confirmPointImport(wrongClass) {
     if (typeof refreshPointViews === 'function') refreshPointViews();
     showToast(`Đã cập nhật điểm ${count} học sinh lớp ${cls?.name || ''}${syncSettings?.url ? ', đang đồng bộ...' : ''}.`, true, 4000);
 }
+
+// ---------------- File mẫu + menu "Điểm Excel" ----------------
+// Mẫu dùng đúng tiêu đề cột của file Xuất Excel nên cả hai loại file đều nhập lại được.
+// Xếp theo STT của lớp; chỉ cột Điểm cộng / Điểm trừ được dùng khi cập nhật.
+function buildPointTemplateRows(cls, classStudents) {
+    const sorted = [...classStudents].sort((a, b) => (parseInt(a.stt) || 0) - (parseInt(b.stt) || 0) || String(a.name).localeCompare(b.name));
+    return [
+        [`BẢNG TỔNG KẾT ĐIỂM THI ĐUA - LỚP ${String(cls.name).toUpperCase()} - MẪU CẬP NHẬT ĐIỂM`],
+        [`Ngày tải mẫu: ${new Date().toLocaleDateString('vi-VN')}`],
+        ['Chỉ sửa 2 cột tô vàng: Điểm cộng (+) và Điểm trừ (-). Không đổi họ tên. Lưu file rồi bấm "Điểm Excel" → "Tải lên file đã sửa".'],
+        [],
+        ['STT', 'Họ và tên', 'Điểm cộng (+)', 'Điểm trừ (-)', 'Tổng điểm hiện tại (không sửa)', 'Ngày sinh'],
+        ...sorted.map(s => [parseInt(s.stt) || '', s.name, Number(s.positivePoints) || 0, Number(s.negativePoints) || 0, Number(s.points) || 0, s.dob || ''])
+    ];
+}
+
+function downloadPointTemplate() {
+    const cls = classes.find(c => c.id === currentClassId);
+    if (!cls) { alert('Chọn lớp trước!'); return; }
+    const cs = students.filter(s => s.classId === currentClassId);
+    if (!cs.length) { showToast('Lớp chưa có học sinh!', false); return; }
+    const rows = buildPointTemplateRows(cls, cs);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const border = { top: { style: 'thin', color: { rgb: 'CCCCCC' } }, bottom: { style: 'thin', color: { rgb: 'CCCCCC' } }, left: { style: 'thin', color: { rgb: 'CCCCCC' } }, right: { style: 'thin', color: { rgb: 'CCCCCC' } } };
+    ws['A1'].s = { font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 14, name: 'Arial' }, fill: { fgColor: { rgb: '33A3DC' } }, alignment: { horizontal: 'center' } };
+    ws['A2'].s = { font: { italic: true, color: { rgb: '555555' }, name: 'Arial' }, alignment: { horizontal: 'center' } };
+    ws['A3'].s = { font: { bold: true, color: { rgb: 'E65100' }, name: 'Arial' }, fill: { fgColor: { rgb: 'FFF3E0' } }, alignment: { horizontal: 'center', wrapText: true } };
+    'ABCDEF'.split('').forEach(c => { ws[c + '5'].s = { font: { bold: true, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: c === 'C' || c === 'D' ? 'F9A825' : '8BC34A' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border }; });
+    for (let r = 6; r <= rows.length; r++) 'ABCDEF'.split('').forEach(c => {
+        const cell = ws[c + r]; if (!cell) return;
+        const edit = c === 'C' || c === 'D';
+        cell.s = { font: { name: 'Arial', sz: 11, bold: edit, color: edit ? { rgb: c === 'C' ? '2E7D32' : 'C62828' } : (c === 'E' ? { rgb: '888888' } : undefined) },
+            fill: edit ? { fgColor: { rgb: 'FFF9C4' } } : undefined, alignment: { horizontal: c === 'B' ? 'left' : 'center', vertical: 'center' }, border };
+    });
+    ws['!cols'] = [{ wch: 6 }, { wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 13 }];
+    ws['!rows'] = [{ hpt: 24 }, {}, { hpt: 32 }, {}, { hpt: 34 }];
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Hien_tai');
+    XLSX.writeFile(wb, `Mau_Cap_Nhat_Diem_${cls.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Đã tải file mẫu. Sửa điểm cộng/trừ rồi tải lên lại.');
+}
+
+function openPointExcelMenu() {
+    const cls = classes.find(c => c.id === currentClassId);
+    if (!cls) { alert('Chọn lớp trước!'); return; }
+    closePointExcelMenu();
+    document.body.insertAdjacentHTML('beforeend', `
+<div id="pointMenuBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[60]" onclick="closePointExcelMenu()"></div>
+<div id="pointMenuModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-sm bg-white rounded-2xl z-[61] shadow-2xl p-5">
+  <div class="flex items-center justify-between mb-1">
+    <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-file-excel text-green-600 mr-2"></i>Điểm Excel · ${_pxEsc(cls.name)}</h3>
+    <button onclick="closePointExcelMenu()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><i class="fas fa-times text-sm"></i></button>
+  </div>
+  <p class="text-xs text-gray-500 mb-4">Cập nhật điểm cộng / điểm trừ cho cả lớp bằng Excel. Học sinh được ghép theo họ tên.</p>
+  <button onclick="closePointExcelMenu();downloadPointTemplate()" class="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-100 text-left mb-2">
+    <span class="w-8 h-8 rounded-full bg-blue-600 text-white font-black flex items-center justify-center flex-shrink-0">1</span>
+    <span><b class="text-blue-800 text-sm">Tải file mẫu</b><br><span class="text-[11px] text-blue-600">Điểm hiện tại của lớp, xếp theo STT. Sửa 2 cột tô vàng.</span></span>
+    <i class="fas fa-download text-blue-500 ml-auto"></i>
+  </button>
+  <button onclick="closePointExcelMenu();openPointExcelImport()" class="w-full flex items-center gap-3 p-3 rounded-xl bg-green-50 hover:bg-green-100 border border-green-100 text-left">
+    <span class="w-8 h-8 rounded-full bg-green-600 text-white font-black flex items-center justify-center flex-shrink-0">2</span>
+    <span><b class="text-green-800 text-sm">Tải lên file đã sửa</b><br><span class="text-[11px] text-green-600">Xem trước điểm cũ → mới rồi mới cập nhật. Nhận cả file "Xuất Excel".</span></span>
+    <i class="fas fa-upload text-green-500 ml-auto"></i>
+  </button>
+</div>`);
+}
+function closePointExcelMenu() {
+    document.getElementById('pointMenuBackdrop')?.remove();
+    document.getElementById('pointMenuModal')?.remove();
+}

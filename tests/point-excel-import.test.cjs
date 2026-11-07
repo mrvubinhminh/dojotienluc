@@ -63,3 +63,13 @@ test('recomputes against current scores when confirming after a late award',()=>
  ctx.applyPointImportPlan(plan,'Cập nhật từ Excel');ctx.saveData();
  assert.deepEqual([ctx.students[0].positivePoints,ctx.students[0].negativePoints],[19,1]);
 });
+test('downloaded template round-trips: unchanged file changes nothing, edited cells update only those students',()=>{
+ const ctx=client([{id:1,stt:2,name:'Lê An',positivePoints:5,negativePoints:1},{id:2,stt:1,name:'Vy A',positivePoints:3},{id:3,stt:3,name:'Vy B'}]);
+ const rows=plain(ctx.buildPointTemplateRows({name:'10A4'},ctx.students));
+ assert.deepEqual(rows.slice(5).map(r=>r.slice(0,5)),[[1,'Vy A',3,0,3],[2,'Lê An',5,1,4],[3,'Vy B',0,0,0]]);
+ assert.equal(ctx.parsePointSheetRows(rows).className,'10A4');
+ assert.equal(ctx.planPointImport(ctx.students,ctx.parsePointSheetRows(rows)).changed.length,0);
+ rows[7][2]=4; rows[6][4]=999;                    // sửa điểm cộng Vy B; cột tổng điểm bị bỏ qua
+ const plan=plain(ctx.planPointImport(ctx.students,ctx.parsePointSheetRows(rows)));
+ assert.deepEqual(plan.changed.map(i=>[i.studentId,i.newPos,i.newNeg]),[[3,4,0]]);
+});
