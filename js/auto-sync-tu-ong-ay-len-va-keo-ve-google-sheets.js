@@ -7,37 +7,24 @@ let _autoPullInterval          = null;
 let _lastLocalChangeTime       = 0;
 
 function scheduleAutoSync() {
-    if (!syncSettings.url || syncSettings.url === DEFAULT_SYNC_URL) return;
+    if (!syncSettings.url) return;
     _lastLocalChangeTime = Date.now();
     clearTimeout(_autoSyncTimer);
-    clearInterval(_autoSyncCountdownInterval);
-
-    let remaining = 10;
-    _showAutoSyncBadge('upload', `Đồng bộ trong ${remaining}s...`);
-    _autoSyncCountdownInterval = setInterval(() => {
-        remaining--;
-        if (remaining > 0) _showAutoSyncBadge('upload', `Đồng bộ trong ${remaining}s...`);
-        else clearInterval(_autoSyncCountdownInterval);
-    }, 1000);
-
+    _showAutoSyncBadge('upload', 'Điểm đang chờ đồng bộ...');
     _autoSyncTimer = setTimeout(async () => {
-        clearInterval(_autoSyncCountdownInterval);
-        _showAutoSyncBadge('spinner', 'Đang đồng bộ...');
+        _showAutoSyncBadge('spinner', 'Đang lưu điểm...');
         try {
-            const result = await syncRequest('push', { classes, students, history, periods, gradeRecords, subjectGrades });
-            if (result.status === 'ok') {
-                syncSettings.lastSync   = new Date().toISOString();
-                syncSettings.lastPushTime = Date.now();
-                saveData();
-                _showAutoSyncBadge('check', 'Đã lưu ☁️', 2500);
-            } else {
-                _hideAutoSyncBadge();
-            }
+            await flushPointTransactions();
+            syncSettings.lastSync = new Date().toISOString();
+            saveData();
+            if (pendingPointBatches().length) scheduleAutoSync();
+            else _showAutoSyncBadge('check', 'Đã lưu điểm ☁️', 2500);
         } catch(e) {
-            console.warn('Auto-sync push failed:', e.message);
-            _hideAutoSyncBadge();
+            _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
+            // Durable outbox survives reload; retry even when the last push failed.
+            _autoSyncTimer = setTimeout(scheduleAutoSync, 20000);
         }
-    }, 10000);
+    }, 1500);
 }
 
 function _showAutoSyncBadge(type, text, autohideMs) {
@@ -62,48 +49,43 @@ function _hideAutoSyncBadge() {
 }
 
 function _applyPulledData(d) {
-    if (d.classes)      classes       = d.classes;
+    capturePointChanges();
+    const pending = pendingPointBatches();
+    const localStudents = students;
+    if (d.classes) classes=d.classes;
     if (d.students) {
-        students = d.students.map(s => {
-            const localS = students.find(ls => ls.id === s.id);
-            let finalAvatar = s.avatar;
-            if ((!finalAvatar || finalAvatar.includes('api.dicebear.com')) && localS && localS.avatar && localS.avatar.startsWith('data:image')) {
-                finalAvatar = localS.avatar;
-            }
-            if (!finalAvatar) {
-                finalAvatar = avatarBaseUrl + (s.name||'student').normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s/g,"");
-            }
-            return { ...s, avatar: finalAvatar };
+        students=d.students.map(s => {
+            const local=localStudents.find(l=>String(l.id)===String(s.id));
+            return {...s,avatar:local?.avatar?.startsWith('data:image') ? local.avatar : (s.avatar || avatarBaseUrl+s.name)};
         });
+        // A student added offline with pending points must not disappear on import.
+        for (const batch of pending) for (const c of batch.changes) {
+            const local=localStudents.find(s=>String(s.id)===String(c.studentId));
+            if(local && !students.some(s=>String(s.id)===String(local.id))) students.push({...local,points:c.opening.points,positivePoints:c.opening.positivePoints,negativePoints:c.opening.negativePoints});
+        }
     }
-    if (d.history)      history       = d.history;
-    if (d.periods)      periods       = d.periods;
-    if (d.gradeRecords) gradeRecords  = d.gradeRecords;
-    if (d.subjectGrades) subjectGrades = d.subjectGrades;
-    syncSettings.lastSync = new Date().toISOString();
-    saveData();
-    renderClasses();
-    if (currentView === 'classroom')  renderStudents();
-    else if (currentView === 'report') renderReport();
+    if (d.periods) periods=d.periods;
+    if (d.gradeRecords) gradeRecords=d.gradeRecords;
+    if (d.subjectGrades) subjectGrades=d.subjectGrades;
+    if (d.meetingNotes) meetingNotes=d.meetingNotes;
+    localStorage.setItem(pointRevisionKey(),JSON.stringify(d.revision));
+    syncSettings.lastSync=new Date().toISOString();
+    applyPointSnapshot(d);
 }
 
 async function _silentPull() {
-    if (!syncSettings.url || syncSettings.url === DEFAULT_SYNC_URL) return;
-    if (Date.now() - _lastLocalChangeTime < 20000) return; // local change pending — skip
+    if (!syncSettings.url) return;
     try {
-        const result = await syncRequest('pull');
-        if (result.status !== 'ok' || !result.data) return;
-        const remoteHistory = result.data.history || [];
-        const localIds      = new Set(history.map(h => String(h.id)));
-        const hasNew        = remoteHistory.some(h => !localIds.has(String(h.id)));
-        if (!hasNew) return;
-        _applyPulledData(result.data);
-        _showAutoSyncBadge('download', 'Cập nhật từ thiết bị khác 🔄', 3000);
-    } catch(e) { /* silent — do not disrupt user */ }
+        // A single shared flight handles polling, retries and point updates.
+        await flushPointTransactions();
+        if (pendingPointBatches().length) scheduleAutoSync();
+    } catch(e) {
+        _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
+    }
 }
 
 function startAutoPull() {
     if (_autoPullInterval) return;
-    _autoPullInterval = setInterval(_silentPull, 30000); // poll every 30s
+    _autoPullInterval=setInterval(_silentPull,30000);
+    if (pendingPointBatches().length) scheduleAutoSync();
 }
-

@@ -61,9 +61,9 @@ function openEditStudentModal(id) {
         document.getElementById('editStudentDob').value=s.dob||'';
         document.getElementById('editStudentStt').value=s.stt||'';
         const posEl = document.getElementById('editStudentPositivePoints');
-        if(posEl) posEl.value=s.positivePoints||0;
+        if(posEl) { posEl.value=s.positivePoints||0; posEl.dataset.original=String(s.positivePoints||0); }
         const negEl = document.getElementById('editStudentNegativePoints');
-        if(negEl) negEl.value=s.negativePoints||0;
+        if(negEl) { negEl.value=s.negativePoints||0; negEl.dataset.original=String(s.negativePoints||0); }
         document.getElementById('editStudentBackdrop').classList.remove('hidden');
         document.getElementById('editStudentModal').classList.remove('hidden');
         document.getElementById('editStudentName').focus();
@@ -85,8 +85,8 @@ function saveEditStudent() {
     if(s){
         const old=s.name;
         s.name=newName; s.realName=newRealName||newName; s.dob=newDob; if(newStt>0) s.stt=newStt;
-        if (newPos !== undefined) s.positivePoints = newPos;
-        if (newNeg !== undefined) s.negativePoints = Math.abs(newNeg);
+        if (newPos !== undefined && posEl.dataset.original !== undefined) s.positivePoints += newPos - Number(posEl.dataset.original);
+        if (newNeg !== undefined && negEl.dataset.original !== undefined) s.negativePoints += Math.abs(newNeg) - Number(negEl.dataset.original);
         s.points = (s.positivePoints||0) - (s.negativePoints||0);
         if(pendingAvatarBase64) {
             s.avatar = pendingAvatarBase64;

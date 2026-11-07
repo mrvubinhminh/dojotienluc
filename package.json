@@ -2,6 +2,8 @@
   "name": "dojo-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "echo 'No build step needed for static site'"
+    "build": "echo 'No build step needed for static site'",
+    "test": "node --test tests/point-sync.test.cjs",
+    "export:apps-script": "node scripts/export-apps-script.cjs"
   }
 }

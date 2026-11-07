@@ -3,6 +3,7 @@
 // ============================================================
 function saveData() {
     try {
+        capturePointChanges();
         localStorage.setItem('dojo_classes',  JSON.stringify(classes));
         localStorage.setItem('dojo_students', JSON.stringify(students));
         localStorage.setItem('dojo_skills',   JSON.stringify(skills));
@@ -16,7 +17,12 @@ function saveData() {
         localStorage.setItem('dojo_meetingNotes',    JSON.stringify(meetingNotes));
         localStorage.setItem('dojo_hoaBa',           JSON.stringify(hoaBa));
         localStorage.setItem('dojo_sync',            JSON.stringify(syncSettings));
-    } catch(e) { console.warn('Lưu thất bại:', e); }
+        localStorage.setItem('dojo_point_saved_at', String(Date.now()));
+    } catch(e) {
+        console.error('Lưu thất bại:', e);
+        if (typeof showToast === 'function') showToast('Chưa lưu được dữ liệu: ' + e.message, false);
+        throw e;
+    }
 }
 
 function loadData() {
@@ -49,5 +55,6 @@ function loadData() {
         if(sy) { syncSettings = JSON.parse(sy); if(!syncSettings.url) syncSettings.url = DEFAULT_SYNC_URL; }
         if(classes.length > 0) currentClassId = classes[0].id;
     } catch(e) { console.warn('Tải thất bại:', e); }
+    initializePointJournal();
 }
 
