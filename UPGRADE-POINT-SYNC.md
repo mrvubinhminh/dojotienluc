@@ -13,6 +13,14 @@ Dòng lịch sử của lệnh reset được đánh dấu `type: 'reset'` (bả
 
 **Mã Apps Script đầy đủ:** [apps-script-v2.gs](apps-script-v2.gs). Sao chép toàn bộ tệp vào dự án Apps Script và triển khai phiên bản mới cho deployment hiện tại. Mẫu mã trong phần hướng dẫn đồng bộ của ứng dụng cũng đã được cập nhật. Bản máy chủ V2 cũ chưa có lệnh reset cần được thay bằng tệp mới này.
 
+## Cập nhật điểm cộng/điểm trừ từ file Excel đã xuất
+
+1. Chọn lớp, mở **Báo cáo** → **Nhập điểm Excel**, chọn file do nút **Xuất Excel** tạo ra (đã sửa số ở cột "Điểm cộng (+)" / "Điểm trừ (-)").
+2. Ứng dụng đọc trang `Hien_tai` (các trang kỳ cũ bị bỏ qua), lấy điểm mới nhất từ máy chủ rồi ghép theo **họ tên**. Thứ tự dòng trong file không quan trọng. Tên viết sai dấu chỉ được ghép khi khớp đúng một em và có nhãn "khớp gần đúng". Tên không có trong lớp hoặc trùng tên sẽ bị bỏ qua và được liệt kê. Học sinh không có trong file giữ nguyên điểm. File của lớp khác cần xác nhận thêm.
+3. Xem bảng "cũ → mới", bấm **Cập nhật**. Mỗi em thay đổi được ghi một giao dịch chênh lệch (không ghi đè), tổng điểm đổi đúng bằng (Δ cộng − Δ trừ). Dòng lịch sử có `type: 'adjust'`, không bị tính là hành vi trong phiếu nhận xét/sổ liên lạc.
+
+Nếu thiết bị khác cộng điểm cùng lúc, phần đó vẫn được cộng thêm trên số trong file. Muốn số cuối cùng đúng bằng file, hãy nhập khi không có ai đang chấm điểm.
+
 ## Đã thay đổi
 
 - Mọi chức năng sửa điểm đi qua `capturePointChanges()` trong `saveData()`. Cách này bao phủ cả trò chơi cũ, thưởng mục tiêu, hoàn tác, điều chỉnh tay và đặt lại cuối kỳ mà không bỏ sót luồng riêng.

@@ -47,7 +47,7 @@ function renderStudentProfile(s) {
         // Gom nhóm theo skillName
         const map = {};
         studentHistory.forEach(h => {
-            if (h.type==='reset') return; // reset điểm không phải hành vi
+            if (h.type) return; // reset / điều chỉnh điểm không phải hành vi
             if (!map[h.skillName]) map[h.skillName] = { count:0, total:0, isPos: h.points>0 };
             map[h.skillName].count++;
             map[h.skillName].total += h.points;
@@ -124,20 +124,20 @@ function renderStudentProfile(s) {
         const sorted = [...studentHistory].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
         histCount.innerText = `${sorted.length} sự kiện`;
         sorted.slice(0, 20).forEach(h => {
-            const isPos = h.points > 0, isReset = h.type==='reset';
+            const isPos = h.points > 0, isReset = h.type==='reset', isSys = !!h.type;
             const dt = new Date(h.timestamp);
             const timeStr = dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
             const dateStr = dt.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});
             histList.insertAdjacentHTML('beforeend', `
                 <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isReset?'bg-gray-100':isPos?'bg-green-100':'bg-red-100'}">
-                        <i class="fas ${isReset?'fa-undo text-gray-500':isPos?'fa-plus text-green-600':'fa-minus text-red-600'} text-xs"></i>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isSys?'bg-gray-100':isPos?'bg-green-100':'bg-red-100'}">
+                        <i class="fas ${isReset?'fa-undo text-gray-500':isSys?'fa-file-import text-gray-500':isPos?'fa-plus text-green-600':'fa-minus text-red-600'} text-xs"></i>
                     </div>
                     <div class="flex-1 overflow-hidden">
                         <p class="text-xs font-bold text-gray-700 truncate">${h.skillName}</p>
                         <p class="text-[10px] text-gray-400">${dateStr} · ${timeStr}</p>
                     </div>
-                    <span class="text-sm font-black flex-shrink-0 ${isReset?'text-gray-500':isPos?'text-green-600':'text-red-600'}">${isReset?'về 0':(isPos?'+':'')+h.points}</span>
+                    <span class="text-sm font-black flex-shrink-0 ${isSys?'text-gray-500':isPos?'text-green-600':'text-red-600'}">${isReset?'về 0':(isPos?'+':'')+h.points}</span>
                 </div>`);
         });
     }

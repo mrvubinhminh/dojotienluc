@@ -129,7 +129,7 @@ function exportCommLogExcel() {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-7); cutoff.setHours(0,0,0,0);
 
     clsStudents.forEach(s => {
-        const sHist = history.filter(h=>h.type!=='reset' && h.classId===currentClassId && h.studentId===s.id);
+        const sHist = history.filter(h=>!h.type && h.classId===currentClassId && h.studentId===s.id);
         const recent = sHist.filter(h=>new Date(h.timestamp)>=cutoff);
         const posRecent = recent.filter(h=>h.points>0).map(h=>`${h.skillName}(+${h.points})`).join('; ');
         const negRecent = recent.filter(h=>h.points<0).map(h=>`${h.skillName}(${h.points})`).join('; ');
@@ -205,7 +205,7 @@ function _buildParentMsg(s, days, template) {
     const today = new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
     const cutoff = days > 0 ? new Date(Date.now() - days*86400000) : new Date(0);
 
-    const sHist    = history.filter(h=>h.type!=='reset' && h.classId===currentClassId && h.studentId===s.id && new Date(h.timestamp)>=cutoff);
+    const sHist    = history.filter(h=>!h.type && h.classId===currentClassId && h.studentId===s.id && new Date(h.timestamp)>=cutoff);
     const posItems = sHist.filter(h=>h.points>0);
     const negItems = sHist.filter(h=>h.points<0);
     const notes    = communicationLog.filter(n=>n.classId===currentClassId && n.studentId===s.id)

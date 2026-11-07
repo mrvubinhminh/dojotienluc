@@ -233,6 +233,7 @@
     <div class="flex gap-3 mb-4" id="reportActions">
         <button onclick="endPeriod()" class="flex-1 py-2 bg-orange-50 text-orange-600 font-bold rounded-xl border border-orange-100 hover:bg-orange-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-flag-checkered"></i> Kết thúc kỳ</button>
         <button onclick="exportToExcel()" class="flex-1 py-2 bg-green-50 text-green-600 font-bold rounded-xl border border-green-100 hover:bg-green-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+        <button onclick="openPointExcelImport()" class="flex-1 py-2 bg-lime-50 text-lime-700 font-bold rounded-xl border border-lime-100 hover:bg-lime-100 transition flex items-center justify-center gap-2 text-sm" title="Cập nhật điểm cộng/điểm trừ của lớp từ file Excel đã xuất (ghép theo họ tên)"><i class="fas fa-file-import"></i> Nhập điểm Excel</button>
         <button onclick="exportClassList()" class="flex-1 py-2 bg-teal-50 text-teal-600 font-bold rounded-xl border border-teal-100 hover:bg-teal-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-list-ol"></i> Danh sách lớp</button>
         <button onclick="openBatchCertModal()" class="flex-1 py-2 bg-amber-50 text-amber-600 font-bold rounded-xl border border-amber-100 hover:bg-amber-100 transition flex items-center justify-center gap-2 text-sm"><i class="fas fa-award"></i> Chứng nhận</button>
     </div>
@@ -2648,6 +2649,7 @@ Câu 2: 1 + 1 = ?"></textarea>
     <script src="js/google-classroom-import.js"></script>
     <script src="js/students.js"></script>
     <script src="js/class-list-import.js"></script>
+    <script src="js/point-excel-import.js"></script>
     <script src="js/points-modal.js"></script>
     <script src="js/edit-delete-student.js"></script>
     <script src="js/batch-crop.js"></script>

@@ -20,7 +20,7 @@ function buildStudentViewData(studentId) {
         const g = rec.studentGrades.find(sg=>sg.studentId===studentId||sg.name===s.name);
         return g ? {periodName:rec.periodName, grades:g.grades} : null;
     }).filter(Boolean);
-    const hist = history.filter(h=>h.type!=='reset'&&h.studentId===studentId&&h.classId===s.classId)
+    const hist = history.filter(h=>!h.type&&h.studentId===studentId&&h.classId===s.classId)
         .sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,12);
     const notes = communicationLog
         .filter(n=>n.studentId===studentId && n.classId===s.classId)
