@@ -18,6 +18,7 @@ function scheduleAutoSync() {
             syncSettings.lastSync = new Date().toISOString();
             saveData();
             if (pendingPointBatches().length) scheduleAutoSync();
+            else if (_metadataBehind) _showMetadataBehind();
             else _showAutoSyncBadge('check', 'Đã lưu điểm ☁️', 2500);
         } catch(e) {
             _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
@@ -70,7 +71,55 @@ function _applyPulledData(d) {
     if (d.meetingNotes) meetingNotes=d.meetingNotes;
     localStorage.setItem(pointRevisionKey(),JSON.stringify(d.revision));
     syncSettings.lastSync=new Date().toISOString();
+    if (!classes.some(c=>String(c.id)===String(currentClassId))) currentClassId = classes.length ? classes[0].id : null;
     applyPointSnapshot(d);
+    _metadataBehind = false;
+    markMetadataSynced();
+}
+
+// ----- Thông tin lớp (metadata) giữa nhiều máy -----
+// Dấu vân tay thông tin lớp lúc đồng bộ gần nhất: khác nghĩa là máy này có sửa chưa bấm Lưu.
+// Điểm và lịch sử không tính vì đã đi qua sổ giao dịch riêng.
+let _metadataBehind = false;
+function _fnvHash(str) {
+    let h = 0x811c9dc5;
+    for (let i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return (h>>>0).toString(36) + ':' + str.length;
+}
+function metadataFingerprint() {
+    return _fnvHash(JSON.stringify({
+        classes,
+        students: students.map(({points, positivePoints, negativePoints, ...rest}) => rest),
+        periods, gradeRecords, subjectGrades, meetingNotes
+    }));
+}
+function _metadataFpKey() { return 'dojo_metadata_fp_v2:' + pointTarget(); }
+function markMetadataSynced() { try { localStorage.setItem(_metadataFpKey(), metadataFingerprint()); } catch(e) {} }
+function isMetadataDirty() { return localStorage.getItem(_metadataFpKey()) !== metadataFingerprint(); }
+function _showMetadataBehind() {
+    _showAutoSyncBadge('download', 'Có thông tin lớp mới từ máy khác — mở Đồng bộ, bấm "Tải về"');
+}
+
+// Mọi phản hồi đồng bộ điểm đi qua đây. Máy chủ có bản thông tin lớp mới hơn (máy khác vừa Lưu):
+// máy này chưa sửa gì thì tự nhận bản mới; đang có sửa chưa lưu thì chỉ báo, không ghi đè.
+function syncSnapshotFromServer(data) {
+    const stored = JSON.parse(localStorage.getItem(pointRevisionKey()) || 'null');
+    if (data.revision === undefined || data.revision === stored) {
+        const clean = !isMetadataDirty();
+        applyPointSnapshot(data);
+        // Học sinh mới chỉ có trên máy chủ được thêm vào từ sổ điểm: không tính là sửa của máy này.
+        if (clean) markMetadataSynced();
+        _metadataBehind = false;
+        return;
+    }
+    if (stored !== null && !isMetadataDirty()) {
+        _applyPulledData(data);
+        showToast('Đã cập nhật thông tin lớp từ máy khác ☁️');
+        return;
+    }
+    // Máy chưa từng tải về từ máy chủ này, hoặc đang có sửa chưa lưu: giữ nguyên, chỉ cập nhật điểm.
+    applyPointSnapshot(data);
+    _metadataBehind = true;
 }
 
 async function _silentPull() {
@@ -79,6 +128,7 @@ async function _silentPull() {
         // A single shared flight handles polling, retries and point updates.
         await flushPointTransactions();
         if (pendingPointBatches().length) scheduleAutoSync();
+        else if (_metadataBehind) _showMetadataBehind();
     } catch(e) {
         _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
     }

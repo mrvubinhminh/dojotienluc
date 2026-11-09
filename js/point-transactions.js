@@ -157,7 +157,8 @@ async function flushPointTransactions() {
         }
         // Capture edits made while fetch was awaiting the response before rebasing.
         capturePointChanges();
-        applyPointSnapshot(result.data);
+        if (typeof syncSnapshotFromServer === 'function') syncSnapshotFromServer(result.data);
+        else applyPointSnapshot(result.data);
         return result;
     })();
     try { return await _pointSyncFlight; } finally { _pointSyncFlight=null; }

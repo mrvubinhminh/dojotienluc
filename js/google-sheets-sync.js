@@ -504,7 +504,7 @@ function _syncUpdatePreview(idVal) {
         const looksWrong = !trimmed.startsWith('https://') && (!trimmed.startsWith('AKfyc') || trimmed.length < 50);
         if (warning) warning.classList.toggle('hidden', !looksWrong);
     } else {
-        preview.textContent = '→ Dùng link đồng bộ chung mặc định';
+        preview.textContent = '→ Không đồng bộ (chỉ lưu trên máy này)';
         preview.classList.remove('hidden');
         if (warning) warning.classList.add('hidden');
     }
@@ -575,23 +575,62 @@ function toggleScriptExpand() {
     }
 }
 
-function saveSyncUrl() {
+async function saveSyncUrl() {
     const idVal = document.getElementById('syncUrl').value.trim();
     const url = _syncIdToUrl(idVal);
-    if (url !== syncSettings.url && pendingPointBatches().length) {
+    const changing = url !== syncSettings.url;
+    // Giao dịch chờ của một máy chủ khác phải gửi xong trước. Giao dịch lúc chưa cài đồng bộ (offline)
+    // thuộc dữ liệu riêng của máy này, không chặn việc nhập key.
+    if (changing && syncSettings.url && pendingPointBatches().length) {
         setSyncStatus('error','Còn giao dịch điểm chưa đồng bộ. Hãy đồng bộ xong trước khi đổi nơi lưu.');
         return;
     }
+    const offlineBatches = changing && !syncSettings.url ? pendingPointBatches() : [];
     syncSettings.url = url;
     saveData();
-    if (!idVal) {
-        setSyncStatus('ok','Đã đặt về link đồng bộ chung mặc định!');
-        showToast('Dùng link đồng bộ chung mặc định!');
-    } else {
-        setSyncStatus('ok','Đã lưu Script ID!');
-        showToast('Đã lưu Script ID của bạn!');
-    }
     _syncUpdatePreview(idVal);
+    if (!idVal) {
+        setSyncStatus('ok','Đã tắt đồng bộ. Dữ liệu chỉ lưu trên máy này.');
+        showToast('Đã tắt đồng bộ');
+        return;
+    }
+    setSyncStatus('ok','Đã lưu Script ID!');
+    showToast('Đã lưu Script ID của bạn!');
+    if (changing) await _connectNewSyncTarget(offlineBatches);
+}
+
+// Máy vừa nhập key: máy chủ đã có dữ liệu thì tải toàn bộ lớp về (máy thứ hai, thứ ba...);
+// máy chủ còn trống thì đưa dữ liệu của máy này lên làm bản đầu tiên.
+async function _connectNewSyncTarget(offlineBatches) {
+    setSyncStatus('loading','Đang kiểm tra dữ liệu trên máy chủ...');
+    try {
+        const res = await rawSyncRequest('syncPoints', {protocol:POINT_PROTOCOL, batches:[]});
+        if (res.protocol !== POINT_PROTOCOL || res.status !== 'ok' || !res.data) throw new Error(res.message || 'Cần triển khai Apps Script V2.');
+        const d = res.data;
+        const nClasses = (d.classes||[]).length, nStudents = (d.students||[]).length;
+        if (nClasses || nStudents) {
+            if (!confirm(`Máy chủ đã có ${nClasses} lớp, ${nStudents} học sinh.\n\nTải về máy này? Danh sách lớp đang có trên máy sẽ được thay bằng dữ liệu trên máy chủ.`)) {
+                setSyncStatus('error','Chưa tải dữ liệu về. Bấm "Tải về" trước khi chấm điểm hoặc bấm Lưu trên máy này.');
+                return;
+            }
+            capturePointChanges();
+            _applyPulledData(d);
+            renderClasses();
+            setSyncStatus('ok',`✅ Đã tải ${nClasses} lớp, ${nStudents} học sinh về máy này.`);
+            showToast('Đã tải dữ liệu lớp về máy này! 🎉');
+            return;
+        }
+        // Máy chủ trống: lưu thông tin lớp trước, rồi mới gửi điểm đã chấm lúc chưa cài đồng bộ.
+        await pushToGSheet();
+        const offlinePrefix = 'dojo_point_outbox_v2:' + encodeURIComponent('offline') + ':';
+        for (const b of offlineBatches) {
+            localStorage.setItem(pointPrefix() + b.operationId, JSON.stringify(b));
+            localStorage.removeItem(offlinePrefix + b.operationId);
+        }
+        if (offlineBatches.length) scheduleAutoSync();
+    } catch(e) {
+        setSyncStatus('error', 'Không kết nối được: ' + e.message);
+    }
 }
 
 function setSyncStatus(type, msg) {
@@ -625,7 +664,10 @@ async function syncRequest(action, data=null) {
         const baseRevision = JSON.parse(localStorage.getItem(pointRevisionKey()) || 'null');
         const result = await rawSyncRequest('push', {protocol:2, baseRevision, snapshot:data});
         if (result.protocol!==2) throw new Error('Cần triển khai Apps Script V2.');
-        if (result.status==='ok') localStorage.setItem(pointRevisionKey(), JSON.stringify(result.revision));
+        if (result.status==='ok') {
+            localStorage.setItem(pointRevisionKey(), JSON.stringify(result.revision));
+            if (typeof markMetadataSynced === 'function') markMetadataSynced();
+        }
         return result;
     }
     const result = action === 'pull' ? await flushPointTransactions() : await rawSyncRequest(action, data);

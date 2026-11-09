@@ -21,6 +21,14 @@ Dòng lịch sử của lệnh reset được đánh dấu `type: 'reset'` (bả
 
 Nếu thiết bị khác cộng điểm cùng lúc, phần đó vẫn được cộng thêm trên số trong file. Muốn số cuối cùng đúng bằng file, hãy nhập khi không có ai đang chấm điểm.
 
+## Dùng chung một key trên nhiều máy
+
+1. Trên máy mới, mở **Đồng bộ**, dán Deployment ID (key), bấm **Lưu**. Nếu máy chủ đã có dữ liệu, app hỏi "Máy chủ đã có X lớp, Y học sinh. Tải về máy này?". Chọn **OK** để thay dữ liệu mẫu/cũ trên máy bằng toàn bộ lớp trên máy chủ. Máy chủ còn trống thì dữ liệu của máy này được đưa lên làm bản đầu tiên.
+2. Sau đó các máy tự đồng bộ mỗi 30 giây. Khi một máy bấm **Lưu** thông tin lớp (thêm/sửa học sinh, đổi tên lớp...), các máy khác không sửa gì sẽ tự nhận bản mới. Máy đang có sửa chưa lưu thì không bị ghi đè; nhãn đồng bộ báo "Có thông tin lớp mới từ máy khác" và cần bấm **Tải về** (phần sửa dở trên máy đó sẽ mất) trước khi **Lưu**.
+3. Điểm cộng/trừ luôn đồng bộ qua sổ giao dịch, không phụ thuộc các bước trên.
+
+Máy đã dùng bản cũ: bấm **Tải về** một lần để bắt đầu tự nhận thông tin lớp.
+
 ## Đã thay đổi
 
 - Mọi chức năng sửa điểm đi qua `capturePointChanges()` trong `saveData()`. Cách này bao phủ cả trò chơi cũ, thưởng mục tiêu, hoàn tác, điều chỉnh tay và đặt lại cuối kỳ mà không bỏ sót luồng riêng.
