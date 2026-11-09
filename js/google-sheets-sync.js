@@ -487,6 +487,7 @@ function openSyncModal() {
         : 'Chưa đồng bộ lần nào';
     document.getElementById('syncModal').classList.remove('hidden');
     setSyncStatus('', '');
+    if (typeof renderPointOutboxPanel === 'function') renderPointOutboxPanel();
     // Listen for input to show preview
     const inp = document.getElementById('syncUrl');
     inp.oninput = () => _syncUpdatePreview(inp.value);
@@ -579,11 +580,17 @@ async function saveSyncUrl() {
     const idVal = document.getElementById('syncUrl').value.trim();
     const url = _syncIdToUrl(idVal);
     const changing = url !== syncSettings.url;
-    // Giao dịch chờ của một máy chủ khác phải gửi xong trước. Giao dịch lúc chưa cài đồng bộ (offline)
-    // thuộc dữ liệu riêng của máy này, không chặn việc nhập key.
-    if (changing && syncSettings.url && pendingPointBatches().length) {
-        setSyncStatus('error','Còn giao dịch điểm chưa đồng bộ. Hãy đồng bộ xong trước khi đổi nơi lưu.');
-        return;
+    // Còn giao dịch chưa gửi được lên máy chủ cũ (thường do máy chủ cũ không còn dùng): không chặn nữa,
+    // cho chọn mang theo sang máy chủ mới hoặc để lại (xem/bỏ ở mục "Giao dịch điểm đang chờ").
+    // Giao dịch lúc chưa cài đồng bộ (offline) thuộc dữ liệu riêng của máy này.
+    let carried = [];
+    const oldTarget = syncSettings.url;
+    if (changing && syncSettings.url) {
+        const pending = pendingPointBatches();
+        if (pending.length) {
+            const preview = pending.slice(0, 5).map(b => '• ' + describeOutboxBatch(b).text).join('\n');
+            if (confirm(`Còn ${pending.length} giao dịch điểm chưa gửi được lên máy chủ cũ:\n${preview}${pending.length > 5 ? '\n…' : ''}\n\nOK = MANG THEO sang máy chủ mới (điểm này sẽ được cộng/trừ ở đó).\nHủy = để lại; có thể xem hoặc bỏ ở mục "Giao dịch điểm đang chờ".`)) carried = pending;
+        }
     }
     const offlineBatches = changing && !syncSettings.url ? pendingPointBatches() : [];
     syncSettings.url = url;
@@ -596,12 +603,15 @@ async function saveSyncUrl() {
     }
     setSyncStatus('ok','Đã lưu Script ID!');
     showToast('Đã lưu Script ID của bạn!');
-    if (changing) await _connectNewSyncTarget(offlineBatches);
+    if (changing) await _connectNewSyncTarget(offlineBatches, carried, oldTarget);
+    if (typeof renderPointOutboxPanel === 'function') renderPointOutboxPanel();
 }
 
 // Máy vừa nhập key: máy chủ đã có dữ liệu thì tải toàn bộ lớp về (máy thứ hai, thứ ba...);
 // máy chủ còn trống thì đưa dữ liệu của máy này lên làm bản đầu tiên.
-async function _connectNewSyncTarget(offlineBatches) {
+async function _connectNewSyncTarget(offlineBatches, carried=[], oldTarget='') {
+    // Giao dịch mang theo chỉ được đưa vào hàng đợi mới SAU khi đã nhận/lưu dữ liệu lớp của máy chủ mới.
+    const moveCarried = () => { if (carried.length) { moveOutboxBatches(oldTarget, carried); scheduleAutoSync(); } };
     setSyncStatus('loading','Đang kiểm tra dữ liệu trên máy chủ...');
     try {
         const res = await rawSyncRequest('syncPoints', {protocol:POINT_PROTOCOL, batches:[]});
@@ -610,11 +620,13 @@ async function _connectNewSyncTarget(offlineBatches) {
         const nClasses = (d.classes||[]).length, nStudents = (d.students||[]).length;
         if (nClasses || nStudents) {
             if (!confirm(`Máy chủ đã có ${nClasses} lớp, ${nStudents} học sinh.\n\nTải về máy này? Danh sách lớp đang có trên máy sẽ được thay bằng dữ liệu trên máy chủ.`)) {
+                moveCarried();
                 setSyncStatus('error','Chưa tải dữ liệu về. Bấm "Tải về" trước khi chấm điểm hoặc bấm Lưu trên máy này.');
                 return;
             }
             capturePointChanges();
             _applyPulledData(d);
+            moveCarried();
             renderClasses();
             setSyncStatus('ok',`✅ Đã tải ${nClasses} lớp, ${nStudents} học sinh về máy này.`);
             showToast('Đã tải dữ liệu lớp về máy này! 🎉');
@@ -628,7 +640,9 @@ async function _connectNewSyncTarget(offlineBatches) {
             localStorage.removeItem(offlinePrefix + b.operationId);
         }
         if (offlineBatches.length) scheduleAutoSync();
+        moveCarried();
     } catch(e) {
+        moveCarried();   // giáo viên đã chọn mang theo: gửi khi kết nối được
         setSyncStatus('error', 'Không kết nối được: ' + e.message);
     }
 }
@@ -643,6 +657,7 @@ function setSyncStatus(type, msg) {
         'bg-blue-50 text-blue-700 border border-blue-200'
     }`;
     badge.innerHTML = `<i class="fas ${type==='ok'?'fa-check-circle':type==='error'?'fa-exclamation-circle':'fa-spinner fa-spin'}"></i> ${msg}`;
+    if (type !== 'loading' && typeof renderPointOutboxPanel === 'function') renderPointOutboxPanel();
 }
 
 function setSyncBtnLoading(btnId, loading, originalHTML) {

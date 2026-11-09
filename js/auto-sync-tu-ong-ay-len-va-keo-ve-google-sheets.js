@@ -21,7 +21,7 @@ function scheduleAutoSync() {
             else if (_metadataBehind) _showMetadataBehind();
             else _showAutoSyncBadge('check', 'Đã lưu điểm ☁️', 2500);
         } catch(e) {
-            _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
+            _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message + ' — mở Đồng bộ › Giao dịch điểm đang chờ');
             // Durable outbox survives reload; retry even when the last push failed.
             _autoSyncTimer = setTimeout(scheduleAutoSync, 20000);
         }
@@ -130,7 +130,7 @@ async function _silentPull() {
         if (pendingPointBatches().length) scheduleAutoSync();
         else if (_metadataBehind) _showMetadataBehind();
     } catch(e) {
-        _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message);
+        _showAutoSyncBadge('upload', 'Chưa đồng bộ: ' + e.message + ' — mở Đồng bộ › Giao dịch điểm đang chờ');
     }
 }
 

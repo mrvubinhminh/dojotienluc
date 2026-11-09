@@ -2173,6 +2173,9 @@ Câu 2: 1 + 1 = ?"></textarea>
             <button onclick="saveSyncUrl()" class="mt-2 w-full py-2.5 bg-gray-800 text-white font-bold rounded-xl text-sm hover:bg-gray-700 transition">Lưu</button>
         </div>
 
+        <!-- Giao dịch điểm đang chờ (gỡ tắc đồng bộ) -->
+        <div id="pointOutboxPanel" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-gray-100"></div>
+
         <!-- Sync actions -->
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <h3 class="font-bold text-gray-700 mb-3">Đồng bộ dữ liệu</h3>
@@ -2669,6 +2672,7 @@ Câu 2: 1 + 1 = ?"></textarea>
     <script src="js/viewer-chia-se-xem-iem-chi-oc.js"></script>
     <script src="js/google-sheets-sync.js"></script>
     <script src="js/auto-sync-tu-ong-ay-len-va-keo-ve-google-sheets.js"></script>
+    <script src="js/point-outbox-tools.js"></script>
     <script src="js/so-iem-bo-mon-subject-grade-book.js"></script>
     <script src="js/grade-comparison-improvement-awards.js"></script>
     <script src="js/charts.js"></script>
