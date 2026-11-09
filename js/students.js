@@ -266,57 +266,140 @@ function handleExcelUpload(e, isSyncUpdate = false) {
 // ============================================================
 // JSON BACKUP / RESTORE
 // ============================================================
+// Mọi dữ liệu app lưu trong saveData(). Địa chỉ đồng bộ và hàng đợi điểm thuộc riêng từng máy nên không nằm trong file.
+const BACKUP_FIELDS = ['classes','students','skills','history','periods','gradeRecords','communicationLog',
+    'studentGoals','classNotes','subjectGrades','meetingNotes','hoaBa'];
+const BACKUP_EXTRA_KEYS = ['dojo_custom_typing','dojo_projMode','cert_school','cert_signer','cert_reason','cert_teacherName'];
+
+function buildBackupData() {
+    const data = {classes, students, skills, history, periods, gradeRecords, communicationLog,
+        studentGoals, classNotes, subjectGrades, meetingNotes, hoaBa};
+    const extras = {};
+    for (const k of BACKUP_EXTRA_KEYS) { const v = localStorage.getItem(k); if (v !== null) extras[k] = v; }
+    return {app:'LopHocTichCuc', format:2, exportedAt:new Date().toISOString(), data, extras};
+}
+
 function exportJsonData() {
-    const data = {
-        classes: classes,
-        students: students,
-        groups: groups,
-        seatingMaps: seatingMaps,
-        records: records,
-        classSettings: classSettings,
-        syncSettings: syncSettings
-    };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href",     dataStr);
-    downloadAnchorNode.setAttribute("download", "LopHocTichCuc_Backup_" + new Date().getTime() + ".json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+    try {
+        capturePointChanges();
+        const backup = buildBackupData();
+        const blob = new Blob([JSON.stringify(backup)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const pad = n => String(n).padStart(2,'0'), d = new Date();
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `LopHocTichCuc_SaoLuu_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        showToast(`Đã tải file sao lưu: ${classes.length} lớp, ${students.length} học sinh 💾`);
+    } catch (e) {
+        console.error(e);
+        showToast('Không tạo được file sao lưu: ' + e.message, false);
+    }
+}
+
+// Nhận cả file mới (format 2) và file cũ (các mảng nằm ngay ở gốc). Trả về {data, extras} đã chuẩn hoá hoặc ném lỗi dễ hiểu.
+function parseBackupFile(text) {
+    let raw;
+    try { raw = JSON.parse(text); } catch { throw new Error('File không phải JSON hợp lệ.'); }
+    if (!raw || typeof raw !== 'object') throw new Error('File sao lưu trống.');
+    const src = raw.format >= 2 && raw.data ? raw.data : raw;
+    if (!Array.isArray(src.classes) || !Array.isArray(src.students)) throw new Error('File không có danh sách lớp và học sinh của ứng dụng này.');
+    const data = {};
+    for (const f of BACKUP_FIELDS) {
+        if (f === 'skills') { if (src.skills && typeof src.skills === 'object') data.skills = src.skills; continue; }
+        if (src[f] !== undefined && !Array.isArray(src[f])) throw new Error(`Mục "${f}" trong file bị hỏng.`);
+        if (Array.isArray(src[f])) data[f] = src[f];
+    }
+    data.students = data.students.map(s => ({...s,
+        points: Number(s.points) || 0, positivePoints: Number(s.positivePoints) || 0, negativePoints: Number(s.negativePoints) || 0}));
+    const extras = {};
+    if (raw.extras && typeof raw.extras === 'object') {
+        for (const k of BACKUP_EXTRA_KEYS) if (typeof raw.extras[k] === 'string') extras[k] = raw.extras[k];
+    }
+    return {data, extras, exportedAt: raw.exportedAt || null};
+}
+
+function _assignBackupGlobals(data, {keepHistory=false}={}) {
+    if (data.classes) classes = data.classes;
+    if (data.students) students = data.students;
+    if (data.skills) skills = data.skills;
+    if (!keepHistory && data.history) history = data.history;
+    if (data.periods) periods = data.periods;
+    if (data.gradeRecords) gradeRecords = data.gradeRecords;
+    if (data.communicationLog) communicationLog = data.communicationLog;
+    if (data.studentGoals) studentGoals = data.studentGoals;
+    if (data.classNotes) classNotes = data.classNotes;
+    if (data.subjectGrades) subjectGrades = data.subjectGrades;
+    if (data.meetingNotes) meetingNotes = data.meetingNotes;
+    if (data.hoaBa) hoaBa = data.hoaBa;
+    currentClassId = classes.length ? classes[0].id : null;
+}
+
+// Không đồng bộ: thay toàn bộ dữ liệu trên máy, xoá hàng đợi điểm cũ để không bị cộng lại.
+function restoreBackupLocal(backup) {
+    _assignBackupGlobals(backup.data);
+    for (const k of pendingPointBatches().map(b => pointPrefix() + b.operationId)) localStorage.removeItem(k);
+    resetPointBaseline();
+    saveData();
+    for (const [k, v] of Object.entries(backup.extras)) localStorage.setItem(k, v);
+}
+
+// Đang đồng bộ: điểm thuộc sổ giao dịch trên máy chủ. Đưa điểm về đúng file bằng giao dịch điều chỉnh
+// (ghi chênh lệch), rồi lưu thông tin lớp lên máy chủ. Lịch sử máy chủ được giữ làm dấu vết.
+async function restoreBackupSynced(backup) {
+    // Lấy điểm mới nhất trước khi tính chênh lệch. Lỗi ở đây: chưa có gì thay đổi trên máy.
+    try { await flushPointTransactions(); } catch (e) { e.beforeRestore = true; throw e; }
+    const now = new Date().toISOString(), label = 'Phục hồi từ file sao lưu';
+    const before = new Map(students.map(s => [String(s.id), s]));
+    _assignBackupGlobals(backup.data, {keepHistory:true});
+    for (const s of students) {
+        const old = before.get(String(s.id)) || {points:0, positivePoints:0, negativePoints:0};
+        const dPoints = s.points - (Number(old.points) || 0);
+        const dPos = s.positivePoints - (Number(old.positivePoints) || 0), dNeg = s.negativePoints - (Number(old.negativePoints) || 0);
+        if (dPoints || dPos || dNeg) history.push({id:'restore-' + crypto.randomUUID(), classId:s.classId, studentId:s.id,
+            studentName:s.name, skillName:label, points:dPoints, type:'adjust', timestamp:now});
+    }
+    saveData();   // tạo giao dịch chênh lệch trong hàng đợi (bền vững ngay cả khi mất mạng)
+    for (const [k, v] of Object.entries(backup.extras)) localStorage.setItem(k, v);
+    return syncRequest('push', {classes, students, history, periods, gradeRecords, subjectGrades, meetingNotes});
 }
 
 function importJsonData(event) {
     const file = event.target.files[0];
+    event.target.value = '';
     if (!file) return;
-    
-    if (!confirm("CẢNH BÁO: Việc phục hồi sẽ XÓA TOÀN BỘ dữ liệu hiện tại trên máy này và thay bằng dữ liệu từ file. Bạn có chắc chắn muốn tiếp tục?")) {
-        event.target.value = '';
-        return;
-    }
-    
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onerror = () => showToast('Không đọc được file.', false);
+    reader.onload = async (e) => {
+        let backup;
+        try { backup = parseBackupFile(e.target.result); }
+        catch (err) { alert('Không phục hồi được: ' + err.message); return; }
+        const d = backup.data;
+        const when = backup.exportedAt ? ` (sao lưu lúc ${new Date(backup.exportedAt).toLocaleString('vi-VN')})` : '';
+        const summary = `File có ${d.classes.length} lớp, ${d.students.length} học sinh, ${(d.history||[]).length} dòng lịch sử${when}.`;
+        if (!syncSettings.url) {
+            if (!confirm(`${summary}\n\nPHỤC HỒI sẽ XOÁ TOÀN BỘ dữ liệu hiện tại trên máy này và thay bằng dữ liệu trong file. Tiếp tục?`)) return;
+            try { restoreBackupLocal(backup); }
+            catch (err) { console.error(err); alert('Phục hồi thất bại, dữ liệu trên máy chưa bị thay đổi hết: ' + err.message); return; }
+            showToast('Phục hồi dữ liệu thành công! Đang tải lại...');
+            setTimeout(() => window.location.reload(), 800);
+            return;
+        }
+        if (!confirm(`${summary}\n\nMáy này đang ĐỒNG BỘ với Google Sheets. Phục hồi sẽ:\n• Thay danh sách lớp, học sinh và các sổ trên máy chủ bằng dữ liệu trong file\n• Đưa điểm của từng em về đúng như file (ghi giao dịch điều chỉnh, các máy khác cũng nhận)\n\nTiếp tục?`)) return;
+        showToast('Đang phục hồi và gửi lên máy chủ...');
         try {
-            const data = JSON.parse(e.target.result);
-            if (data.classes && Array.isArray(data.classes)) {
-                localStorage.setItem('dojo_classes', JSON.stringify(data.classes || []));
-                localStorage.setItem('dojo_students', JSON.stringify(data.students || []));
-                localStorage.setItem('dojo_groups', JSON.stringify(data.groups || []));
-                localStorage.setItem('dojo_seating', JSON.stringify(data.seatingMaps || []));
-                localStorage.setItem('dojo_records', JSON.stringify(data.records || []));
-                localStorage.setItem('dojo_classSettings', JSON.stringify(data.classSettings || {}));
-                localStorage.setItem('dojo_syncSettings', JSON.stringify(data.syncSettings || {}));
-                
-                showToast("Phục hồi dữ liệu thành công! Đang tải lại...");
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                alert("File không hợp lệ hoặc bị lỗi định dạng!");
-            }
+            const result = await restoreBackupSynced(backup);
+            if (result.status !== 'ok') throw new Error(result.message || 'Máy chủ từ chối');
+            showToast('Phục hồi thành công và đã lưu lên máy chủ! Đang tải lại...');
+            setTimeout(() => window.location.reload(), 1200);
         } catch (err) {
             console.error(err);
-            alert("Lỗi khi đọc file JSON!");
+            if (err.beforeRestore) { alert('Chưa phục hồi gì: không kết nối được máy chủ (' + err.message + '). Kiểm tra mạng rồi thử lại.'); return; }
+            alert('Đã phục hồi trên máy này và giữ điểm trong hàng đợi, nhưng chưa lưu được thông tin lớp lên máy chủ: '
+                + err.message + '\n\nKiểm tra mạng rồi bấm "Lưu". Nếu báo xung đột, phục hồi lại file này sau khi bấm "Tải về".');
+            if (typeof refreshPointViews === 'function') refreshPointViews();
         }
     };
     reader.readAsText(file);
-    event.target.value = '';
 }
