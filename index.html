@@ -154,7 +154,7 @@
     </div>
     <div class="mb-3 relative">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-        <input type="text" id="searchInput" onkeyup="filterStudents(event)" placeholder="Tìm theo STT hoặc Tên, cách nhau dấu , (VD: 1,3,Trâm)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-dojo-blue focus:ring-2 focus:ring-blue-100 transition-all text-sm font-semibold text-gray-700 shadow-sm">
+        <input type="text" id="searchInput" oninput="filterStudents()" onkeydown="if(event.key==='Enter')filterStudents(event)" placeholder="STT hoặc tên, cách nhau dấu phẩy (VD: 1,3,5 hoặc 1-10, Trâm)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-dojo-blue focus:ring-2 focus:ring-blue-100 transition-all text-sm font-semibold text-gray-700 shadow-sm">
     </div>
 
     <!-- Panel chọn theo STT -->

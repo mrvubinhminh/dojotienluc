@@ -12,17 +12,20 @@ function renderStudents() {
     }
     document.getElementById('headerClassName').innerHTML=`${cls.name} <i class="fas fa-caret-down text-sm"></i>`;
     const grid=document.getElementById('studentGrid');
-    grid.innerHTML='';
     let total=0;
-    const si=document.getElementById('searchInput'); if(si) si.value='';
-    // Reset STT panel khi đổi lớp hoặc re-render
-    if(sttPanelOpen) { sttSelected.clear(); renderSttChips(); updateSttAwardBtn(); }
+    // Chỉ xoá ô tìm và các lựa chọn khi ĐỔI LỚP. Vẽ lại do tự đồng bộ (mỗi 30 giây, sau mỗi lần chấm)
+    // phải giữ nguyên những gì giáo viên đang gõ/chọn.
+    const classChanged = _renderedClassId !== currentClassId;
+    _renderedClassId = currentClassId;
+    if (classChanged) clearStudentSelections();
+    else _dropMissingSelections();
+    const cards=[];
     students.filter(s=>s.classId===currentClassId).forEach((student,i)=>{
         total+=student.points;
         const pColor=student.points>0?'bg-dojo-green text-white shadow-green-200':(student.points<0?'bg-dojo-red text-white shadow-red-200':'bg-gray-200 text-gray-700');
         const stt=student.stt||(i+1);
         const ms=getMilestone(student.points);
-        grid.insertAdjacentHTML('beforeend',`
+        cards.push(`
             <div id="student-card-${student.id}" data-name="${student.name.toLowerCase()}" data-stt="${stt}" data-id="${student.id}" class="student-card bg-white rounded-xl shadow-sm border border-gray-100 p-1.5 flex flex-col items-center cursor-pointer relative transition-all duration-300" onclick="handleCardClick(${student.id})">
                 <!-- Checkbox overlay -->
                 <div id="check-${student.id}" class="card-checkbox hidden absolute inset-0 rounded-xl bg-dojo-blue bg-opacity-15 flex items-end justify-center pb-1 pointer-events-none z-10">
@@ -35,8 +38,70 @@ function renderStudents() {
                 <div class="h-4 flex items-center">${ms?`<span class="text-sm leading-none" title="${ms.label}">${ms.icon}</span>`:''}</div>
             </div>`);
     });
+    grid.innerHTML=cards.join('');   // một lần ghi DOM thay vì 40-50 lần
+    _restoreSelectionsOnCards();
     document.getElementById('totalClassPoints').innerText=`Tổng điểm: ${total}`;
     document.getElementById('studentCount').innerText=students.filter(s=>s.classId===currentClassId).length;
+}
+
+// ---- Giữ lựa chọn khi vẽ lại ----
+let _renderedClassId = undefined;
+
+// Xoá ô tìm, chọn riêng, chọn STT (khi đổi lớp hoặc sau khi đã chấm điểm xong cho nhóm).
+function clearStudentSelections() {
+    const si=document.getElementById('searchInput'); if(si) si.value='';
+    document.getElementById('multiSelectBar')?.classList.add('hidden');
+    if (typeof sttSelected !== 'undefined') { sttSelected.clear(); if (sttPanelOpen) renderSttChips(); updateSttAwardBtn(); }
+    exitGroupSelectMode();
+}
+// Học sinh bị xoá/chuyển lớp trong lúc đang chọn thì bỏ khỏi danh sách chọn.
+function _dropMissingSelections() {
+    const inClass = new Set(students.filter(s=>s.classId===currentClassId).map(s=>s.id));
+    for (const id of [...groupSelected]) if (!inClass.has(id)) groupSelected.delete(id);
+    if (typeof sttSelected !== 'undefined') for (const id of [...sttSelected]) if (!inClass.has(id)) sttSelected.delete(id);
+}
+// Sau khi vẽ lại thẻ học sinh: áp lại bộ lọc đang gõ, dấu tích "Chọn riêng" và viền chọn STT.
+function _restoreSelectionsOnCards() {
+    const si=document.getElementById('searchInput');
+    if (si && si.value.trim()) _applyCardFilter(si.value);
+    if (groupSelectMode) {
+        document.querySelectorAll('.student-card').forEach(card=>{
+            if (card.style.display !== 'none') card.querySelector('.card-checkbox')?.classList.remove('hidden');
+        });
+        groupSelected.forEach(id=>{
+            document.getElementById(`check-${id}`)?.classList.remove('hidden');
+            document.getElementById(`student-card-${id}`)?.classList.add('ring-2','ring-dojo-blue','scale-[0.97]');
+        });
+        updateGroupFloatBtn();
+    }
+    if (typeof sttSelected !== 'undefined') {
+        sttSelected.forEach(id=>document.getElementById(`student-card-${id}`)?.classList.add('ring-2','ring-purple-500'));
+        if (sttPanelOpen) renderSttChips();
+        updateSttAwardBtn();
+    }
+}
+
+// "1,3,5" · "1-10" · "2-6, Trâm" — số là STT (có khoảng), chữ là tên.
+function parseStudentQuery(raw) {
+    const stts = new Set(), names = [];
+    for (const part of String(raw||'').split(/[,;]+/).map(t=>t.trim().toLowerCase()).filter(Boolean)) {
+        const range = part.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+        if (range) {
+            let a=+range[1], b=+range[2]; if (a>b) [a,b]=[b,a];
+            for (let n=a; n<=b && n-a<500; n++) stts.add(String(n));
+        } else if (/^\d+$/.test(part)) stts.add(String(+part));
+        else names.push(part);
+    }
+    return {stts, names, count: stts.size + names.length};
+}
+function _applyCardFilter(raw) {
+    const q = parseStudentQuery(raw), visibleIds = [];
+    document.querySelectorAll('.student-card').forEach(card=>{
+        const match = !q.count || q.stts.has(card.dataset.stt) || q.names.some(t=>card.dataset.name.includes(t));
+        card.style.display = match ? 'flex' : 'none';
+        if (match) visibleIds.push(parseInt(card.dataset.id));
+    });
+    return {q, visibleIds};
 }
 
 // ---- Multi-select state ----
@@ -48,19 +113,11 @@ let _groupTargetIds = [];
 function filterStudents(e) {
     const searchInput = document.getElementById('searchInput');
     if (!searchInput) return;
-    const raw = searchInput.value.trim();
-    const terms = raw.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t.length>0);
-
-    const visibleIds = [];
-    document.querySelectorAll('.student-card').forEach(card=>{
-        const match = !raw || terms.some(t => card.dataset.stt===t || card.dataset.name.includes(t));
-        card.style.display = match ? 'flex' : 'none';
-        if (match) visibleIds.push(parseInt(card.dataset.id));
-    });
+    const {q, visibleIds} = _applyCardFilter(searchInput.value);
 
     const bar = document.getElementById('multiSelectBar');
     if (bar) {
-        if (terms.length >= 2 && visibleIds.length >= 2) {
+        if ((q.count >= 2 || q.stts.size >= 2) && visibleIds.length >= 2) {
             bar.classList.remove('hidden');
             document.getElementById('multiSelectInfo').innerText = `${visibleIds.length} học sinh được chọn`;
         } else {
@@ -74,7 +131,7 @@ function filterStudents(e) {
         if (typeof openPointsModal === 'function') {
             openPointsModal(visibleIds[0]);
             searchInput.value = '';
-            filterStudents(); // reset
+            filterStudents(); // bỏ lọc
             searchInput.blur();
         }
     }

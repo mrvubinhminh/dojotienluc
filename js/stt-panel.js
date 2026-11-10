@@ -16,11 +16,15 @@ function toggleSttPanel() {
         ? '<i class="fas fa-times mr-1"></i>Đóng'
         : '<i class="fas fa-hashtag mr-1"></i>Theo STT';
     if (sttPanelOpen) renderSttChips();
-    else { sttSelected.clear(); updateSttAwardBtn(); }
+    else {
+        sttSelected.forEach(id=>document.getElementById(`student-card-${id}`)?.classList.remove('ring-2','ring-purple-500'));
+        sttSelected.clear(); updateSttAwardBtn();
+    }
 }
 
 function renderSttChips() {
     const container = document.getElementById('sttChips');
+    if (!container) return;
     container.innerHTML = '';
     const classStudents = students.filter(s=>s.classId===currentClassId)
                                   .sort((a,b)=>(a.stt||0)-(b.stt||0));
@@ -33,9 +37,7 @@ function renderSttChips() {
         const sel = sttSelected.has(s.id);
         const chip = document.createElement('button');
         chip.id = `stt-chip-${s.id}`;
-        chip.className = `w-10 h-10 rounded-full text-sm font-black flex items-center justify-center transition-all shadow-sm ${
-            sel ? 'bg-purple-600 text-white scale-110 shadow-purple-200' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-purple-400'
-        }`;
+        chip.className = _sttChipClass(sel);
         chip.title = s.name;
         chip.innerText = stt;
         chip.onclick = () => toggleSttChip(s.id);
@@ -43,12 +45,20 @@ function renderSttChips() {
     });
 }
 
+// Bấm số để chọn/bỏ chọn nhiều em, rồi bấm "Cho/trừ điểm (N học sinh)". Chỉ đổi đúng ô vừa bấm,
+// không vẽ lại cả danh sách.
 function toggleSttChip(id) {
-    // Thay vì chọn nhiều, click vào là mở bảng cho điểm luôn
-    if (typeof openPointsModal === 'function') {
-        openPointsModal(id);
-        toggleSttPanel(); // Đóng panel STT
-    }
+    const on = !sttSelected.has(id);
+    if (on) sttSelected.add(id); else sttSelected.delete(id);
+    const chip = document.getElementById(`stt-chip-${id}`);
+    if (chip) chip.className = _sttChipClass(on);
+    document.getElementById(`student-card-${id}`)?.classList.toggle('ring-2', on);
+    document.getElementById(`student-card-${id}`)?.classList.toggle('ring-purple-500', on);
+    updateSttAwardBtn();
+}
+function _sttChipClass(sel) {
+    return `w-10 h-10 rounded-full text-sm font-black flex items-center justify-center transition-colors shadow-sm ${
+        sel ? 'bg-purple-600 text-white ring-2 ring-purple-300' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-purple-400'}`;
 }
 
 function selectAllStt() {
@@ -73,6 +83,7 @@ function clearSttSelection() {
 
 function updateSttAwardBtn() {
     const btn = document.getElementById('btnAwardByStt');
+    if (!btn) return;
     if (sttSelected.size > 0) {
         btn.classList.remove('hidden');
         btn.classList.add('flex');

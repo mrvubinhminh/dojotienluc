@@ -239,7 +239,8 @@ function addPoints(skillId, points, skillName) {
         });
         showToast(`${_groupTargetIds.length} học sinh ${isPos?'+':''}${points} (${skillName})`,isPos);
         _isGroupAward=false; _groupTargetIds=[];
-        exitGroupSelectMode();
+        // Đã chấm xong cho nhóm: lúc này mới bỏ chọn và xoá ô tìm "1,3,5".
+        if (typeof clearStudentSelections === 'function') clearStudentSelections(); else exitGroupSelectMode();
     } else if(isAwardAll) {
         students.filter(s=>s.classId===currentClassId).forEach(s=>{
             const old=s.points;
